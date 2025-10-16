@@ -1,0 +1,188 @@
+<!-- src/app/features/profile/components/personal-info/personal-info.component.html -->
+<div class="personal-info">
+  <div class="section-header">
+    <h2 class="section-title">
+      <i class="fas fa-user"></i>
+      Informations personnelles
+    </h2>
+    <p class="section-description">
+      Gérez vos informations personnelles et vos préférences de compte
+    </p>
+  </div>
+
+  <form [formGroup]="personalInfoForm" (ngSubmit)="onSubmit()" class="personal-info-form">
+    
+    <!-- Photo de profil -->
+    <div class="profile-photo-section">
+      <div class="photo-container">
+        <div class="avatar-circle">
+          <img src="assets/images/avatar-placeholder.png" alt="Photo de profil" class="avatar-img">
+          <div class="photo-overlay">
+            <i class="fas fa-camera"></i>
+          </div>
+        </div>
+        <div class="photo-info">
+          <h3>Photo de profil</h3>
+          <p>Ajoutez une photo pour personnaliser votre compte</p>
+          <button type="button" class="btn btn-outline">Changer la photo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Informations de base -->
+    <div class="form-section">
+      <h3 class="form-section-title">Informations de base</h3>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">Prénom *</label>
+          <input 
+            type="text" 
+            id="firstName"
+            formControlName="firstName"
+            class="form-control"
+            placeholder="Votre prénom"
+          >
+          <div class="error-message" *ngIf="personalInfoForm.get('firstName')?.invalid && personalInfoForm.get('firstName')?.touched">
+            Le prénom est obligatoire
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="lastName">Nom *</label>
+          <input 
+            type="text" 
+            id="lastName"
+            formControlName="lastName"
+            class="form-control"
+            placeholder="Votre nom"
+          >
+          <div class="error-message" *ngIf="personalInfoForm.get('lastName')?.invalid && personalInfoForm.get('lastName')?.touched">
+            Le nom est obligatoire
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label for="email">Adresse email *</label>
+          <input 
+            type="email" 
+            id="email"
+            formControlName="email"
+            class="form-control"
+            placeholder="votre.email@example.com"
+          >
+          <div class="error-message" *ngIf="personalInfoForm.get('email')?.invalid && personalInfoForm.get('email')?.touched">
+            <span *ngIf="personalInfoForm.get('email')?.errors?.['required']">L'email est obligatoire</span>
+            <span *ngIf="personalInfoForm.get('email')?.errors?.['email']">Format d'email invalide</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phone">Téléphone *</label>
+          <input 
+            type="tel" 
+            id="phone"
+            formControlName="phone"
+            class="form-control"
+            placeholder="+228 90 12 34 56"
+          >
+          <div class="error-message" *ngIf="personalInfoForm.get('phone')?.invalid && personalInfoForm.get('phone')?.touched">
+            Le numéro de téléphone est obligatoire
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="dateOfBirth">Date de naissance</label>
+          <input 
+            type="date" 
+            id="dateOfBirth"
+            formControlName="dateOfBirth"
+            class="form-control"
+          >
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="gender">Genre</label>
+          <select id="gender" formControlName="gender" class="form-control">
+            <option value="">Sélectionner</option>
+            <option value="male">Homme</option>
+            <option value="female">Femme</option>
+            <option value="other">Autre</option>
+            <option value="prefer_not_to_say">Préfère ne pas dire</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Préférences -->
+    <div class="form-section">
+      <h3 class="form-section-title">Préférences</h3>
+      
+      <div class="preferences-grid">
+        <div class="preference-item">
+          <div class="preference-info">
+            <label for="language-select"><h4>Langue préférée</h4></label>
+            <p>Choisissez la langue d'affichage</p>
+          </div>
+          <select 
+            id="language-select"
+            class="form-control preference-control"
+            title="Sélectionner votre langue préférée"
+            aria-label="Langue préférée">
+            <option value="fr">Français</option>
+            <option value="en">English</option>
+            <option value="ewe">Ewe</option>
+          </select>
+        </div>
+
+        <div class="preference-item">
+          <div class="preference-info">
+            <label for="currency-select"><h4>Devise préférée</h4></label>
+            <p>Affichage des prix</p>
+          </div>
+          <select 
+            id="currency-select"
+            class="form-control preference-control"
+            title="Sélectionner votre devise préférée"
+            aria-label="Devise préférée">
+            <option value="XOF">FCFA (XOF)</option>
+            <option value="EUR">Euro (EUR)</option>
+            <option value="USD">Dollar (USD)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button 
+        type="button" 
+        class="btn btn-outline"
+        (click)="onCancel()"
+      >
+        Annuler
+      </button>
+      
+      <button 
+        type="submit" 
+        class="btn btn-primary"
+        [disabled]="!personalInfoForm.valid || isUpdating"
+      >
+        <span *ngIf="!isUpdating">
+          <i class="fas fa-save"></i>
+          Enregistrer les modifications
+        </span>
+        <span *ngIf="isUpdating" class="loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          Enregistrement...
+        </span>
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,261 @@
+// src/app/features/admin/styles/_admin-mixins.scss
+
+// === MIXINS DE RESPONSIVE ===
+@mixin admin-mobile {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+@mixin admin-tablet {
+  @media (min-width: 768px) and (max-width: 991px) {
+    @content;
+  }
+}
+
+@mixin admin-desktop {
+  @media (min-width: 992px) {
+    @content;
+  }
+}
+
+@mixin admin-large-desktop {
+  @media (min-width: 1200px) {
+    @content;
+  }
+}
+
+// === MIXINS DE FLEXBOX ===
+@mixin admin-flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin admin-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin admin-flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@mixin admin-flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// === MIXINS D'OMBRES ===
+@mixin admin-card-shadow {
+  box-shadow: $admin-shadow-sm;
+}
+
+@mixin admin-elevated-shadow {
+  box-shadow: $admin-shadow-md;
+}
+
+@mixin admin-deep-shadow {
+  box-shadow: $admin-shadow-lg;
+}
+
+// === MIXINS DE BORDURES ===
+@mixin admin-border-radius($size: md) {
+  @if $size == sm {
+    border-radius: $admin-border-radius-sm;
+  } @else if $size == md {
+    border-radius: $admin-border-radius-md;
+  } @else if $size == lg {
+    border-radius: $admin-border-radius-lg;
+  } @else if $size == xl {
+    border-radius: $admin-border-radius-xl;
+  }
+}
+
+@mixin admin-border {
+  border: $admin-border-width solid $admin-border-color;
+}
+
+// === MIXINS DE TRANSITIONS ===
+@mixin admin-transition($property: all, $speed: normal) {
+  @if $speed == fast {
+    transition: $property $admin-transition-fast;
+  } @else if $speed == normal {
+    transition: $property $admin-transition-normal;
+  } @else if $speed == slow {
+    transition: $property $admin-transition-slow;
+  }
+}
+
+// === MIXINS DE TYPOGRAPHIE ===
+@mixin admin-heading {
+  font-family: $admin-font-family;
+  font-weight: $admin-font-weight-medium;
+  color: $admin-black;
+  margin: 0;
+}
+
+@mixin admin-body-text {
+  font-family: $admin-font-family;
+  font-size: $admin-font-size-base;
+  font-weight: $admin-font-weight-normal;
+  color: $admin-dark-grey;
+  line-height: 1.5;
+}
+
+@mixin admin-small-text {
+  font-size: $admin-font-size-small;
+  font-weight: $admin-font-weight-normal;
+  color: $admin-dark-grey;
+}
+
+// === MIXINS DE BOUTONS ===
+@mixin admin-button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $admin-spacing-sm;
+  padding: $admin-spacing-md $admin-spacing-lg;
+  font-family: $admin-font-family;
+  font-size: $admin-font-size-base;
+  font-weight: $admin-font-weight-medium;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  @include admin-border-radius(sm);
+  @include admin-transition(all, fast);
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin admin-button-primary {
+  @include admin-button-base;
+  background-color: $admin-primary;
+  color: $admin-white;
+
+  &:hover:not(:disabled) {
+    background-color: darken($admin-primary, 10%);
+  }
+}
+
+@mixin admin-button-secondary {
+  @include admin-button-base;
+  background-color: transparent;
+  color: $admin-primary;
+  border: $admin-border-width solid $admin-primary;
+
+  &:hover:not(:disabled) {
+    background-color: $admin-primary;
+    color: $admin-white;
+  }
+}
+
+// === MIXINS DE CARTES ===
+@mixin admin-card {
+  background-color: $admin-white;
+  @include admin-border-radius(md);
+  @include admin-card-shadow;
+  padding: $admin-card-padding;
+}
+
+@mixin admin-card-header {
+  @include admin-flex-between;
+  padding-bottom: $admin-spacing-md;
+  margin-bottom: $admin-spacing-md;
+  border-bottom: $admin-border-width solid $admin-border-color;
+
+  h2, h3 {
+    @include admin-heading;
+    font-size: $admin-font-size-xlarge;
+  }
+}
+
+// === MIXINS DE TABLEAUX ===
+@mixin admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: $admin-white;
+
+  th, td {
+    padding: $admin-spacing-md;
+    text-align: left;
+    border-bottom: $admin-border-width solid $admin-table-border;
+  }
+
+  th {
+    background-color: $admin-table-header-bg;
+    font-weight: $admin-font-weight-medium;
+    color: $admin-black;
+  }
+
+  tbody tr:hover {
+    background-color: $admin-table-row-hover;
+  }
+}
+
+// === MIXINS DE STATUTS ===
+@mixin admin-status-badge($color) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $admin-spacing-xs $admin-spacing-sm;
+  font-size: $admin-font-size-small;
+  font-weight: $admin-font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background-color: $color;
+  color: $admin-white;
+  @include admin-border-radius(sm);
+}
+
+// === MIXINS D'ANIMATION ===
+@mixin admin-loading-spinner {
+  @keyframes admin-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  animation: admin-spin 1s linear infinite;
+}
+
+@mixin admin-fade-in {
+  @keyframes admin-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  animation: admin-fade-in 0.3s ease-out;
+}
+
+// === MIXINS D'UTILITAIRES ===
+@mixin admin-truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin admin-clearfix {
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}
+
+@mixin admin-visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

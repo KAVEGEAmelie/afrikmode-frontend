@@ -1,0 +1,260 @@
+<div class="payment-demo">
+  
+  <!-- Header -->
+  <div class="demo-header">
+    <h1>
+      <i class="fas fa-credit-card"></i>
+      Démonstration du Système de Paiement
+    </h1>
+    <p>Testez le système de simulation de paiement professionnel d'AfrikMode</p>
+  </div>
+
+  <!-- Demo Controls -->
+  <div class="demo-controls">
+    
+    <!-- Amount Selection -->
+    <div class="control-group">
+      <h3>Montant du paiement</h3>
+      <div class="amount-buttons">
+        <button class="amount-btn" 
+                [class.active]="paymentAmount === 25000"
+                (click)="setAmount(25000)">
+          25,000 FCFA
+        </button>
+        <button class="amount-btn" 
+                [class.active]="paymentAmount === 50000"
+                (click)="setAmount(50000)">
+          50,000 FCFA
+        </button>
+        <button class="amount-btn" 
+                [class.active]="paymentAmount === 100000"
+                (click)="setAmount(100000)">
+          100,000 FCFA
+        </button>
+        <button class="amount-btn" 
+                [class.active]="paymentAmount === 250000"
+                (click)="setAmount(250000)">
+          250,000 FCFA
+        </button>
+      </div>
+    </div>
+
+    <!-- Customer Selection -->
+    <div class="control-group">
+      <h3>Profil client</h3>
+      <div class="customer-buttons">
+        <button class="customer-btn" 
+                [class.active]="customerInfo.name === 'Jean Dupont'"
+                (click)="setCustomer({
+                  name: 'Jean Dupont',
+                  email: 'jean.dupont@example.com',
+                  phone: '+228 XX XX XX XX'
+                })">
+          <i class="fas fa-user"></i>
+          Jean Dupont
+        </button>
+        <button class="customer-btn" 
+                [class.active]="customerInfo.name === 'Marie Koffi'"
+                (click)="setCustomer({
+                  name: 'Marie Koffi',
+                  email: 'marie.koffi@example.com',
+                  phone: '+228 YY YY YY YY'
+                })">
+          <i class="fas fa-user"></i>
+          Marie Koffi
+        </button>
+        <button class="customer-btn" 
+                [class.active]="customerInfo.name === 'Koffi Mensah'"
+                (click)="setCustomer({
+                  name: 'Koffi Mensah',
+                  email: 'koffi.mensah@example.com',
+                  phone: '+228 ZZ ZZ ZZ ZZ'
+                })">
+          <i class="fas fa-user"></i>
+          Koffi Mensah
+        </button>
+      </div>
+    </div>
+
+    <!-- Payment Action -->
+    <div class="control-group">
+      <h3>Action</h3>
+      <button class="btn btn-primary btn-large" (click)="openPaymentModal()">
+        <i class="fas fa-credit-card"></i>
+        Tester le paiement
+      </button>
+    </div>
+  </div>
+
+  <!-- Current Payment Info -->
+  <div class="payment-info">
+    <h3>Informations du paiement</h3>
+    <div class="info-card">
+      <div class="info-row">
+        <span>Montant:</span>
+        <strong>{{ paymentAmount | number }} {{ currency }}</strong>
+      </div>
+      <div class="info-row">
+        <span>Client:</span>
+        <strong>{{ customerInfo.name }}</strong>
+      </div>
+      <div class="info-row">
+        <span>Email:</span>
+        <strong>{{ customerInfo.email }}</strong>
+      </div>
+      <div class="info-row">
+        <span>Commande:</span>
+        <strong>{{ orderId }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Last Payment Result -->
+  <div class="payment-result" *ngIf="lastPaymentResult">
+    <h3>Dernier résultat de paiement</h3>
+    <div class="result-card" [class.success]="lastPaymentResult.success" [class.error]="!lastPaymentResult.success">
+      <div class="result-header">
+        <i class="fas" [class.fa-check-circle]="lastPaymentResult.success" [class.fa-times-circle]="!lastPaymentResult.success"></i>
+        <span>{{ lastPaymentResult.success ? 'Paiement réussi' : 'Paiement échoué' }}</span>
+      </div>
+      <div class="result-details">
+        <div class="detail-row">
+          <span>Transaction ID:</span>
+          <strong>{{ lastPaymentResult.transactionId }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Statut:</span>
+          <strong>{{ lastPaymentResult.status }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Message:</span>
+          <strong>{{ lastPaymentResult.message }}</strong>
+        </div>
+        <div class="detail-row" *ngIf="lastPaymentResult.fees > 0">
+          <span>Frais:</span>
+          <strong>{{ lastPaymentResult.fees | number }} {{ currency }}</strong>
+        </div>
+        <div class="detail-row" *ngIf="lastPaymentResult.receiptUrl">
+          <span>Reçu:</span>
+          <a [href]="lastPaymentResult.receiptUrl" target="_blank">Télécharger</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment History -->
+  <div class="payment-history" *ngIf="paymentHistory.length > 0">
+    <div class="history-header">
+      <h3>Historique des paiements</h3>
+      <button class="btn btn-outline btn-small" (click)="clearHistory()">
+        <i class="fas fa-trash"></i>
+        Vider l'historique
+      </button>
+    </div>
+    
+    <div class="history-list">
+      <div *ngFor="let payment of paymentHistory; let i = index" 
+           class="history-item"
+           [class.success]="payment.success"
+           [class.error]="!payment.success">
+        
+        <div class="history-icon">
+          <i class="fas" [class.fa-check]="payment.success" [class.fa-times]="!payment.success"></i>
+        </div>
+        
+        <div class="history-details">
+          <div class="history-main">
+            <span class="transaction-id">{{ payment.transactionId }}</span>
+            <span class="amount">{{ payment.processingTime }}ms</span>
+          </div>
+          <div class="history-meta">
+            <span class="status">{{ payment.status }}</span>
+            <span class="message">{{ payment.message }}</span>
+          </div>
+        </div>
+        
+        <div class="history-actions">
+          <button class="btn btn-small btn-outline" 
+                  (click)="getPaymentStatus(payment.transactionId)"
+                  title="Vérifier le statut">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features List -->
+  <div class="features-list">
+    <h3>Fonctionnalités du système de paiement</h3>
+    
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-credit-card"></i>
+        </div>
+        <h4>Cartes bancaires</h4>
+        <p>Support Visa, Mastercard, American Express avec validation complète</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-mobile-alt"></i>
+        </div>
+        <h4>Mobile Money</h4>
+        <p>T-Money, Flooz, MTN Mobile Money pour l'Afrique de l'Ouest</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-university"></i>
+        </div>
+        <h4>Virement bancaire</h4>
+        <p>Transfert direct depuis votre compte bancaire</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-money-bill-wave"></i>
+        </div>
+        <h4>Paiement à la livraison</h4>
+        <p>Payez en espèces lors de la réception de votre commande</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h4>Sécurité</h4>
+        <p>Chiffrement 256-bit et conformité PCI DSS</p>
+      </div>
+      
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-clock"></i>
+        </div>
+        <h4>Temps réel</h4>
+        <p>Simulation de traitement en temps réel avec animations</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <app-payment-modal
+    [isOpen]="showPaymentModal"
+    [amount]="paymentAmount"
+    [currency]="currency"
+    [orderId]="orderId"
+    [customerInfo]="customerInfo"
+    (paymentSuccess)="onPaymentSuccess($event)"
+    (paymentError)="onPaymentError($event)"
+    (paymentCancelled)="onPaymentCancelled()"
+    (modalClosed)="onPaymentModalClosed()">
+  </app-payment-modal>
+</div>
+
+
+
+
+
+

@@ -1,0 +1,103 @@
+// src/app/features/admin/pages/dashboard/components/activity-feed/activity-feed.component.scss
+
+.activity-feed {
+  min-height: 300px;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  
+  .spinner-small {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #F5F5F5;
+    border-top-color: #8B2E2E;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  
+  p {
+    margin-top: 1rem;
+    color: #9E9E9E;
+    font-size: 0.875rem;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activity-item {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background-color: #F9F9F9;
+  }
+}
+
+.activity-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  
+  .material-icons {
+    color: white;
+    font-size: 1.25rem;
+  }
+}
+
+.activity-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.activity-message {
+  color: #2C3E50;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.activity-time {
+  color: #9E9E9E;
+  font-size: 0.8rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #BDBDBD;
+  
+  .material-icons {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}

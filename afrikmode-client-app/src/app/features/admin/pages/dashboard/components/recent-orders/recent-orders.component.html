@@ -1,0 +1,48 @@
+<!-- src/app/features/admin/pages/dashboard/components/recent-orders/recent-orders.component.html -->
+
+<div class="recent-orders">
+  @if (loading) {
+    <div class="loading">
+      <div class="spinner-small"></div>
+      <p>Chargement...</p>
+    </div>
+  }
+
+  @if (!loading && orders.length > 0) {
+    <div class="orders-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Commande</th>
+            <th>Client</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (order of orders; track order.id) {
+            <tr>
+              <td class="order-id">{{ order.id }}</td>
+              <td class="customer-name">{{ order.customer }}</td>
+              <td class="order-amount">{{ order.amount | currency:'XOF':'symbol':'1.0-0' }}</td>
+              <td>
+                <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+                  {{ getStatusLabel(order.status) }}
+                </span>
+              </td>
+              <td class="order-date">{{ formatDate(order.date) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (!loading && orders.length === 0) {
+    <div class="empty-state">
+      <span class="material-icons">receipt_long</span>
+      <p>Aucune commande récente</p>
+    </div>
+  }
+</div>

@@ -1,0 +1,561 @@
+.footer {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: white;
+  margin-top: auto;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e67e22, transparent);
+  }
+
+  .newsletter-section {
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    padding: 2.5rem 0;
+    border-bottom: 1px solid #4a5f7a;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="%23ffffff" opacity="0.03"/><circle cx="75" cy="75" r="1" fill="%23ffffff" opacity="0.03"/><circle cx="50" cy="10" r="0.5" fill="%23ffffff" opacity="0.02"/><circle cx="10" cy="60" r="0.5" fill="%23ffffff" opacity="0.02"/><circle cx="90" cy="40" r="0.5" fill="%23ffffff" opacity="0.02"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      opacity: 0.1;
+    }
+
+    .newsletter-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      position: relative;
+      z-index: 1;
+
+      .newsletter-text {
+        h3 {
+          margin: 0 0 0.5rem 0;
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+
+        p {
+          margin: 0;
+          color: #bdc3c7;
+          font-size: 0.95rem;
+        }
+      }
+
+      .newsletter-form {
+        display: flex;
+        gap: 0.5rem;
+        min-width: 300px;
+
+        .newsletter-input {
+          flex: 1;
+          padding: 0.75rem 1rem;
+          border: none;
+          border-radius: 4px;
+          background-color: #ecf0f1;
+          color: #2c3e50;
+          font-size: 0.95rem;
+
+          &::placeholder {
+            color: #7f8c8d;
+          }
+
+          &:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #e67e22;
+          }
+        }
+
+        .newsletter-btn {
+          padding: 0.75rem 1.5rem;
+          background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
+          position: relative;
+          overflow: hidden;
+
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+          }
+
+          &:hover {
+            background: linear-gradient(135deg, #d35400 0%, #c0392b 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(230, 126, 34, 0.4);
+            
+            &::before {
+              left: 100%;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .footer-main {
+    padding: 3.5rem 0;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #e67e22, transparent);
+      border-radius: 2px;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 3rem;
+
+      .footer-column {
+        h4 {
+          margin: 0 0 1.5rem 0;
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #ecf0f1;
+        }
+
+        // Style spécial pour le titre AfrikMode
+        .afrikmode-title {
+          font-size: 2.2rem !important;
+          font-weight: 900 !important;
+          font-family: 'Playfair Display', serif !important;
+          background: linear-gradient(
+            135deg,
+            #FFD700 0%,
+            #FFA500 25%,
+            #FF6B6B 50%,
+            #8B2E2E 75%,
+            #4A1414 100%
+          );
+          background-size: 300% 300%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          position: relative;
+          display: inline-block;
+          margin-bottom: 2rem !important;
+          cursor: pointer;
+          transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          animation: gradientShift 4s ease infinite, float 3s ease-in-out infinite;
+          text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          overflow: visible;
+
+          // Effet de brillance qui passe
+          &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              90deg,
+              transparent,
+              rgba(255, 255, 255, 0.8),
+              transparent
+            );
+            animation: shine 3s infinite;
+            z-index: 1;
+          }
+
+          // Effet de lueur autour du texte
+          &::after {
+            content: 'AfrikMode';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+              135deg,
+              #FFD700 0%,
+              #FFA500 25%,
+              #FF6B6B 50%,
+              #8B2E2E 75%,
+              #4A1414 100%
+            );
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: blur(8px);
+            opacity: 0.7;
+            z-index: -1;
+            animation: gradientShift 4s ease infinite;
+          }
+
+          // Effet de survol
+          &:hover {
+            transform: scale(1.15) rotate(8deg);
+            animation-play-state: paused;
+            background-position: 100% 50%;
+            text-shadow: 0 0 50px rgba(255, 215, 0, 0.8);
+            
+            &::before {
+              animation: shine 0.6s ease-in-out;
+            }
+            
+            &::after {
+              filter: blur(15px);
+              opacity: 1;
+              transform: scale(1.1) rotate(-2deg);
+            }
+
+            .sparkle {
+              opacity: 1;
+              animation-duration: 0.6s;
+            }
+          }
+
+          // Effet de clic
+          &:active {
+            transform: scale(1.05) rotate(3deg);
+            transition: all 0.1s ease;
+          }
+
+          // Animation du dégradé
+          @keyframes gradientShift {
+            0%, 100% { 
+              background-position: 0% 50%; 
+            }
+            50% { 
+              background-position: 100% 50%; 
+            }
+          }
+
+          // Animation de brillance
+          @keyframes shine {
+            0% { 
+              left: -100%; 
+            }
+            100% { 
+              left: 100%; 
+            }
+          }
+
+          // Animation de flottement
+          @keyframes float {
+            0%, 100% { 
+              transform: translateY(0px); 
+            }
+            50% { 
+              transform: translateY(-3px); 
+            }
+          }
+
+          // Particules de brillance
+          .sparkle {
+            position: absolute;
+            font-size: 0.8rem;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            transition: all 0.3s ease;
+          }
+
+          .sparkle-1 {
+            top: -15px;
+            right: -15px;
+            animation: sparkle 2s ease-in-out infinite;
+          }
+
+          .sparkle-2 {
+            bottom: -15px;
+            left: -15px;
+            animation: sparkle 2s ease-in-out infinite 0.5s;
+          }
+
+          .sparkle-3 {
+            top: 50%;
+            right: -20px;
+            transform: translateY(-50%);
+            animation: sparkle 2s ease-in-out infinite 1s;
+          }
+
+          @keyframes sparkle {
+            0% { 
+              opacity: 0; 
+              transform: scale(0) rotate(0deg); 
+            }
+            50% { 
+              opacity: 1; 
+              transform: scale(1.2) rotate(180deg); 
+            }
+            100% { 
+              opacity: 0; 
+              transform: scale(0.8) rotate(360deg); 
+            }
+          }
+        }
+
+        p {
+          margin: 0 0 1.5rem 0;
+          color: #bdc3c7;
+          line-height: 1.6;
+          font-size: 0.9rem;
+        }
+
+        .social-links {
+          display: flex;
+          gap: 1rem;
+
+          .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: #bdc3c7;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+            &::before {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+              border-radius: 50%;
+              opacity: 0;
+              transition: opacity 0.3s ease;
+            }
+
+            i {
+              font-size: 1.2rem;
+              position: relative;
+              z-index: 2;
+              transition: all 0.3s ease;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 100%;
+              height: 100%;
+              color: inherit;
+              opacity: 0;
+              
+              // S'assurer que les icônes Font Awesome sont visibles
+              &.fab, &.fas, &.far, &.fal, &.fad {
+                font-family: "Font Awesome 6 Brands", "Font Awesome 6 Free", "Font Awesome 6 Pro" !important;
+                font-weight: 900;
+                font-style: normal;
+                font-variant: normal;
+                text-rendering: auto;
+                line-height: 1;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+                opacity: 1;
+              }
+            }
+
+            .social-fallback {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              font-size: 1.4rem;
+              opacity: 1;
+              transition: opacity 0.3s ease;
+              z-index: 3;
+              pointer-events: none;
+              font-weight: bold;
+            }
+
+            // Afficher Font Awesome au survol si disponible
+            &:hover i.fab,
+            &:hover i.fas,
+            &:hover i.far,
+            &:hover i.fal,
+            &:hover i.fad {
+              opacity: 1;
+            }
+
+            // Masquer le fallback au survol si Font Awesome fonctionne
+            &:hover .social-fallback {
+              opacity: 0;
+            }
+
+            &:hover {
+              color: white;
+              transform: translateY(-3px) scale(1.1);
+              box-shadow: 0 8px 25px rgba(230, 126, 34, 0.3);
+              
+              &::before {
+                opacity: 1;
+              }
+              
+              i {
+                transform: rotate(360deg);
+              }
+            }
+          }
+        }
+
+        .footer-links {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+
+          li {
+            margin-bottom: 0.75rem;
+
+            a {
+              color: #bdc3c7;
+              text-decoration: none;
+              font-size: 0.9rem;
+              transition: color 0.3s ease;
+
+              &:hover {
+                color: #e67e22;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .footer-bottom {
+    background: linear-gradient(135deg, #1a252f 0%, #0f1419 100%);
+    padding: 1.5rem 0;
+    border-top: 1px solid #4a5f7a;
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #e67e22, transparent);
+    }
+
+    .footer-bottom-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .copyright {
+        margin: 0;
+        color: #bdc3c7;
+        font-size: 0.9rem;
+      }
+
+      .secure-payment {
+        margin: 0;
+        color: #bdc3c7;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .footer {
+    .newsletter-section {
+      .newsletter-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+
+        .newsletter-form {
+          width: 100%;
+          max-width: 400px;
+        }
+      }
+    }
+
+    .footer-main {
+      .footer-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+
+        .footer-column {
+          .social-links {
+            justify-content: center;
+          }
+        }
+      }
+    }
+
+    .footer-bottom {
+      .footer-bottom-content {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    .newsletter-section {
+      padding: 1.5rem 0;
+
+      .newsletter-content {
+        .newsletter-form {
+          flex-direction: column;
+          gap: 1rem;
+
+          .newsletter-input,
+          .newsletter-btn {
+            width: 100%;
+          }
+        }
+      }
+    }
+
+    .footer-main {
+      padding: 2rem 0;
+
+      .footer-grid {
+        gap: 1.5rem;
+      }
+    }
+  }
+}
+

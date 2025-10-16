@@ -1,0 +1,272 @@
+<!-- src/app/features/orders/components/order-tracking/order-tracking.component.html -->
+<div class="tracking-page">
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement des informations de suivi...</p>
+    </div>
+  
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="error-container">
+      <i class="fas fa-exclamation-circle"></i>
+      <p>{{ error }}</p>
+      <button class="btn btn-primary" (click)="goBack()">
+        <i class="fas fa-arrow-left"></i>
+        Retour
+      </button>
+    </div>
+  
+    <!-- Tracking Content -->
+    <div *ngIf="order && !isLoading" class="tracking-content">
+      
+      <!-- Header -->
+      <div class="tracking-header">
+        <div class="container">
+          <button class="back-btn" (click)="goBack()">
+            <i class="fas fa-arrow-left"></i>
+            Retour
+          </button>
+  
+          <div class="header-info">
+            <h1>
+              <i class="fas fa-map-marker-alt"></i>
+              Suivi de commande
+            </h1>
+                        <p>Commande {{ order.order_number }}</p>
+          </div>
+  
+          <button class="refresh-btn" (click)="refreshTracking()">
+            <i class="fas fa-sync-alt"></i>
+            Actualiser
+          </button>
+        </div>
+      </div>
+  
+      <div class="container">
+        
+        <!-- Status Overview Card -->
+        <div class="status-overview-card">
+          <div class="overview-left">
+            <div class="status-icon" [style.background-color]="getStatusColor(order.status) + '20'">
+              <i class="fas fa-truck" [style.color]="getStatusColor(order.status)"></i>
+            </div>
+            <div class="status-info">
+              <h2>{{ getStatusLabel(order.status) }}</h2>
+              <p *ngIf="trackingInfo && trackingInfo.estimated_delivery">
+                Livraison estimée le {{ formatDate(trackingInfo.estimated_delivery) }}
+              </p>
+              <p *ngIf="!trackingInfo || !trackingInfo.estimated_delivery">
+                Date de livraison à venir
+              </p>
+            </div>
+          </div>
+  
+          <div class="overview-right">
+            <div *ngIf="getEstimatedDeliveryDays() !== null" class="delivery-countdown">
+              <div class="countdown-number" [class.delayed]="isDeliveryDelayed()">
+                {{ getEstimatedDeliveryDays() || 0 }}
+              </div>
+              <div class="countdown-label">
+                {{ (getEstimatedDeliveryDays() || 0) <= 1 ? 'jour restant' : 'jours restants' }}
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Progress Bar -->
+        <div class="progress-bar-section">
+          <div class="progress-label">
+            <span>Progression de la livraison</span>
+            <strong>{{ getProgressPercentage() }}%</strong>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+          </div>
+        </div>
+  
+        <!-- Tracking Timeline -->
+        <div class="tracking-timeline-section">
+          <h2>Étapes de livraison</h2>
+          
+          <div class="timeline">
+            <div *ngFor="let step of trackingSteps; let i = index" 
+                 class="timeline-step"
+                 [class.completed]="step.status === 'completed'"
+                 [class.active]="step.status === 'active'"
+                 [class.pending]="step.status === 'pending'">
+              
+              <div class="step-connector" *ngIf="i < trackingSteps.length - 1"></div>
+              
+              <div class="step-icon-wrapper">
+                <div class="step-icon">
+                  <i class="fas" [class]="'fas ' + step.icon"></i>
+                </div>
+              </div>
+  
+              <div class="step-content">
+                <h3>{{ step.label }}</h3>
+                <p *ngIf="step.date" class="step-date">
+                  {{ formatShortDate(step.date) }}
+                </p>
+                <p *ngIf="!step.date && step.status === 'pending'" class="step-pending">
+                  En attente
+                </p>
+                <p *ngIf="step.status === 'active'" class="step-active-text">
+                  En cours
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Grid Layout -->
+        <div class="tracking-grid">
+          
+          <!-- Left Column -->
+          <div class="tracking-main">
+            
+            <!-- Tracking Updates -->
+            <div *ngIf="trackingInfo && trackingInfo.updates && trackingInfo.updates.length > 0" 
+                 class="tracking-card">
+              <h2>
+                <i class="fas fa-history"></i>
+                Historique des mises à jour
+              </h2>
+  
+              <div class="updates-list">
+                <div *ngFor="let update of trackingInfo.updates" class="update-item">
+                  <div class="update-dot"></div>
+                  <div class="update-content">
+                    <div class="update-header">
+                      <strong>{{ update.status }}</strong>
+                      <span class="update-date">{{ formatShortDate(update.date) }}</span>
+                    </div>
+                    <p class="update-description">{{ update.description }}</p>
+                    <p *ngIf="update.location" class="update-location">
+                      <i class="fas fa-map-pin"></i>
+                      {{ update.location }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            <!-- No Updates -->
+            <div *ngIf="!trackingInfo || !trackingInfo.updates || trackingInfo.updates.length === 0" 
+                 class="tracking-card no-updates">
+              <i class="fas fa-info-circle"></i>
+              <h3>Aucune mise à jour disponible</h3>
+              <p>Les informations de suivi seront disponibles une fois la commande expédiée.</p>
+            </div>
+  
+            <!-- Delivery Address -->
+            <div class="tracking-card">
+              <h2>
+                <i class="fas fa-map-marker-alt"></i>
+                Adresse de livraison
+              </h2>
+  
+              <div class="address-content">
+                <div class="address-icon">
+                  <i class="fas fa-home"></i>
+                </div>
+                <div class="address-details">
+                  <p><strong>{{ order.shipping_address.first_name }} {{ order.shipping_address.last_name }}</strong></p>
+                  <p>{{ order.shipping_address.address_line_1 }}</p>
+                  <p *ngIf="order.shipping_address.address_line_2">{{ order.shipping_address.address_line_2 }}</p>
+                  <p>{{ order.shipping_address.city }}, {{ order.shipping_address.postal_code }}</p>
+                  <p>{{ order.shipping_address.country }}</p>
+                  <p *ngIf="order.shipping_address.phone" class="address-contact">
+                    <i class="fas fa-phone"></i>
+                    {{ order.shipping_address.phone }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Right Column - Sidebar -->
+          <div class="tracking-sidebar">
+            
+            <!-- Tracking Info Card -->
+            <div class="tracking-card">
+              <h2>Informations de suivi</h2>
+  
+              <div *ngIf="trackingInfo" class="tracking-details">
+                <div class="detail-row">
+                  <span class="detail-label">Transporteur</span>
+                  <strong>{{ trackingInfo.carrier }}</strong>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">N° de suivi</span>
+                  <strong>{{ trackingInfo.tracking_number }}</strong>
+                </div>
+                <div *ngIf="trackingInfo.estimated_delivery" class="detail-row">
+                  <span class="detail-label">Livraison estimée</span>
+                  <strong>{{ formatDate(trackingInfo.estimated_delivery) }}</strong>
+                </div>
+  
+                <button *ngIf="trackingInfo.tracking_url" 
+                        class="btn btn-primary-full" 
+                        (click)="openTrackingUrl()">
+                  <i class="fas fa-external-link-alt"></i>
+                  Suivre sur le site du transporteur
+                </button>
+              </div>
+  
+              <div *ngIf="!trackingInfo" class="no-tracking-info">
+                <i class="fas fa-info-circle"></i>
+                <p>Informations de suivi non disponibles</p>
+              </div>
+            </div>
+  
+            <!-- Order Items Preview -->
+            <div class="tracking-card">
+              <h2>Articles commandés</h2>
+  
+              <div class="items-preview">
+                <div *ngFor="let item of order.items.slice(0, 3)" class="item-preview">
+                  <img [src]="item.product.image_url" [alt]="item.product.name" [title]="item.product.name" alt="Image du produit" title="Image du produit">
+                  <div class="item-info">
+                    <p class="item-name">{{ item.product.name }}</p>
+                    <p class="item-quantity">Qté: {{ item.quantity }}</p>
+                  </div>
+                </div>
+                <p *ngIf="order.items.length > 3" class="more-items">
+                  +{{ order.items.length - 3 }} autre(s) article(s)
+                </p>
+              </div>
+            </div>
+  
+            <!-- Help Card -->
+            <div class="tracking-card help-card">
+              <h2>Besoin d'aide ?</h2>
+              
+              <div class="help-content">
+                <p>Un problème avec votre livraison ?</p>
+                
+                <button class="btn btn-outline-full" (click)="contactSupport()">
+                  <i class="fas fa-headset"></i>
+                  Contacter le support
+                </button>
+  
+                <div class="help-links">
+                  <a routerLink="/help/shipping">
+                    <i class="fas fa-question-circle"></i>
+                    FAQ Livraison
+                  </a>
+                  <a routerLink="/help/returns">
+                    <i class="fas fa-undo"></i>
+                    Retours & Remboursements
+                  </a>
+                </div>
+              </div>
+            </div>
+  
+          </div>
+        </div>
+  
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,313 @@
+// src/app/features/admin/pages/users/users.component.scss
+.users-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  .header-content {
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 600;
+      color: #1a1a1a;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: #1976d2;
+      }
+    }
+
+    .page-subtitle {
+      margin: 0;
+      color: #666;
+      font-size: 16px;
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+
+    button {
+      background-color: #1976d2 !important;
+      color: white !important;
+      border: none !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+      
+      &:hover {
+        background-color: #1565c0 !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3) !important;
+      }
+
+      mat-icon {
+        color: white !important;
+      }
+    }
+  }
+}
+
+.filters-card {
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .filters-form {
+    .filters-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+
+      .search-field {
+        flex: 1;
+        min-width: 250px;
+      }
+
+      .filter-field {
+        min-width: 150px;
+      }
+
+      .clear-filters {
+        margin-left: auto;
+        color: #666;
+
+        &:hover {
+          background-color: #f5f5f5;
+        }
+      }
+    }
+  }
+}
+
+.table-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  .table-container {
+    overflow-x: auto;
+
+    .users-table {
+      width: 100%;
+      min-width: 800px;
+
+      th {
+        font-weight: 600;
+        color: #333;
+        background-color: #f8f9fa;
+      }
+
+      td {
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .user-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #1976d2, #42a5f5);
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .user-details {
+          .user-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 2px;
+          }
+
+          .user-id {
+            font-size: 12px;
+            color: #666;
+          }
+        }
+      }
+
+      .email-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .email-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          color: #666;
+        }
+      }
+
+      .stat-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          color: #666;
+        }
+      }
+
+      .date-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #666;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+
+      mat-chip {
+        font-size: 12px;
+        font-weight: 500;
+        min-height: 24px;
+
+        &[color="primary"] {
+          background-color: #e3f2fd;
+          color: #1976d2;
+        }
+
+        &[color="accent"] {
+          background-color: #fff3e0;
+          color: #f57c00;
+        }
+
+        &[color="warn"] {
+          background-color: #ffebee;
+          color: #d32f2f;
+        }
+      }
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+
+  p {
+    margin-top: 16px;
+    color: #666;
+    font-size: 16px;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .users-container {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+
+    .header-actions {
+      justify-content: stretch;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+
+  .filters-form .filters-row {
+    flex-direction: column;
+    align-items: stretch;
+
+    .search-field,
+    .filter-field {
+      min-width: unset;
+    }
+
+    .clear-filters {
+      margin-left: 0;
+      align-self: flex-start;
+    }
+  }
+}
+
+// Menu Actions
+.danger-action {
+  color: #d32f2f !important;
+
+  mat-icon {
+    color: #d32f2f !important;
+  }
+
+  &:hover {
+    background-color: #ffebee !important;
+  }
+}
+
+// Améliorer les styles des boutons d'action
+.mat-mdc-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  min-height: 40px;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+  }
+
+  span {
+    flex: 1;
+  }
+}
+
+// Styles pour les boutons de la table
+.users-table {
+  .mat-mdc-button {
+    min-width: 40px;
+    padding: 8px;
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}

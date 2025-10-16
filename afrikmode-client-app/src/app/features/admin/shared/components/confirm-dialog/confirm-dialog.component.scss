@@ -1,0 +1,241 @@
+// src/app/features/admin/shared/components/confirm-dialog/confirm-dialog.component.scss
+
+.confirm-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.confirm-dialog {
+  position: relative;
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease;
+
+  &.loading {
+    pointer-events: none;
+    opacity: 0.8;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #F5F5F5;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .material-icons {
+    font-size: 1.25rem;
+    color: #9E9E9E;
+  }
+}
+
+.dialog-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .material-icons {
+    font-size: 2rem;
+    color: white;
+  }
+
+  &.dialog-icon-info {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  }
+
+  &.dialog-icon-warning {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+  }
+
+  &.dialog-icon-danger {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+  }
+
+  &.dialog-icon-success {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  }
+}
+
+.dialog-content {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.dialog-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2C3E50;
+  margin: 0 0 1rem 0;
+}
+
+.dialog-message {
+  font-size: 1rem;
+  color: #757575;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  min-width: 120px;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-cancel {
+  background: #F5F5F5;
+  color: #2C3E50;
+
+  &:hover:not(:disabled) {
+    background: #E0E0E0;
+  }
+}
+
+.btn-confirm {
+  color: white;
+
+  &.btn-info {
+    background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+    }
+  }
+
+  &.btn-warning {
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+    }
+  }
+
+  &.btn-danger {
+    background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+    }
+  }
+
+  &.btn-success {
+    background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+    }
+  }
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive
+@media (max-width: 480px) {
+  .confirm-dialog {
+    padding: 1.5rem;
+  }
+
+  .dialog-title {
+    font-size: 1.25rem;
+  }
+
+  .dialog-message {
+    font-size: 0.9rem;
+  }
+
+  .dialog-actions {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+    }
+  }
+}

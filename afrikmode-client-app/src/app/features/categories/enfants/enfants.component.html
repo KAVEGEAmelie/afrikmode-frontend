@@ -1,0 +1,70 @@
+<div class="enfants-page">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="highlight">Mode Enfantine</span> Africaine
+      </h1>
+      <p class="hero-subtitle">
+        Des vêtements colorés et confortables pour nos petits princes et princesses
+      </p>
+    </div>
+  </section>
+
+  <!-- Age Groups Section -->
+  <section class="age-groups-section">
+    <div class="container">
+      <h2 class="section-title">👶 Groupes d'Âge</h2>
+      <div class="age-groups-grid">
+        <div class="age-group-card" *ngFor="let group of ageGroups" (click)="navigateToCategory(group)">
+          <div class="age-icon">{{ group.icon }}</div>
+          <h3 class="age-name">{{ group.name }}</h3>
+          <span class="age-count">{{ group.count }} pièces</span>
+          <div class="category-overlay">
+            <span class="view-all">Voir tout</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section class="products-section">
+    <div class="container">
+      <h2 class="section-title">🌟 Nos Favoris</h2>
+      <div class="products-grid">
+        <div class="product-card" *ngFor="let product of featuredProducts">
+          <div class="product-image">
+            <img [src]="product.image" [alt]="product.name" [title]="product.name" />
+            <div class="product-badges" *ngIf="product.isPopular">
+              <span class="badge popular">Coup de cœur</span>
+            </div>
+            <div class="product-actions">
+              <button class="action-btn wishlist" (click)="addToWishlist(product)" title="Ajouter à la wishlist">
+                <i class="icon">♡</i>
+              </button>
+              <button class="action-btn quick-view" (click)="navigateToProduct(product)" title="Voir le produit">
+                <i class="icon">👁</i>
+              </button>
+            </div>
+          </div>
+          <div class="product-info">
+            <span class="product-category">{{ product.category }}</span>
+            <h3 class="product-name">{{ product.name }}</h3>
+            <div class="product-price">
+              <span class="current-price">{{ product.price }}€</span>
+              <span class="original-price" *ngIf="product.originalPrice">{{ product.originalPrice }}€</span>
+            </div>
+            <div class="product-sizes">
+              <span class="size-label">Tailles:</span>
+              <span class="size-options">{{ product.sizes.join(', ') }}</span>
+            </div>
+            <button class="btn-add-cart" (click)="addToCart(product)">
+              Ajouter au Panier
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

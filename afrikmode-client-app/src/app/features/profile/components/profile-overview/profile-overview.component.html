@@ -1,0 +1,87 @@
+<!-- src/app/features/profile/components/profile-overview/profile-overview.component.html -->
+<div class="profile-overview">
+  
+  <h1>Bienvenue, {{ user.name }} !</h1>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon orders">
+        <i class="fas fa-shopping-bag"></i>
+      </div>
+      <div class="stat-info">
+        <h3>{{ user.totalOrders }}</h3>
+        <p>Commandes totales</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon spent">
+        <i class="fas fa-coins"></i>
+      </div>
+      <div class="stat-info">
+        <h3>{{ user.totalSpent | number }} {{ user.currency }}</h3>
+        <p>Total dépensé</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon member">
+        <i class="fas fa-calendar"></i>
+      </div>
+      <div class="stat-info">
+        <h3>{{ user.memberSince }}</h3>
+        <p>Membre depuis</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="section">
+    <h2>Accès rapide</h2>
+    <div class="quick-links-grid">
+      <div *ngFor="let link of quickLinks" 
+           class="quick-link-card" 
+           (click)="navigateTo(link.path)">
+        <div class="link-icon" [style.background-color]="link.color + '20'">
+          <i class="fas" [class]="'fas ' + link.icon" [style.color]="link.color"></i>
+        </div>
+        <h3>{{ link.title }}</h3>
+        <p>{{ link.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="section">
+    <div class="section-header">
+      <h2>Commandes récentes</h2>
+      <button class="btn-text" (click)="viewAllOrders()">
+        Voir tout
+        <i class="fas fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <div class="orders-list">
+      <div *ngFor="let order of recentOrders" class="order-card">
+        <div class="order-info">
+          <div class="order-number">
+            <strong>{{ order.order_number }}</strong>
+            <span class="order-date">{{ order.date | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <span class="order-items">{{ order.items_count }} article(s)</span>
+        </div>
+        <div class="order-status">
+          <span class="status-badge"
+                [style.background-color]="getStatusColor(order.status) + '20'"
+                [style.color]="getStatusColor(order.status)">
+            {{ getStatusLabel(order.status) }}
+          </span>
+        </div>
+        <div class="order-total">
+          <strong>{{ order.total | number }} FCFA</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,189 @@
+<div class="femmes-page">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="highlight">Mode Féminine</span> Africaine
+      </h1>
+      <p class="hero-subtitle">
+        Célébrez votre beauté avec notre collection exclusive de vêtements féminins africains contemporains
+      </p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-number">200+</span>
+          <span class="stat-label">Pièces Uniques</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">15</span>
+          <span class="stat-label">Créateurs</span>
+        </div>
+        <div class="stat">
+          <span class="stat-number">98%</span>
+          <span class="stat-label">Satisfaites</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories-section">
+    <div class="container">
+      <h2 class="section-title">👗 Catégories Femmes</h2>
+      <div class="categories-grid">
+        <div class="category-card" *ngFor="let category of categories" (click)="navigateToCategory(category)">
+          <div class="category-icon">{{ category.icon }}</div>
+          <h3 class="category-name">{{ category.name }}</h3>
+          <span class="category-count">{{ category.count }} pièces</span>
+          <div class="category-overlay">
+            <span class="view-all">Voir tout</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters and Sort Section -->
+  <section class="filters-section">
+    <div class="container">
+      <div class="filters-header">
+        <h2 class="section-title">✨ Notre Collection</h2>
+        <div class="sort-controls">
+          <label for="sort">Trier par:</label>
+          <select id="sort" [(ngModel)]="sortBy" (change)="sortProducts(sortBy)" class="sort-select">
+            <option value="popularity">Popularité</option>
+            <option value="price-low">Prix croissant</option>
+            <option value="price-high">Prix décroissant</option>
+            <option value="rating">Note</option>
+            <option value="newest">Nouveautés</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="quick-filters">
+        <button class="filter-btn" (click)="filterByCategory('')" [class.active]="filters.category === ''">
+          Tout
+        </button>
+        <button class="filter-btn" *ngFor="let cat of categories" 
+                (click)="filterByCategory(cat.name)" 
+                [class.active]="filters.category === cat.name">
+          {{ cat.name }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Grid -->
+  <section class="products-section">
+    <div class="container">
+      <div class="products-grid">
+        <div class="product-card" *ngFor="let product of featuredProducts">
+          <div class="product-image">
+            <img [src]="product.image" [alt]="product.name" [title]="product.name" />
+            <div class="product-badges">
+              <span class="badge popular" *ngIf="product.isPopular">Populaire</span>
+              <span class="badge discount" *ngIf="product.originalPrice">
+                -{{ getDiscountPercentage(product.originalPrice, product.price) }}%
+              </span>
+            </div>
+            <div class="product-actions">
+              <button class="action-btn wishlist" (click)="addToWishlist(product)" title="Ajouter à la wishlist">
+                <i class="icon">♡</i>
+              </button>
+              <button class="action-btn quick-view" (click)="navigateToProduct(product)" title="Voir le produit">
+                <i class="icon">👁</i>
+              </button>
+            </div>
+            <div class="color-options">
+              <span class="color-dot" 
+                    *ngFor="let color of product.colors.slice(0, 3)" 
+                    [style.background-color]="color"
+                    [title]="'Couleur disponible'">
+              </span>
+            </div>
+          </div>
+          
+          <div class="product-info">
+            <div class="product-header">
+              <span class="product-category">{{ product.category }}</span>
+              <div class="product-rating">
+                <span class="rating-stars">
+                  <i class="star" *ngFor="let star of [1,2,3,4,5]" 
+                     [class.filled]="star <= Math.floor(product.rating)">⭐</i>
+                </span>
+                <span class="rating-text">({{ product.reviews }})</span>
+              </div>
+            </div>
+            
+            <h3 class="product-name">{{ product.name }}</h3>
+            
+            <div class="product-price">
+              <span class="current-price">{{ product.price }}€</span>
+              <span class="original-price" *ngIf="product.originalPrice">{{ product.originalPrice }}€</span>
+            </div>
+            
+            <div class="product-sizes">
+              <span class="size-label">Tailles:</span>
+              <span class="size-options">{{ product.sizes.join(', ') }}</span>
+            </div>
+            
+            <button class="btn-add-cart" (click)="addToCart(product)">
+              Ajouter au Panier
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Style Guide Section -->
+  <section class="style-guide-section">
+    <div class="container">
+      <h2 class="section-title">💫 Guide de Style</h2>
+      <p class="section-subtitle">Conseils et inspirations pour sublimer votre style africain</p>
+      
+      <div class="style-guides">
+        <div class="style-card" *ngFor="let guide of styleGuide">
+          <div class="style-image">
+            <img [src]="guide.image" [alt]="guide.title" [title]="guide.title" />
+            <div class="style-overlay">
+              <h3 class="style-title">{{ guide.title }}</h3>
+              <p class="style-description">{{ guide.description }}</p>
+            </div>
+          </div>
+          <div class="style-tips">
+            <h4>Nos conseils :</h4>
+            <ul>
+              <li *ngFor="let tip of guide.tips">{{ tip }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter Section -->
+  <section class="newsletter-section">
+    <div class="container">
+      <div class="newsletter-content">
+        <h2 class="newsletter-title">Restez Inspirée</h2>
+        <p class="newsletter-text">
+          Recevez nos dernières collections et conseils de style directement dans votre boîte mail
+        </p>
+        <form class="newsletter-form">
+          <input type="email" placeholder="Votre adresse e-mail" class="newsletter-input" />
+          <button type="submit" class="newsletter-btn">S'abonner</button>
+        </form>
+        <div class="newsletter-benefits">
+          <div class="benefit">
+            <span class="benefit-icon">🎁</span>
+            <span class="benefit-text">15% de réduction sur votre première commande</span>
+          </div>
+          <div class="benefit">
+            <span class="benefit-icon">📧</span>
+            <span class="benefit-text">Accès privilégié aux nouvelles collections</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

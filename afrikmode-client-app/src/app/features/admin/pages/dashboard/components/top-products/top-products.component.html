@@ -1,0 +1,50 @@
+<!-- src/app/features/admin/pages/dashboard/components/top-products/top-products.component.html -->
+
+<div class="top-products">
+  @if (loading) {
+    <div class="loading">
+      <div class="spinner-small"></div>
+      <p>Chargement...</p>
+    </div>
+  }
+
+  @if (!loading && products.length > 0) {
+    <div class="products-list">
+      @for (product of products; track product.id; let i = $index) {
+        <div class="product-item">
+          <div class="product-rank">{{ getRank(i) }}</div>
+          
+          <div class="product-info">
+            <h4 class="product-name">{{ product.name }}</h4>
+            <span class="product-category">{{ product.category }}</span>
+            
+            <div class="product-stats">
+              <div class="stat">
+                <span class="stat-label">Ventes:</span>
+                <span class="stat-value">{{ product.sales }}</span>
+              </div>
+              <div class="stat">
+                <span class="stat-label">CA:</span>
+                <span class="stat-value">{{ product.revenue | currency:'XOF':'symbol':'1.0-0' }}</span>
+              </div>
+            </div>
+            
+            <div class="progress-bar">
+              <div 
+                class="progress-fill" 
+                [style.width]="getProgressWidth(product.sales)">
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loading && products.length === 0) {
+    <div class="empty-state">
+      <span class="material-icons">inventory_2</span>
+      <p>Aucun produit disponible</p>
+    </div>
+  }
+</div>

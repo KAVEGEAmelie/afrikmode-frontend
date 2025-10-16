@@ -1,0 +1,209 @@
+<!-- src/app/features/orders/components/orders-list/orders-list.component.html -->
+<div class="orders-page">
+  
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="container">
+        <h1><i class="fas fa-box"></i> Mes commandes</h1>
+        <p>Suivez et gérez toutes vos commandes</p>
+      </div>
+    </div>
+  
+    <div class="container">
+      
+      <!-- Filters Bar -->
+      <div class="filters-bar">
+        
+        <!-- Status Tabs -->
+        <div class="status-tabs">
+          <button *ngFor="let option of statusOptions"
+                  class="status-tab"
+                  [class.active]="selectedStatus === option.value"
+                  [style.--status-color]="option.color"
+                  (click)="onStatusChange(option.value)">
+            <i class="fas" [class]="'fas ' + option.icon"></i>
+            <span>{{ option.label }}</span>
+          </button>
+        </div>
+  
+        <!-- Search and Sort -->
+        <div class="search-sort-bar">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" 
+                   placeholder="Rechercher une commande..." 
+                   [(ngModel)]="searchQuery"
+                   (input)="onSearch()">
+          </div>
+  
+          <div class="sort-controls">
+            <button class="sort-btn" (click)="onSort('date')">
+              <i class="fas fa-calendar-alt"></i>
+              Date
+              <i class="fas" 
+                 [class.fa-sort-up]="sortBy === 'date' && sortOrder === 'asc'"
+                 [class.fa-sort-down]="sortBy === 'date' && sortOrder === 'desc'"
+                 [class.fa-sort]="sortBy !== 'date'"></i>
+            </button>
+            <button class="sort-btn" (click)="onSort('amount')">
+              <i class="fas fa-money-bill-wave"></i>
+              Montant
+              <i class="fas" 
+                 [class.fa-sort-up]="sortBy === 'amount' && sortOrder === 'asc'"
+                 [class.fa-sort-down]="sortBy === 'amount' && sortOrder === 'desc'"
+                 [class.fa-sort]="sortBy !== 'amount'"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement des commandes...</p>
+      </div>
+  
+      <!-- Error State -->
+      <div *ngIf="error && !isLoading" class="error-container">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>{{ error }}</p>
+        <button class="btn btn-primary" (click)="loadOrders()">
+          <i class="fas fa-redo"></i>
+          Réessayer
+        </button>
+      </div>
+  
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && !error && filteredOrders.length === 0" class="empty-state">
+        <i class="fas fa-shopping-bag"></i>
+        <h3>Aucune commande</h3>
+        <p *ngIf="selectedStatus === 'all'">Vous n'avez pas encore passé de commande</p>
+        <p *ngIf="selectedStatus !== 'all'">Aucune commande {{ getStatusLabel(selectedStatus).toLowerCase() }}</p>
+        <button class="btn btn-primary" routerLink="/shop">
+          <i class="fas fa-shopping-cart"></i>
+          Commencer mes achats
+        </button>
+      </div>
+  
+      <!-- Orders List -->
+      <div *ngIf="!isLoading && !error && filteredOrders.length > 0" class="orders-list">
+        
+        <div *ngFor="let order of filteredOrders" class="order-card">
+          
+          <!-- Order Header -->
+          <div class="order-header">
+            <div class="order-info">
+              <div class="order-number">
+                <i class="fas fa-hashtag"></i>
+                <strong>{{ order.order_number }}</strong>
+              </div>
+              <div class="order-date">
+                <i class="fas fa-calendar"></i>
+                {{ order.created_at | date:'dd/MM/yyyy à HH:mm' }}
+              </div>
+            </div>
+            
+            <div class="order-status">
+              <span class="status-badge" 
+                    [style.background-color]="getStatusColor(order.status) + '20'"
+                    [style.color]="getStatusColor(order.status)"
+                    [style.border-color]="getStatusColor(order.status)">
+                <i class="fas" [class]="'fas ' + getStatusIcon(order.status)"></i>
+                {{ getStatusLabel(order.status) }}
+              </span>
+            </div>
+          </div>
+  
+          <!-- Order Items Preview -->
+          <div class="order-items">
+            <div *ngFor="let item of order.items.slice(0, 3)" class="order-item">
+              <img [src]="item.product.image_url" 
+                   [alt]="item.product.name" 
+                   [title]="item.product.name"
+                   alt="Image du produit"
+                   title="Image du produit">
+              <div class="item-info">
+                <h4>{{ item.product.name }}</h4>
+                <p>Quantité: {{ item.quantity }}</p>
+              </div>
+              <div class="item-price">
+                {{ item.total_price | number }} {{ order.currency }}
+              </div>
+            </div>
+            <div *ngIf="order.items.length > 3" class="more-items">
+              +{{ order.items.length - 3 }} autre(s) article(s)
+            </div>
+          </div>
+  
+          <!-- Order Footer -->
+          <div class="order-footer">
+            <div class="order-total">
+              <span>Total:</span>
+              <strong>{{ order.total | number }} {{ order.currency }}</strong>
+            </div>
+  
+            <div class="order-actions">
+              <button class="btn btn-outline-sm" (click)="viewOrder(order.id)">
+                <i class="fas fa-eye"></i>
+                Détails
+              </button>
+  
+              <button *ngIf="order.status === 'shipped' || order.status === 'delivered'" 
+                      class="btn btn-outline-sm" 
+                      (click)="trackOrder(order.id)">
+                <i class="fas fa-map-marker-alt"></i>
+                Suivre
+              </button>
+  
+              <button *ngIf="order.payment_status === 'paid'" 
+                      class="btn btn-outline-sm" 
+                      (click)="downloadInvoice(order.id)">
+                <i class="fas fa-file-download"></i>
+                Facture
+              </button>
+  
+              <button *ngIf="order.status === 'delivered'" 
+                      class="btn btn-primary-sm" 
+                      (click)="reorder(order.id)">
+                <i class="fas fa-redo"></i>
+                Recommander
+              </button>
+            </div>
+          </div>
+  
+          <!-- Payment Status -->
+          <div *ngIf="order.payment_status !== 'paid'" class="payment-alert">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>Paiement {{ getPaymentStatusLabel(order.payment_status) }}</span>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Pagination -->
+      <div *ngIf="!isLoading && filteredOrders.length > 0 && getTotalPages() > 1" class="pagination">
+        <button class="pagination-btn" 
+                [disabled]="currentPage === 1"
+                (click)="onPageChange(currentPage - 1)"
+                aria-label="Page précédente"
+                title="Page précédente">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+  
+        <button *ngFor="let page of paginationArray" 
+                class="pagination-btn"
+                [class.active]="page === currentPage"
+                (click)="onPageChange(page)">
+          {{ page }}
+        </button>
+  
+        <button class="pagination-btn" 
+                [disabled]="currentPage === getTotalPages()"
+                (click)="onPageChange(currentPage + 1)"
+                aria-label="Page suivante"
+                title="Page suivante">
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </div>
+  
+    </div>
+  </div>

@@ -1,0 +1,70 @@
+<div class="promotions-page">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="highlight">Promotions</span> Exceptionnelles
+      </h1>
+      <p class="hero-subtitle">
+        Ne manquez pas nos offres limitées sur les plus belles pièces AfrikMode
+      </p>
+    </div>
+  </section>
+
+  <!-- Promotional Offers Section -->
+  <section class="offers-section">
+    <div class="container">
+      <h2 class="section-title">🔥 Offres du Moment</h2>
+      <div class="offers-grid">
+        <div class="offer-card" *ngFor="let offer of promotionalOffers">
+          <div class="offer-image">
+            <img [src]="offer.image" [alt]="offer.title" [title]="offer.title" />
+            <div class="offer-badge">
+              -{{ offer.discount }}%
+            </div>
+          </div>
+          <div class="offer-info">
+            <h3 class="offer-title">{{ offer.title }}</h3>
+            <p class="offer-description">{{ offer.description }}</p>
+            <div class="offer-timer">
+              <span class="timer-label">Plus que</span>
+              <span class="timer-value">{{ getRemainingDays(offer.endDate) }} jours</span>
+            </div>
+            <button class="btn-discover">Découvrir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sale Products Section -->
+  <section class="sale-products-section">
+    <div class="container">
+      <h2 class="section-title">💰 Produits en Solde</h2>
+      <div class="products-grid">
+        <div class="product-card" *ngFor="let product of saleProducts">
+          <div class="product-image">
+            <img [src]="product.image" [alt]="product.name" [title]="product.name" />
+            <div class="product-badges">
+              <span class="badge discount">-{{ product.discount }}%</span>
+            </div>
+          </div>
+          <div class="product-info">
+            <h3 class="product-name">{{ product.name }}</h3>
+            <div class="product-price">
+              <span class="current-price">{{ product.price }}€</span>
+              <span class="original-price">{{ product.originalPrice }}€</span>
+            </div>
+            <div class="product-rating">
+              <span class="rating-stars">{{ product.rating }}/5</span>
+              <span class="rating-text">({{ product.reviews }} avis)</span>
+            </div>
+            <button class="btn-add-cart" (click)="addToCart(product)">
+              Ajouter au Panier
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

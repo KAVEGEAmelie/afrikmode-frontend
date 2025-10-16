@@ -1,0 +1,279 @@
+<div class="shop-page">
+  
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="container">
+        <h1>Boutique</h1>
+        <p>Découvrez notre collection complète de mode africaine</p>
+      </div>
+    </div>
+  
+    <div class="shop-container">
+      <div class="container">
+        <div class="shop-layout">
+  
+          <!-- Sidebar Filters -->
+          <aside class="sidebar" [class.mobile-open]="showMobileFilters">
+            <div class="sidebar-header">
+              <h3>Filtres</h3>
+              <button class="close-btn" (click)="showMobileFilters = false">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+  
+            <!-- Search -->
+            <div class="filter-group">
+              <label>Rechercher</label>
+              <div class="search-box">
+                <input 
+                  type="text" 
+                  [(ngModel)]="searchQuery"
+                  (ngModelChange)="applyFilters()"
+                  placeholder="Nom du produit...">
+                <i class="fas fa-search"></i>
+              </div>
+            </div>
+  
+            <!-- Categories -->
+            <div class="filter-group">
+              <label>Catégories</label>
+              <select 
+                [(ngModel)]="selectedCategory" 
+                (ngModelChange)="applyFilters()"
+                class="filter-select">
+                <option value="all">Toutes les catégories</option>
+                <option *ngFor="let cat of filterOptions.categories" [value]="cat">
+                  {{ cat }}
+                </option>
+              </select>
+            </div>
+  
+            <!-- Price Range -->
+            <div class="filter-group">
+              <label>Prix</label>
+              <select 
+                [(ngModel)]="selectedPriceRange" 
+                (ngModelChange)="applyFilters()"
+                class="filter-select">
+                <option value="all">Tous les prix</option>
+                <option *ngFor="let range of filterOptions.priceRanges" [value]="range.label">
+                  {{ range.label }}
+                </option>
+              </select>
+            </div>
+  
+            <!-- Colors -->
+            <div class="filter-group">
+              <label>Couleurs</label>
+              <div class="color-grid">
+                <button 
+                  *ngFor="let color of filterOptions.colors"
+                  class="color-btn"
+                  [class.active]="selectedColors.includes(color)"
+                  [class]="'color-' + color"
+                  (click)="toggleColor(color)"
+                  [title]="color">
+                </button>
+              </div>
+            </div>
+  
+            <!-- Sizes -->
+            <div class="filter-group">
+              <label>Tailles</label>
+              <div class="size-grid">
+                <button 
+                  *ngFor="let size of filterOptions.sizes"
+                  class="size-btn"
+                  [class.active]="selectedSizes.includes(size)"
+                  (click)="toggleSize(size)">
+                  {{ size }}
+                </button>
+              </div>
+            </div>
+  
+            <!-- Reset Button -->
+            <button class="btn-reset" (click)="resetFilters()">
+              <i class="fas fa-redo"></i>
+              Réinitialiser les filtres
+            </button>
+          </aside>
+  
+          <!-- Main Content -->
+          <div class="main-content">
+            
+            <!-- Toolbar -->
+            <div class="toolbar">
+              <div class="toolbar-left">
+                <button class="filter-toggle" (click)="showMobileFilters = true">
+                  <i class="fas fa-filter"></i>
+                  Filtres
+                </button>
+                <span class="results-count">
+                  {{ filteredProducts.length }} produit(s) trouvé(s)
+                </span>
+              </div>
+  
+              <div class="toolbar-right">
+                <!-- Sort -->
+                <select 
+                  [(ngModel)]="sortBy" 
+                  (ngModelChange)="sortProducts()"
+                  class="sort-select">
+                  <option value="default">Trier par défaut</option>
+                  <option value="newest">Les plus récents</option>
+                  <option value="price-asc">Prix croissant</option>
+                  <option value="price-desc">Prix décroissant</option>
+                  <option value="name-asc">Nom (A-Z)</option>
+                  <option value="rating">Les mieux notés</option>
+                </select>
+  
+                <!-- View Mode -->
+                <div class="view-toggle">
+                  <button 
+                    class="view-btn"
+                    [class.active]="viewMode === 'grid'"
+                    (click)="setViewMode('grid')">
+                    <i class="fas fa-th"></i>
+                  </button>
+                  <button 
+                    class="view-btn"
+                    [class.active]="viewMode === 'list'"
+                    (click)="setViewMode('list')">
+                    <i class="fas fa-list"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Products Grid -->
+            <div class="products-wrapper" *ngIf="displayedProducts.length > 0">
+              <div class="products-grid" [class.list-view]="viewMode === 'list'">
+                <div 
+                  *ngFor="let product of displayedProducts"
+                  class="product-card"
+                  [routerLink]="['/products', product.id]">
+                  
+                  <!-- Badges -->
+                  <div class="product-badges">
+                    <span *ngIf="product.isNew" class="badge badge-new">Nouveau</span>
+                    <span *ngIf="product.discount" class="badge badge-sale">-{{ product.discount }}%</span>
+                  </div>
+  
+                  <!-- Image -->
+                  <div class="product-image">
+                    <img [src]="product.image" [alt]="product.name">
+                    <div class="product-actions">
+                      <button class="action-btn" (click)="addToWishlist(product, $event)" title="Favoris">
+                        <i class="far fa-heart"></i>
+                      </button>
+                      <button class="action-btn" title="Aperçu rapide">
+                        <i class="far fa-eye"></i>
+                      </button>
+                    </div>
+                    <button class="add-to-cart-btn" (click)="addToCart(product, $event)">
+                      <i class="fas fa-shopping-bag"></i>
+                      Ajouter au panier
+                    </button>
+                  </div>
+  
+                  <!-- Info -->
+                  <div class="product-info">
+                    <span class="product-category">{{ product.category }}</span>
+                    <h3 class="product-name">{{ product.name }}</h3>
+                    
+                    <div class="product-rating">
+                      <i *ngFor="let star of [1,2,3,4,5]" 
+                         class="fas fa-star"
+                         [class.half]="star > product.rating && star - product.rating < 1"
+                         [class.empty]="star > product.rating">
+                      </i>
+                      <span>({{ product.rating }})</span>
+                    </div>
+  
+                    <div class="product-price">
+                      <span class="current-price">{{ product.price | number }} FCFA</span>
+                      <span *ngIf="product.oldPrice" class="old-price">
+                        {{ product.oldPrice | number }} FCFA
+                      </span>
+                    </div>
+  
+                    <!-- Colors (list view only) -->
+                    <div class="product-colors" *ngIf="viewMode === 'list' && product.colors">
+                      <span class="color-label">Couleurs:</span>
+                      <div class="color-dots">
+                        <span 
+                          *ngFor="let color of product.colors" 
+                          class="color-dot"
+                          [class]="'color-' + color"
+                          [title]="color">
+                        </span>
+                      </div>
+                    </div>
+  
+                    <!-- Sizes (list view only) -->
+                    <div class="product-sizes" *ngIf="viewMode === 'list' && product.sizes">
+                      <span class="size-label">Tailles:</span>
+                      <span class="sizes-text">{{ product.sizes.join(', ') }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="displayedProducts.length === 0">
+              <i class="fas fa-search"></i>
+              <h3>Aucun produit trouvé</h3>
+              <p>Essayez de modifier vos filtres ou votre recherche</p>
+              <button class="btn-primary" (click)="resetFilters()">
+                Réinitialiser les filtres
+              </button>
+            </div>
+  
+            <!-- Pagination -->
+            <div class="pagination" *ngIf="totalPages > 1">
+              <button 
+                class="page-btn"
+                [disabled]="currentPage === 1"
+                (click)="goToPage(currentPage - 1)">
+                <i class="fas fa-chevron-left"></i>
+              </button>
+  
+              <button 
+                *ngIf="currentPage > 3"
+                class="page-btn"
+                (click)="goToPage(1)">
+                1
+              </button>
+  
+              <span *ngIf="currentPage > 3" class="page-dots">...</span>
+  
+              <button 
+                *ngFor="let page of getPaginationArray()"
+                class="page-btn"
+                [class.active]="page === currentPage"
+                (click)="goToPage(page)">
+                {{ page }}
+              </button>
+  
+              <span *ngIf="currentPage < totalPages - 2" class="page-dots">...</span>
+  
+              <button 
+                *ngIf="currentPage < totalPages - 2"
+                class="page-btn"
+                (click)="goToPage(totalPages)">
+                {{ totalPages }}
+              </button>
+  
+              <button 
+                class="page-btn"
+                [disabled]="currentPage === totalPages"
+                (click)="goToPage(currentPage + 1)">
+                <i class="fas fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

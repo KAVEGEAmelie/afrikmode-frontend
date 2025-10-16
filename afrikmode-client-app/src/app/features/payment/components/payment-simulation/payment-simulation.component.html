@@ -1,0 +1,301 @@
+<div class="payment-simulation">
+  
+  <!-- Header -->
+  <div class="payment-header">
+    <h2>
+      <i class="fas fa-credit-card"></i>
+      Paiement Sécurisé
+    </h2>
+    <div class="amount-display">
+      <span class="amount">{{ amount | number }} {{ currency }}</span>
+      <span *ngIf="getFees() > 0" class="fees">+ {{ getFees() | number }} {{ currency }} de frais</span>
+    </div>
+  </div>
+
+  <!-- Payment Methods Selection -->
+  <div class="payment-methods" *ngIf="!isProcessing">
+    <h3>Choisissez votre méthode de paiement</h3>
+    
+    <div class="methods-grid">
+      <div *ngFor="let method of paymentMethods" 
+           class="method-card"
+           [class.selected]="selectedMethod === method.id"
+           (click)="selectedMethod = method.id; onMethodChange()">
+        
+        <div class="method-icon">
+          <i [class]="method.icon"></i>
+        </div>
+        
+        <div class="method-info">
+          <h4>{{ method.name }}</h4>
+          <p>{{ method.description }}</p>
+          <div class="method-details">
+            <span class="processing-time">
+              <i class="fas fa-clock"></i>
+              {{ method.processingTime / 1000 }}s
+            </span>
+            <span class="success-rate">
+              <i class="fas fa-check-circle"></i>
+              {{ method.successRate }}% succès
+            </span>
+            <span *ngIf="method.fees > 0" class="fees">
+              <i class="fas fa-coins"></i>
+              {{ method.fees | number }} {{ currency }} frais
+            </span>
+          </div>
+        </div>
+        
+        <div class="method-radio">
+          <input type="radio" 
+                 [value]="method.id" 
+                 [(ngModel)]="selectedMethod" 
+                 name="paymentMethod">
+          <span class="radio-custom"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Payment Form -->
+  <div class="payment-form" *ngIf="showCardForm && !isProcessing">
+    <h3>Informations de carte bancaire</h3>
+    
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label for="cardNumber">Numéro de carte *</label>
+        <input type="text" 
+               id="cardNumber" 
+               [(ngModel)]="cardInfo.number"
+               (input)="formatCardNumber($event)"
+               placeholder="1234 5678 9012 3456"
+               maxlength="19"
+               class="form-control">
+        <small class="form-hint">Visa, Mastercard, American Express acceptées</small>
+      </div>
+      
+      <div class="form-group full-width">
+        <label for="cardName">Nom sur la carte *</label>
+        <input type="text" 
+               id="cardName" 
+               [(ngModel)]="cardInfo.name"
+               placeholder="Jean Dupont"
+               class="form-control">
+      </div>
+      
+      <div class="form-group">
+        <label for="cardExpiry">Date d'expiration *</label>
+        <input type="text" 
+               id="cardExpiry" 
+               [(ngModel)]="cardInfo.expiry"
+               (input)="formatExpiry($event)"
+               placeholder="MM/AA"
+               maxlength="5"
+               class="form-control">
+      </div>
+      
+      <div class="form-group">
+        <label for="cardCvv">CVV *</label>
+        <input type="text" 
+               id="cardCvv" 
+               [(ngModel)]="cardInfo.cvv"
+               (input)="formatCvv($event)"
+               placeholder="123"
+               maxlength="4"
+               class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Money Form -->
+  <div class="payment-form" *ngIf="showMobileForm && !isProcessing">
+    <h3>Paiement Mobile Money</h3>
+    
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Opérateur *</label>
+        <div class="provider-buttons">
+          <button type="button" 
+                  class="provider-btn"
+                  [class.selected]="mobileMoneyInfo.provider === 'tmoney'"
+                  (click)="mobileMoneyInfo.provider = 'tmoney'">
+            <img src="assets/images/providers/tmoney.png" alt="T-Money">
+            T-Money
+          </button>
+          <button type="button" 
+                  class="provider-btn"
+                  [class.selected]="mobileMoneyInfo.provider === 'flooz'"
+                  (click)="mobileMoneyInfo.provider = 'flooz'">
+            <img src="assets/images/providers/flooz.png" alt="Flooz">
+            Flooz
+          </button>
+          <button type="button" 
+                  class="provider-btn"
+                  [class.selected]="mobileMoneyInfo.provider === 'mtn'"
+                  (click)="mobileMoneyInfo.provider = 'mtn'">
+            <img src="assets/images/providers/mtn.png" alt="MTN">
+            MTN
+          </button>
+        </div>
+      </div>
+      
+      <div class="form-group full-width">
+        <label for="mobileNumber">Numéro de téléphone *</label>
+        <input type="tel" 
+               id="mobileNumber" 
+               [(ngModel)]="mobileMoneyInfo.number"
+               (input)="formatPhoneNumber($event)"
+               placeholder="+228 XX XX XX XX"
+               class="form-control">
+        <small class="form-hint">Format: +228 XX XX XX XX</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Transfer Form -->
+  <div class="payment-form" *ngIf="showBankForm && !isProcessing">
+    <h3>Virement Bancaire</h3>
+    
+    <div class="bank-info">
+      <div class="bank-details">
+        <h4>Informations pour le virement</h4>
+        <div class="detail-row">
+          <span>Banque:</span>
+          <strong>Banque Atlantique Togo</strong>
+        </div>
+        <div class="detail-row">
+          <span>Compte:</span>
+          <strong>001234567890</strong>
+        </div>
+        <div class="detail-row">
+          <span>Code BIC:</span>
+          <strong>ATLTTGTG</strong>
+        </div>
+        <div class="detail-row">
+          <span>Référence:</span>
+          <strong>{{ orderId }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Montant:</span>
+          <strong>{{ getTotalAmount() | number }} {{ currency }}</strong>
+        </div>
+      </div>
+      
+      <div class="bank-instructions">
+        <h4>Instructions</h4>
+        <ol>
+          <li>Effectuez un virement vers le compte ci-dessus</li>
+          <li>Utilisez la référence de commande comme motif</li>
+          <li>Envoyez-nous le reçu par email</li>
+          <li>Votre commande sera traitée après confirmation</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cash on Delivery Info -->
+  <div class="payment-form" *ngIf="showCodInfo && !isProcessing">
+    <h3>Paiement à la Livraison</h3>
+    
+    <div class="cod-info">
+      <div class="cod-icon">
+        <i class="fas fa-money-bill-wave"></i>
+      </div>
+      <div class="cod-details">
+        <h4>Paiement en espèces</h4>
+        <p>Vous paierez {{ getTotalAmount() | number }} {{ currency }} en espèces lors de la livraison.</p>
+        <div class="cod-fees">
+          <i class="fas fa-info-circle"></i>
+          <span>Frais de service: {{ getFees() | number }} {{ currency }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Processing Animation -->
+  <div class="processing-container" *ngIf="isProcessing">
+    <div class="processing-header">
+      <h3>Traitement du paiement</h3>
+      <div class="transaction-id">
+        Transaction: {{ paymentStatus?.transactionId }}
+      </div>
+    </div>
+    
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+      </div>
+      <div class="progress-text">
+        {{ getProgressPercentage() | number:'1.0-0' }}% - {{ paymentStatus?.currentStep }}
+      </div>
+    </div>
+    
+    <div class="processing-steps">
+      <div *ngFor="let step of getProcessingSteps(); let i = index" 
+           class="step-item"
+           [class.completed]="i < currentStep"
+           [class.current]="i === currentStep">
+        <div class="step-icon">
+          <i *ngIf="i < currentStep" class="fas fa-check"></i>
+          <i *ngIf="i === currentStep" class="fas fa-spinner fa-spin"></i>
+          <i *ngIf="i > currentStep" class="fas fa-circle"></i>
+        </div>
+        <div class="step-text">{{ step }}</div>
+      </div>
+    </div>
+    
+    <div class="processing-footer">
+      <div class="estimated-time" *ngIf="getEstimatedTime()">
+        <i class="fas fa-clock"></i>
+        Temps estimé: {{ getEstimatedTime() }}
+      </div>
+      <button class="btn btn-outline" (click)="cancelPayment()">
+        <i class="fas fa-times"></i>
+        Annuler
+      </button>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="payment-actions" *ngIf="!isProcessing">
+    <button class="btn btn-outline" (click)="paymentCancelled.emit()">
+      <i class="fas fa-arrow-left"></i>
+      Retour
+    </button>
+    
+    <button class="btn btn-primary" 
+            [disabled]="!validateForm()"
+            (click)="processPayment()">
+      <i class="fas fa-lock"></i>
+      Payer {{ getTotalAmount() | number }} {{ currency }}
+    </button>
+  </div>
+
+  <!-- Security Badges -->
+  <div class="security-info">
+    <div class="security-badges">
+      <div class="badge">
+        <i class="fas fa-shield-alt"></i>
+        <span>SSL Sécurisé</span>
+      </div>
+      <div class="badge">
+        <i class="fas fa-lock"></i>
+        <span>Chiffrement 256-bit</span>
+      </div>
+      <div class="badge">
+        <i class="fas fa-check-circle"></i>
+        <span>PCI DSS</span>
+      </div>
+    </div>
+    
+    <p class="security-text">
+      Vos informations de paiement sont protégées par un chiffrement de niveau bancaire.
+      Nous ne stockons jamais vos données de carte bancaire.
+    </p>
+  </div>
+</div>
+
+
+
+
+
+

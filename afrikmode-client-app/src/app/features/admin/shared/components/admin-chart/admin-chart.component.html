@@ -1,0 +1,64 @@
+<!-- src/app/features/admin/shared/components/admin-chart/admin-chart.component.html -->
+
+<mat-card class="chart-card">
+  <!-- Header -->
+  <mat-card-header *ngIf="title || showTypeSelector || showRefreshButton">
+    <div class="chart-header">
+      <div class="chart-title">
+        <mat-card-title>{{ title }}</mat-card-title>
+      </div>
+      <div class="chart-controls">
+        <!-- Type Selector -->
+        <mat-select *ngIf="showTypeSelector" 
+                    [(value)]="chartType" 
+                    (selectionChange)="onChartTypeChange()"
+                    class="type-selector">
+          <mat-option *ngFor="let type of availableTypes" [value]="type.value">
+            <mat-icon>{{ type.icon }}</mat-icon>
+            <span>{{ type.label }}</span>
+          </mat-option>
+        </mat-select>
+        
+        <!-- Refresh Button -->
+        <button *ngIf="showRefreshButton" 
+                mat-icon-button 
+                (click)="onRefresh()"
+                matTooltip="Actualiser">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        
+        <!-- Export Button -->
+        <button mat-icon-button 
+                (click)="exportChart('png')"
+                matTooltip="Exporter en PNG"
+                [disabled]="!chartData">
+          <mat-icon>download</mat-icon>
+        </button>
+      </div>
+    </div>
+  </mat-card-header>
+
+  <!-- Content -->
+  <mat-card-content>
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Chargement du graphique...</p>
+    </div>
+
+    <!-- Chart Container -->
+    <div *ngIf="!loading" class="chart-container" [style.height.px]="height">
+      <!-- No Data State -->
+      <div *ngIf="!chartData" class="no-data">
+        <mat-icon>bar_chart</mat-icon>
+        <p>Aucune donnée disponible</p>
+      </div>
+
+      <!-- Chart Canvas -->
+      <canvas *ngIf="chartData" 
+              #chartCanvas 
+              class="chart-canvas">
+      </canvas>
+    </div>
+  </mat-card-content>
+</mat-card>

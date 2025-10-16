@@ -1,0 +1,43 @@
+<!-- src/app/features/admin/pages/dashboard/components/sales-chart/sales-chart.component.html -->
+
+<div class="sales-chart">
+  @if (loading) {
+    <div class="loading">
+      <div class="spinner-small"></div>
+      <p>Chargement du graphique...</p>
+    </div>
+  }
+
+  @if (!loading) {
+    <div class="chart-container">
+      <canvas 
+        #chartCanvas 
+        width="800" 
+        height="300"
+        class="chart-canvas">
+      </canvas>
+    </div>
+
+    <div class="chart-legend">
+      <div class="legend-item">
+        <span class="legend-color"></span>
+        <span class="legend-label">Ventes mensuelles (FCFA)</span>
+      </div>
+    </div>
+
+    <div class="chart-stats">
+      <div class="stat-item">
+        <span class="stat-label">Total</span>
+        <span class="stat-value">{{ totalSales | currency:'XOF':'symbol':'1.0-0' }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Moyenne</span>
+        <span class="stat-value">{{ averageSales | currency:'XOF':'symbol':'1.0-0' }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Meilleur mois</span>
+        <span class="stat-value">{{ maxValue | currency:'XOF':'symbol':'1.0-0' }}</span>
+      </div>
+    </div>
+  }
+</div>

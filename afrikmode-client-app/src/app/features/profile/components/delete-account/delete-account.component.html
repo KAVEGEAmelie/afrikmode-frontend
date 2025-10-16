@@ -1,0 +1,54 @@
+<!-- src/app/features/profile/components/delete-account/delete-account.component.html -->
+<div class="delete-account-page">
+  
+  <div class="warning-card">
+    <div class="warning-icon">
+      <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <h1>Supprimer mon compte</h1>
+    <p class="warning-text">
+      Cette action est <strong>irréversible</strong>. Toutes vos données seront définitivement supprimées.
+    </p>
+  </div>
+
+  <div class="info-card">
+    <h2>Ce qui sera supprimé :</h2>
+    <ul>
+      <li><i class="fas fa-check"></i> Toutes vos informations personnelles</li>
+      <li><i class="fas fa-check"></i> Votre historique de commandes</li>
+      <li><i class="fas fa-check"></i> Vos adresses enregistrées</li>
+      <li><i class="fas fa-check"></i> Votre liste de souhaits</li>
+      <li><i class="fas fa-check"></i> Vos avis et commentaires</li>
+    </ul>
+  </div>
+
+  <div class="confirmation-card">
+    <h2>Confirmation</h2>
+    <p>Pour confirmer la suppression, tapez <strong>SUPPRIMER</strong> dans le champ ci-dessous :</p>
+    
+    <input 
+      type="text" 
+      [(ngModel)]="confirmText" 
+      placeholder="Tapez SUPPRIMER"
+      class="confirm-input">
+    
+    <button 
+      class="btn btn-danger" 
+      (click)="deleteAccount()"
+      [disabled]="confirmText !== 'SUPPRIMER' || isDeleting">
+      <span *ngIf="!isDeleting">
+        <i class="fas fa-trash-alt"></i>
+        Supprimer définitivement mon compte
+      </span>
+      <span *ngIf="isDeleting">
+        <i class="fas fa-spinner fa-spin"></i>
+        Suppression en cours...
+      </span>
+    </button>
+
+    <a routerLink="/profile" class="btn btn-outline">
+      <i class="fas fa-arrow-left"></i>
+      Annuler
+    </a>
+  </div>
+</div>

@@ -1,0 +1,225 @@
+<div class="auth-page">
+    <div class="auth-container">
+      
+      <!-- Left Side - Image/Brand -->
+      <div class="auth-banner">
+        <div class="banner-overlay"></div>
+        <div class="banner-content">
+          <div class="brand-logo">
+            <h1>AfrikMode</h1>
+            <p>Rejoignez notre communauté</p>
+          </div>
+          <div class="banner-features">
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Accès exclusif aux nouveautés</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Promotions membres</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Suivi de commandes</span>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Right Side - Form -->
+      <div class="auth-form-container">
+        <div class="auth-form-wrapper">
+          
+          <!-- Header -->
+          <div class="form-header">
+            <h2>Créer un compte</h2>
+            <p>Commencez votre aventure mode</p>
+          </div>
+  
+          <!-- Error Message -->
+          <div class="alert alert-error" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ errorMessage }}
+          </div>
+  
+          <!-- Register Form -->
+          <form (ngSubmit)="onSubmit()" class="auth-form">
+            
+            <!-- Name Fields -->
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">Prénom</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user input-icon"></i>
+                  <input 
+                    type="text" 
+                    id="firstName" 
+                    [(ngModel)]="firstName"
+                    name="firstName"
+                    placeholder="Jean"
+                    required>
+                </div>
+              </div>
+  
+              <div class="form-group">
+                <label for="lastName">Nom</label>
+                <div class="input-wrapper">
+                  <i class="fas fa-user input-icon"></i>
+                  <input 
+                    type="text" 
+                    id="lastName" 
+                    [(ngModel)]="lastName"
+                    name="lastName"
+                    placeholder="Dupont"
+                    required>
+                </div>
+              </div>
+            </div>
+  
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email">Adresse email</label>
+              <div class="input-wrapper">
+                <i class="fas fa-envelope input-icon"></i>
+                <input 
+                  type="email" 
+                  id="email" 
+                  [(ngModel)]="email"
+                  name="email"
+                  placeholder="exemple@email.com"
+                  required>
+              </div>
+            </div>
+  
+            <!-- Password -->
+            <div class="form-group">
+              <label for="password">Mot de passe</label>
+              <div class="input-wrapper">
+                <i class="fas fa-lock input-icon"></i>
+                <input 
+                  [type]="showPassword ? 'text' : 'password'" 
+                  id="password" 
+                  [(ngModel)]="password"
+                  name="password"
+                  (ngModelChange)="checkPasswordStrength()"
+                  placeholder="••••••••"
+                  required>
+                <button 
+                  type="button" 
+                  class="toggle-password"
+                  (click)="togglePasswordVisibility('password')"
+                  aria-label="Basculer l'affichage du mot de passe"
+                  title="Basculer l'affichage du mot de passe"
+                  [attr.aria-pressed]="showPassword">
+                  <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+              
+              <!-- Password Strength -->
+              <div class="password-strength" *ngIf="passwordStrength">
+                <div class="strength-bar">
+                  <div class="strength-fill" 
+                       [class.weak]="passwordStrength === 'weak'"
+                       [class.medium]="passwordStrength === 'medium'"
+                       [class.strong]="passwordStrength === 'strong'">
+                  </div>
+                </div>
+                <span class="strength-text"
+                      [class.weak]="passwordStrength === 'weak'"
+                      [class.medium]="passwordStrength === 'medium'"
+                      [class.strong]="passwordStrength === 'strong'">
+                  {{ passwordStrength === 'weak' ? 'Faible' : 
+                     passwordStrength === 'medium' ? 'Moyen' : 'Fort' }}
+                </span>
+              </div>
+            </div>
+  
+            <!-- Confirm Password -->
+            <div class="form-group">
+              <label for="confirmPassword">Confirmer le mot de passe</label>
+              <div class="input-wrapper">
+                <i class="fas fa-lock input-icon"></i>
+                <input 
+                  [type]="showConfirmPassword ? 'text' : 'password'" 
+                  id="confirmPassword" 
+                  [(ngModel)]="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  required>
+                <button 
+                  type="button" 
+                  class="toggle-password"
+                  (click)="togglePasswordVisibility('confirm')"
+                  aria-label="Basculer l'affichage de la confirmation du mot de passe"
+                  title="Basculer l'affichage de la confirmation du mot de passe"
+                  [attr.aria-pressed]="showConfirmPassword">
+                  <i [class]="showConfirmPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+            </div>
+  
+            <!-- Terms & Conditions -->
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="acceptTerms"
+                  name="acceptTerms"
+                  required>
+                <span>
+                  J'accepte les 
+                  <a routerLink="/terms" target="_blank">conditions d'utilisation</a> 
+                  et la 
+                  <a routerLink="/privacy" target="_blank">politique de confidentialité</a>
+                </span>
+              </label>
+            </div>
+  
+            <!-- Submit Button -->
+            <button 
+              type="submit" 
+              class="btn btn-primary btn-full"
+              [disabled]="isLoading">
+              <span *ngIf="!isLoading">Créer mon compte</span>
+              <span *ngIf="isLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Création...
+              </span>
+            </button>
+          </form>
+  
+          <!-- Divider -->
+          <div class="divider">
+            <span>Ou s'inscrire avec</span>
+          </div>
+  
+          <!-- Social Register -->
+          <div class="social-login">
+            <button class="btn btn-social btn-google" (click)="registerWithGoogle()">
+              <i class="fab fa-google"></i>
+              Google
+            </button>
+            <button class="btn btn-social btn-facebook" (click)="registerWithFacebook()">
+              <i class="fab fa-facebook-f"></i>
+              Facebook
+            </button>
+          </div>
+  
+          <!-- Login Link -->
+          <div class="form-footer">
+            <p>Vous avez déjà un compte ? 
+              <a routerLink="/login" class="register-link">Se connecter</a>
+            </p>
+          </div>
+  
+          <!-- Back to Home -->
+          <div class="back-home">
+            <a routerLink="/">
+              <i class="fas fa-arrow-left"></i>
+              Retour à l'accueil
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

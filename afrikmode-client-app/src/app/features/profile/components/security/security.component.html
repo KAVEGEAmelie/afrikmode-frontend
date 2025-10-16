@@ -1,0 +1,71 @@
+<!-- src/app/features/profile/components/security/security.component.html -->
+<div class="security-page">
+  
+  <h1>Sécurité</h1>
+
+  <!-- Change Password -->
+  <div class="security-card">
+    <h2>Changer le mot de passe</h2>
+    <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+      <div class="form-group">
+        <label for="currentPassword">Mot de passe actuel</label>
+        <input type="password" id="currentPassword" formControlName="currentPassword">
+      </div>
+      <div class="form-group">
+        <label for="newPassword">Nouveau mot de passe</label>
+        <input type="password" id="newPassword" formControlName="newPassword">
+        <small>Minimum 8 caractères</small>
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirmer le mot de passe</label>
+        <input type="password" id="confirmPassword" formControlName="confirmPassword">
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="!passwordForm.valid || isChangingPassword">
+        <span *ngIf="!isChangingPassword">Changer le mot de passe</span>
+        <span *ngIf="isChangingPassword"><i class="fas fa-spinner fa-spin"></i> Modification...</span>
+      </button>
+    </form>
+  </div>
+
+  <!-- Two-Factor Authentication -->
+  <div class="security-card">
+    <div class="card-header">
+      <div>
+        <h2>Authentification à deux facteurs</h2>
+        <p>Ajoutez une couche de sécurité supplémentaire</p>
+      </div>
+      <label class="toggle-switch" for="two-factor-toggle">
+        <input 
+          type="checkbox" 
+          id="two-factor-toggle"
+          [(ngModel)]="twoFactorEnabled" 
+          (change)="toggleTwoFactor()"
+          title="Activer/désactiver l'authentification à deux facteurs"
+          aria-label="Authentification à deux facteurs">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Login History -->
+  <div class="security-card">
+    <div class="card-header">
+      <h2>Historique de connexion</h2>
+      <button class="btn btn-outline-sm" (click)="logoutAllDevices()">
+        Déconnecter tous les appareils
+      </button>
+    </div>
+    <div class="login-history">
+      <div *ngFor="let session of loginHistory" class="session-item">
+        <div class="session-icon">
+          <i class="fas fa-desktop"></i>
+        </div>
+        <div class="session-info">
+          <h4>{{ session.device }}</h4>
+          <p>{{ session.location }} • {{ session.date }}</p>
+        </div>
+        <span *ngIf="session.current" class="current-badge">Actuelle</span>
+      </div>
+    </div>
+  </div>
+</div>

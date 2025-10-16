@@ -1,0 +1,318 @@
+<div class="checkout-page">
+  
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="container">
+        <h1>Finaliser ma commande</h1>
+        <p>Paiement sécurisé</p>
+      </div>
+    </div>
+  
+    <div class="container">
+      <div class="checkout-layout">
+        
+        <!-- Left Side - Form -->
+        <div class="checkout-form-section">
+          
+          <!-- Progress Steps -->
+          <div class="progress-steps">
+            <div class="step" [class.active]="currentStep >= 1" [class.completed]="currentStep > 1">
+              <div class="step-number">1</div>
+              <span class="step-label">Livraison</span>
+            </div>
+            <div class="step-line" [class.completed]="currentStep > 1"></div>
+            <div class="step" [class.active]="currentStep >= 2" [class.completed]="currentStep > 2">
+              <div class="step-number">2</div>
+              <span class="step-label">Expédition</span>
+            </div>
+            <div class="step-line" [class.completed]="currentStep > 2"></div>
+            <div class="step" [class.active]="currentStep >= 3">
+              <div class="step-number">3</div>
+              <span class="step-label">Paiement</span>
+            </div>
+          </div>
+  
+          <!-- Step 1: Shipping Information -->
+          <div *ngIf="currentStep === 1" class="form-step">
+            <h2>Informations de livraison</h2>
+            
+            <form class="checkout-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="firstName">Prénom *</label>
+                  <input type="text" id="firstName" [(ngModel)]="shippingAddress.firstName" 
+                         name="firstName" required>
+                </div>
+                <div class="form-group">
+                  <label for="lastName">Nom *</label>
+                  <input type="text" id="lastName" [(ngModel)]="shippingAddress.lastName" 
+                         name="lastName" required>
+                </div>
+              </div>
+  
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email">Email *</label>
+                  <input type="email" id="email" [(ngModel)]="shippingAddress.email" 
+                         name="email" required>
+                </div>
+                <div class="form-group">
+                  <label for="phone">Téléphone *</label>
+                  <input type="tel" id="phone" [(ngModel)]="shippingAddress.phone" 
+                         name="phone" required>
+                </div>
+              </div>
+  
+              <div class="form-group">
+                <label for="address">Adresse complète *</label>
+                <input type="text" id="address" [(ngModel)]="shippingAddress.address" 
+                       name="address" placeholder="Rue, numéro, quartier..." required>
+              </div>
+  
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="city">Ville *</label>
+                  <input type="text" id="city" [(ngModel)]="shippingAddress.city" 
+                         name="city" required>
+                </div>
+                <div class="form-group">
+                  <label for="postalCode">Code postal</label>
+                  <input type="text" id="postalCode" [(ngModel)]="shippingAddress.postalCode" 
+                         name="postalCode">
+                </div>
+              </div>
+  
+              <div class="form-group">
+                <label for="country">Pays *</label>
+                <select id="country" [(ngModel)]="shippingAddress.country" name="country" required>
+                  <option value="Togo">Togo</option>
+                  <option value="Benin">Bénin</option>
+                  <option value="Ghana">Ghana</option>
+                  <option value="Nigeria">Nigeria</option>
+                  <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                </select>
+              </div>
+            </form>
+  
+            <div class="step-actions">
+              <button class="btn btn-primary" (click)="nextStep()">
+                Continuer
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+  
+          <!-- Step 2: Shipping Method -->
+          <div *ngIf="currentStep === 2" class="form-step">
+            <h2>Mode de livraison</h2>
+            
+            <div class="shipping-options">
+              <div *ngFor="let option of shippingOptions" 
+                   class="shipping-option"
+                   [class.selected]="shippingMethod === option.id"
+                   (click)="shippingMethod = option.id">
+                <div class="option-radio">
+                  <input type="radio" 
+                         [id]="option.id" 
+                         [value]="option.id"
+                         [(ngModel)]="shippingMethod"
+                         name="shipping">
+                  <span class="radio-custom"></span>
+                </div>
+                <div class="option-info">
+                  <h3>{{ option.name }}</h3>
+                  <p>{{ option.duration }}</p>
+                </div>
+                <div class="option-price">
+                  {{ option.price === 0 ? 'Gratuit' : (option.price | number) + ' FCFA' }}
+                </div>
+              </div>
+            </div>
+  
+            <div class="step-actions">
+              <button class="btn btn-outline" (click)="previousStep()">
+                <i class="fas fa-arrow-left"></i>
+                Retour
+              </button>
+              <button class="btn btn-primary" (click)="nextStep()">
+                Continuer
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+  
+          <!-- Step 3: Payment -->
+          <div *ngIf="currentStep === 3" class="form-step">
+            <h2>Méthode de paiement</h2>
+            
+            <div class="payment-methods">
+              <div class="payment-option" 
+                   [class.selected]="paymentMethod === 'card'"
+                   (click)="paymentMethod = 'card'">
+                <input type="radio" value="card" [(ngModel)]="paymentMethod" name="payment">
+                <i class="fas fa-credit-card"></i>
+                <span>Carte bancaire</span>
+              </div>
+              <div class="payment-option" 
+                   [class.selected]="paymentMethod === 'mobile'"
+                   (click)="paymentMethod = 'mobile'">
+                <input type="radio" value="mobile" [(ngModel)]="paymentMethod" name="payment">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Mobile Money</span>
+              </div>
+              <div class="payment-option" 
+                   [class.selected]="paymentMethod === 'cash'"
+                   (click)="paymentMethod = 'cash'">
+                <input type="radio" value="cash" [(ngModel)]="paymentMethod" name="payment">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Paiement à la livraison</span>
+              </div>
+            </div>
+  
+            <!-- Card Payment Form -->
+            <div *ngIf="paymentMethod === 'card'" class="payment-form">
+              <div class="form-group">
+                <label for="cardNumber">Numéro de carte</label>
+                <input type="text" id="cardNumber" [(ngModel)]="cardInfo.number" 
+                       placeholder="1234 5678 9012 3456" maxlength="19">
+              </div>
+              <div class="form-group">
+                <label for="cardName">Nom sur la carte</label>
+                <input type="text" id="cardName" [(ngModel)]="cardInfo.name">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="cardExpiry">Date d'expiration</label>
+                  <input type="text" id="cardExpiry" [(ngModel)]="cardInfo.expiry" 
+                         placeholder="MM/AA" maxlength="5">
+                </div>
+                <div class="form-group">
+                  <label for="cardCvv">CVV</label>
+                  <input type="text" id="cardCvv" [(ngModel)]="cardInfo.cvv" 
+                         placeholder="123" maxlength="3">
+                </div>
+              </div>
+            </div>
+  
+            <!-- Mobile Money Form -->
+            <div *ngIf="paymentMethod === 'mobile'" class="payment-form">
+              <div class="form-group">
+                <label>Opérateur</label>
+                <div class="mobile-providers">
+                  <button type="button" 
+                          class="provider-btn"
+                          [class.selected]="mobileMoneyProvider === 'tmoney'"
+                          (click)="mobileMoneyProvider = 'tmoney'">
+                    T-Money
+                  </button>
+                  <button type="button" 
+                          class="provider-btn"
+                          [class.selected]="mobileMoneyProvider === 'flooz'"
+                          (click)="mobileMoneyProvider = 'flooz'">
+                    Flooz
+                  </button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="mobileNumber">Numéro de téléphone</label>
+                <input type="tel" id="mobileNumber" [(ngModel)]="mobileMoneyNumber" 
+                       placeholder="+228 XX XX XX XX">
+              </div>
+            </div>
+  
+            <!-- Terms -->
+            <div class="terms-checkbox">
+              <label>
+                <input type="checkbox" [(ngModel)]="acceptTerms" required>
+                <span>
+                  J'accepte les 
+                  <a routerLink="/terms" target="_blank">conditions générales</a> 
+                  et la 
+                  <a routerLink="/privacy" target="_blank">politique de confidentialité</a>
+                </span>
+              </label>
+            </div>
+  
+            <div class="step-actions">
+              <button class="btn btn-outline" (click)="previousStep()">
+                <i class="fas fa-arrow-left"></i>
+                Retour
+              </button>
+              <button class="btn btn-primary" 
+                      [disabled]="isProcessing || !acceptTerms"
+                      (click)="submitOrder()">
+                <span *ngIf="!isProcessing">
+                  <i class="fas fa-lock"></i>
+                  Confirmer la commande
+                </span>
+                <span *ngIf="isProcessing">
+                  <i class="fas fa-spinner fa-spin"></i>
+                  Traitement...
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Right Side - Order Summary -->
+        <div class="order-summary-section">
+          <div class="order-summary">
+            <h3>Récapitulatif</h3>
+  
+            <!-- Cart Items -->
+            <div class="summary-items">
+              <div *ngFor="let item of cartItems" class="summary-item">
+                <img [src]="item.image" [alt]="item.name">
+                <div class="item-details">
+                  <h4>{{ item.name }}</h4>
+                  <p>Quantité: {{ item.quantity }}</p>
+                </div>
+                <div class="item-price">
+                  {{ (item.price * item.quantity) | number }} FCFA
+                </div>
+              </div>
+            </div>
+  
+            <!-- Price Breakdown -->
+            <div class="summary-totals">
+              <div class="total-row">
+                <span>Sous-total</span>
+                <span>{{ getSubtotal() | number }} FCFA</span>
+              </div>
+              <div class="total-row">
+                <span>Livraison</span>
+                <span>{{ getShippingCost() === 0 ? 'Gratuit' : (getShippingCost() | number) + ' FCFA' }}</span>
+              </div>
+              <div class="total-row total">
+                <span>Total</span>
+                <span>{{ getTotal() | number }} FCFA</span>
+              </div>
+            </div>
+  
+            <!-- Security -->
+            <div class="security-badge">
+              <i class="fas fa-lock"></i>
+              <span>Paiement 100% sécurisé</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <app-payment-modal
+      [isOpen]="showPaymentModal"
+      [amount]="getTotal()"
+      [currency]="'FCFA'"
+      [orderId]="generateOrderId()"
+      [customerInfo]="{
+        name: shippingAddress.firstName + ' ' + shippingAddress.lastName,
+        email: shippingAddress.email,
+        phone: shippingAddress.phone
+      }"
+      (paymentSuccess)="onPaymentSuccess($event)"
+      (paymentError)="onPaymentError($event)"
+      (paymentCancelled)="onPaymentCancelled()"
+      (modalClosed)="onPaymentModalClosed()">
+    </app-payment-modal>
+  </div>

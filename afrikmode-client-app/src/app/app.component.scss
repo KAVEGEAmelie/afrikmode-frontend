@@ -1,0 +1,14 @@
+// src/app/app.component.scss
+
+// Compensation pour le header fixe
+:host {
+  display: block;
+  padding-top: 80px; // Hauteur approximative du header
+}
+
+.connectivity-status-container {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+}

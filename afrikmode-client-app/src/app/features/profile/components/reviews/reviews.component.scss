@@ -1,0 +1,460 @@
+// src/app/features/profile/components/reviews/reviews.component.scss
+@import '../../styles/profile-shared';
+
+.reviews {
+  @include fade-in;
+
+  .section-header {
+    @include page-header;
+    background: linear-gradient(135deg, $secondary-color 0%, $primary-dark 100%);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    h2 {
+      font-family: $font-family-heading;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0 0 $spacing-md 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+
+      @include mobile-only {
+        font-size: 2rem;
+      }
+
+      i {
+        color: $accent-color;
+        font-size: 2.2rem;
+      }
+    }
+
+    p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin: 0;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      color: white;
+    }
+  }
+
+  .filters-section {
+    @include section-card;
+    padding: $spacing-lg;
+    margin-bottom: $spacing-2xl;
+
+    .filters-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: $spacing-lg;
+      flex-wrap: wrap;
+
+      @include mobile-only {
+        flex-direction: column;
+        align-items: stretch;
+        gap: $spacing-md;
+      }
+
+      .filter-group {
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+
+        label {
+          font-weight: 600;
+          color: $text-primary;
+          font-size: 0.95rem;
+        }
+
+        .filter-select {
+          @include input-style;
+          min-width: 200px;
+          font-size: 0.9rem;
+        }
+      }
+
+      .stats {
+        display: flex;
+        gap: $spacing-lg;
+
+        @include mobile-only {
+          justify-content: center;
+        }
+
+        .stat-item {
+          text-align: center;
+          padding: $spacing-md;
+          background: $bg-secondary;
+          border-radius: $radius-md;
+          min-width: 80px;
+
+          .stat-number {
+            display: block;
+            font-family: $font-family-heading;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: $primary-color;
+            margin-bottom: $spacing-xs;
+          }
+
+          .stat-label {
+            font-size: 0.8rem;
+            color: $text-secondary;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+
+  .loading-state {
+    @include empty-state;
+    padding: $spacing-2xl;
+
+    .loading-spinner {
+      font-size: 3rem;
+      color: $primary-color;
+      margin-bottom: $spacing-lg;
+      animation: spin 1s linear infinite;
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: $text-secondary;
+    }
+  }
+
+  .reviews-list {
+    .empty-state {
+      @include empty-state;
+      padding: $spacing-2xl;
+
+      .empty-icon {
+        font-size: 4rem;
+        color: $border-medium;
+        margin-bottom: $spacing-lg;
+      }
+
+      h3 {
+        font-family: $font-family-heading;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: $text-secondary;
+        margin: 0 0 $spacing-sm 0;
+      }
+
+      p {
+        font-size: 1rem;
+        color: $text-muted;
+        margin: 0 0 $spacing-lg 0;
+        max-width: 400px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .btn {
+        @include button-primary;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+      }
+    }
+
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: $spacing-lg;
+
+      @include mobile-only {
+        grid-template-columns: 1fr;
+        gap: $spacing-md;
+      }
+
+      .review-card {
+        @include card-style;
+        padding: $spacing-xl;
+        transition: all $transition-normal;
+        position: relative;
+        overflow: hidden;
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: $shadow-hover;
+        }
+
+        .review-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: $spacing-lg;
+          padding-bottom: $spacing-md;
+          border-bottom: 1px solid $border-light;
+
+          .product-info {
+            display: flex;
+            align-items: center;
+            gap: $spacing-md;
+            flex: 1;
+
+            .product-image {
+              width: 60px;
+              height: 60px;
+              border-radius: $radius-md;
+              overflow: hidden;
+              flex-shrink: 0;
+              box-shadow: $shadow-sm;
+
+              .product-img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                transition: transform $transition-normal;
+              }
+            }
+
+            .product-details {
+              flex: 1;
+              min-width: 0;
+
+              .product-name {
+                font-family: $font-family-heading;
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: $text-primary;
+                margin: 0 0 $spacing-xs 0;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                line-height: 1.3;
+              }
+
+              .review-date {
+                color: $text-muted;
+                font-size: 0.85rem;
+                margin: 0;
+              }
+            }
+          }
+
+          .review-status {
+            .status-badge {
+              @include status-badge('info');
+              font-size: 0.8rem;
+              padding: 6px 12px;
+              display: flex;
+              align-items: center;
+              gap: 4px;
+              font-weight: 600;
+
+              &.published {
+                @include status-badge('success');
+              }
+
+              &.pending {
+                @include status-badge('warning');
+              }
+
+              i {
+                font-size: 0.7rem;
+              }
+            }
+          }
+        }
+
+        .review-rating {
+          display: flex;
+          align-items: center;
+          gap: $spacing-md;
+          margin-bottom: $spacing-lg;
+
+          .stars {
+            display: flex;
+            gap: 2px;
+
+            i {
+              font-size: 1.1rem;
+              transition: all $transition-normal;
+
+              &.filled {
+                color: $accent-color;
+                text-shadow: 0 1px 2px rgba($accent-color, 0.3);
+              }
+
+              &.empty {
+                color: $border-medium;
+              }
+            }
+          }
+
+          .rating-text {
+            font-family: $font-family-heading;
+            font-weight: 600;
+            color: $text-primary;
+            font-size: 1rem;
+          }
+        }
+
+        .review-content {
+          margin-bottom: $spacing-lg;
+
+          .review-comment {
+            color: $text-secondary;
+            line-height: 1.6;
+            margin: 0;
+            font-size: 0.95rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          }
+        }
+
+        .review-actions {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: $spacing-md;
+          flex-wrap: wrap;
+
+          .btn {
+            @include button-outline;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+
+            &.btn-sm {
+              padding: 6px 12px;
+              font-size: 0.8rem;
+            }
+
+            &.btn-danger {
+              background: transparent;
+              color: $danger-color;
+              border-color: $danger-color;
+
+              &:hover {
+                background: $danger-color;
+                color: white;
+              }
+            }
+
+            i {
+              margin-right: $spacing-xs;
+            }
+          }
+
+          .action-buttons {
+            display: flex;
+            gap: $spacing-sm;
+          }
+        }
+      }
+    }
+  }
+
+  .guide-section {
+    @include section-card;
+    padding: $spacing-2xl;
+    margin-top: $spacing-2xl;
+    background: linear-gradient(135deg, rgba($accent-color, 0.05) 0%, rgba($accent-color, 0.02) 100%);
+    border: 2px solid rgba($accent-color, 0.2);
+
+    .guide-title {
+      font-family: $font-family-heading;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: $text-primary;
+      margin: 0 0 $spacing-lg 0;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+
+      i {
+        color: $accent-color;
+        font-size: 1.2rem;
+      }
+    }
+
+    .guide-content {
+      .guide-tips {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: $spacing-md;
+
+        @include mobile-only {
+          grid-template-columns: 1fr;
+        }
+
+        .tip-item {
+          display: flex;
+          align-items: center;
+          gap: $spacing-md;
+          padding: $spacing-md;
+          background: white;
+          border-radius: $radius-md;
+          border: 1px solid $border-light;
+          transition: all $transition-normal;
+
+          &:hover {
+            background: $bg-secondary;
+            transform: translateX(4px);
+          }
+
+          i {
+            color: $success-color;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+          }
+
+          span {
+            color: $text-primary;
+            font-weight: 500;
+            font-size: 0.95rem;
+            line-height: 1.4;
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

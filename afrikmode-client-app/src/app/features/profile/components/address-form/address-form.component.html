@@ -1,0 +1,116 @@
+<!-- src/app/features/profile/components/address-form/address-form.component.html -->
+<div class="address-form-container">
+  
+  <div class="form-header">
+    <h2>{{ isEditMode ? 'Modifier l\'adresse' : 'Nouvelle adresse' }}</h2>
+  </div>
+
+  <form [formGroup]="addressForm" (ngSubmit)="saveAddress()">
+    
+    <!-- Type -->
+    <div class="form-group">
+      <label>Type d'adresse *</label>
+      <div class="radio-group">
+        <label class="radio-label">
+          <input type="radio" formControlName="type" value="shipping">
+          <span class="radio-custom"></span>
+          <span>Livraison</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" formControlName="type" value="billing">
+          <span class="radio-custom"></span>
+          <span>Facturation</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Name -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="firstName">Prénom *</label>
+        <input type="text" id="firstName" formControlName="first_name" placeholder="John">
+      </div>
+      <div class="form-group">
+        <label for="lastName">Nom *</label>
+        <input type="text" id="lastName" formControlName="last_name" placeholder="Doe">
+      </div>
+    </div>
+
+    <!-- Company -->
+    <div class="form-group">
+      <label for="company">Entreprise (optionnel)</label>
+      <input type="text" id="company" formControlName="company" placeholder="Nom de l'entreprise">
+    </div>
+
+    <!-- Address -->
+    <div class="form-group">
+      <label for="addressLine1">Adresse *</label>
+      <input type="text" id="addressLine1" formControlName="address_line_1" 
+             placeholder="Numéro et nom de rue, quartier">
+    </div>
+
+    <div class="form-group">
+      <label for="addressLine2">Complément d'adresse (optionnel)</label>
+      <input type="text" id="addressLine2" formControlName="address_line_2" 
+             placeholder="Appartement, bâtiment, étage">
+    </div>
+
+    <!-- City & Postal -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="city">Ville *</label>
+        <input type="text" id="city" formControlName="city" placeholder="Lomé">
+      </div>
+      <div class="form-group">
+        <label for="postalCode">Code postal</label>
+        <input type="text" id="postalCode" formControlName="postal_code" placeholder="01BP123">
+      </div>
+    </div>
+
+    <!-- State & Country -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="state">Région/État</label>
+        <input type="text" id="state" formControlName="state" placeholder="Maritime">
+      </div>
+      <div class="form-group">
+        <label for="country">Pays *</label>
+        <select id="country" formControlName="country">
+          <option *ngFor="let country of countries" [value]="country">{{ country }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Phone -->
+    <div class="form-group">
+      <label for="phone">Téléphone *</label>
+      <input type="tel" id="phone" formControlName="phone" placeholder="+228 90 12 34 56">
+    </div>
+
+    <!-- Default -->
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="is_default">
+        <span class="checkbox-custom"></span>
+        <span>Définir comme adresse par défaut</span>
+      </label>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn-outline" (click)="cancel()">
+        Annuler
+      </button>
+      <button type="submit" class="btn btn-primary" [disabled]="!addressForm.valid || isSaving">
+        <span *ngIf="!isSaving">
+          <i class="fas fa-save"></i>
+          {{ isEditMode ? 'Mettre à jour' : 'Enregistrer' }}
+        </span>
+        <span *ngIf="isSaving">
+          <i class="fas fa-spinner fa-spin"></i>
+          Enregistrement...
+        </span>
+      </button>
+    </div>
+  </form>
+</div>

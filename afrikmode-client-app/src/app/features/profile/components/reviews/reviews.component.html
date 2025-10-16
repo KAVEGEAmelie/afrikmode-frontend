@@ -1,0 +1,179 @@
+<!-- src/app/features/profile/components/reviews/reviews.component.html -->
+<div class="reviews">
+  <div class="section-header">
+    <h2 class="section-title">
+      <i class="fas fa-star"></i>
+      Mes avis produits
+    </h2>
+    <p class="section-description">
+      Gérez vos avis et partagez votre expérience avec la communauté AfrikMode
+    </p>
+  </div>
+
+  <!-- Filtres -->
+  <div class="filters-section">
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="filter-select">Filtrer par :</label>
+        <select 
+          id="filter-select"
+          [(ngModel)]="selectedFilter" 
+          class="filter-select"
+          title="Filtrer les avis par statut"
+          aria-label="Filtrer les avis par statut">
+          <option *ngFor="let option of filterOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-number">{{ filteredReviews.length }}</span>
+          <span class="stat-label">Avis</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">{{ publishedReviewsCount }}</span>
+          <span class="stat-label">Publiés</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- État de chargement -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <p>Chargement de vos avis...</p>
+  </div>
+
+  <!-- Liste des avis -->
+  <div *ngIf="!isLoading" class="reviews-list">
+    <div *ngIf="filteredReviews.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-star"></i>
+      </div>
+      <h3>Aucun avis trouvé</h3>
+      <p *ngIf="selectedFilter === 'all'">
+        Vous n'avez pas encore donné d'avis sur vos achats.
+      </p>
+      <p *ngIf="selectedFilter === 'published'">
+        Aucun avis publié pour le moment.
+      </p>
+      <p *ngIf="selectedFilter === 'pending'">
+        Aucun avis en attente de publication.
+      </p>
+      <a routerLink="/orders" class="btn btn-primary">
+        <i class="fas fa-shopping-bag"></i>
+        Voir mes commandes
+      </a>
+    </div>
+
+    <div *ngIf="filteredReviews.length > 0" class="reviews-grid">
+      <div *ngFor="let review of filteredReviews" class="review-card">
+        
+        <!-- Header de l'avis -->
+        <div class="review-header">
+          <div class="product-info">
+            <div class="product-image">
+              <img 
+                [src]="review.productImage" 
+                [alt]="review.productName" 
+                title="Image du produit évalué"
+                [title]="'Image du produit : ' + review.productName"
+                aria-label="Image du produit évalué"
+                class="product-img">
+            </div>
+            <div class="product-details">
+              <h3 class="product-name">{{ review.productName }}</h3>
+              <p class="review-date">{{ review.date | date:'dd/MM/yyyy' }}</p>
+            </div>
+          </div>
+          
+          <div class="review-status">
+            <span class="status-badge" [class.published]="review.isPublished" [class.pending]="!review.isPublished">
+              <i class="fas" [class.fa-check-circle]="review.isPublished" [class.fa-clock]="!review.isPublished"></i>
+              {{ review.isPublished ? 'Publié' : 'En attente' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Évaluation -->
+        <div class="review-rating">
+          <div class="stars">
+            <i 
+              *ngFor="let star of getStarArray(review.rating)" 
+              class="fas fa-star"
+              [class.filled]="star <= review.rating"
+              [class.empty]="star > review.rating"
+            ></i>
+          </div>
+          <span class="rating-text">{{ review.rating }}/5</span>
+        </div>
+
+        <!-- Commentaire -->
+        <div class="review-content">
+          <p class="review-comment">{{ review.comment }}</p>
+        </div>
+
+        <!-- Actions -->
+        <div class="review-actions">
+          <button 
+            (click)="viewProduct(review.productId)"
+            class="btn btn-outline btn-sm"
+          >
+            <i class="fas fa-external-link-alt"></i>
+            Voir le produit
+          </button>
+          
+          <div class="action-buttons">
+            <button 
+              (click)="editReview(review.id)"
+              class="btn btn-outline btn-sm"
+              title="Modifier l'avis"
+            >
+              <i class="fas fa-edit"></i>
+            </button>
+            
+            <button 
+              (click)="deleteReview(review.id)"
+              class="btn btn-danger btn-sm"
+              title="Supprimer l'avis"
+            >
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guide pour les avis -->
+  <div class="guide-section">
+    <h3 class="guide-title">
+      <i class="fas fa-lightbulb"></i>
+      Comment bien rédiger un avis ?
+    </h3>
+    <div class="guide-content">
+      <div class="guide-tips">
+        <div class="tip-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Soyez honnête et détaillé sur votre expérience</span>
+        </div>
+        <div class="tip-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Mentionnez la qualité, la taille, et la livraison</span>
+        </div>
+        <div class="tip-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Ajoutez des photos pour aider les autres clients</span>
+        </div>
+        <div class="tip-item">
+          <i class="fas fa-check-circle"></i>
+          <span>Restez respectueux et constructif</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

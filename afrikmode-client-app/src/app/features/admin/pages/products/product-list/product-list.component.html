@@ -1,0 +1,62 @@
+<!-- src/app/features/admin/pages/products/product-list/product-list.component.html -->
+
+<div class="product-list-container">
+  <div class="list-header">
+    <div class="search-filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Rechercher un produit</mat-label>
+        <input matInput placeholder="Nom, SKU, description...">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Filtrer par statut</mat-label>
+        <mat-select>
+          <mat-option value="">Tous les statuts</mat-option>
+          <mat-option value="active">Actif</mat-option>
+          <mat-option value="inactive">Inactif</mat-option>
+          <mat-option value="draft">Brouillon</mat-option>
+          <mat-option value="archived">Archivé</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Filtrer par catégorie</mat-label>
+        <mat-select>
+          <mat-option value="">Toutes les catégories</mat-option>
+          <mat-option value="vetements">Vêtements</mat-option>
+          <mat-option value="accessoires">Accessoires</mat-option>
+          <mat-option value="chaussures">Chaussures</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="action-buttons">
+      <button mat-stroked-button (click)="exportProducts()">
+        <mat-icon>download</mat-icon>
+        Exporter
+      </button>
+      
+      <button mat-raised-button color="primary" [routerLink]="['../create']">
+        <mat-icon>add</mat-icon>
+        Nouveau Produit
+      </button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <app-admin-data-table
+      [data]="products"
+      [columns]="columns"
+      [loading]="loading"
+      [selectable]="true"
+      [actions]="actions"
+      [searchable]="true"
+      [paginated]="true"
+      [pageSize]="10"
+      emptyMessage="Aucun produit trouvé"
+      (selectionChange)="onSelectionChange($event)"
+      (sortChange)="onSortChange($event)">
+    </app-admin-data-table>
+  </div>
+</div>

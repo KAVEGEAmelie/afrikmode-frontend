@@ -1,0 +1,64 @@
+<!-- src/app/features/admin/shared/components/admin-topbar/admin-topbar.component.html -->
+<mat-toolbar class="topbar">
+  
+  <!-- Menu Button -->
+  <button 
+    mat-icon-button 
+    class="menu-button"
+    (click)="onMenuClick()">
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <!-- Breadcrumb / Title -->
+  <span class="topbar-title">Administration</span>
+
+  <span class="spacer"></span>
+
+  <!-- Search -->
+  <div class="search-container">
+    <mat-icon class="search-icon">search</mat-icon>
+    <input 
+      type="text" 
+      class="search-input"
+      placeholder="Rechercher..."
+      [(ngModel)]="searchQuery"
+      (keypress)="onSearchKeyPress($event)"
+      (blur)="onSearch()">
+  </div>
+
+  <!-- Notifications -->
+  <button 
+    mat-icon-button 
+    class="topbar-button"
+    (click)="onNotificationsClick()">
+    <mat-icon [matBadge]="notificationsCount" matBadgeColor="warn">notifications</mat-icon>
+  </button>
+
+  <!-- Profile Menu -->
+  <button 
+    mat-button 
+    [matMenuTriggerFor]="profileMenu"
+    class="profile-button">
+    <div class="profile-info">
+      <span class="profile-name">{{ userName }}</span>
+      <mat-icon>arrow_drop_down</mat-icon>
+    </div>
+  </button>
+
+  <mat-menu #profileMenu="matMenu">
+    <button mat-menu-item (click)="onProfileClick()">
+      <mat-icon>person</mat-icon>
+      <span>Mon profil</span>
+    </button>
+    <button mat-menu-item (click)="onSettingsClick()">
+      <mat-icon>settings</mat-icon>
+      <span>Paramètres</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="onLogout()">
+      <mat-icon>exit_to_app</mat-icon>
+      <span>Déconnexion</span>
+    </button>
+  </mat-menu>
+
+</mat-toolbar>

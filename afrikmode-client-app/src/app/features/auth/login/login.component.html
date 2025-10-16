@@ -1,0 +1,148 @@
+<div class="auth-page">
+    <div class="auth-container">
+      
+      <!-- Left Side - Image/Brand -->
+      <div class="auth-banner">
+        <div class="banner-overlay"></div>
+        <div class="banner-content">
+          <div class="brand-logo">
+            <h1>AfrikMode</h1>
+            <p>Votre destination mode africaine</p>
+          </div>
+          <div class="banner-features">
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Produits authentiques</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Livraison rapide</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-check-circle"></i>
+              <span>Paiement sécurisé</span>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Right Side - Form -->
+      <div class="auth-form-container">
+        <div class="auth-form-wrapper">
+          
+          <!-- Header -->
+          <div class="form-header">
+            <h2>Bienvenue</h2>
+            <p>Connectez-vous à votre compte</p>
+          </div>
+  
+          <!-- Error Message -->
+          <div class="alert alert-error" *ngIf="errorMessage">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ errorMessage }}
+          </div>
+  
+          <!-- Login Form -->
+          <form (ngSubmit)="onSubmit()" class="auth-form">
+            
+            <!-- Email -->
+            <div class="form-group">
+              <label for="email">Adresse email</label>
+              <div class="input-wrapper">
+                <i class="fas fa-envelope input-icon"></i>
+                <input 
+                  type="email" 
+                  id="email" 
+                  [(ngModel)]="email"
+                  name="email"
+                  placeholder="exemple@email.com"
+                  required>
+              </div>
+            </div>
+  
+            <!-- Password -->
+            <div class="form-group">
+              <label for="password">Mot de passe</label>
+              <div class="input-wrapper">
+                <i class="fas fa-lock input-icon"></i>
+                <input 
+                  [type]="showPassword ? 'text' : 'password'" 
+                  id="password" 
+                  [(ngModel)]="password"
+                  name="password"
+                  placeholder="••••••••"
+                  required>
+                <button 
+                  type="button" 
+                  class="toggle-password"
+                  (click)="togglePasswordVisibility()"
+                  aria-label="Basculer l'affichage du mot de passe"
+                  title="Basculer l'affichage du mot de passe"
+                  [attr.aria-pressed]="showPassword">
+                  <i [class]="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+            </div>
+  
+            <!-- Remember Me & Forgot Password -->
+            <div class="form-options">
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="rememberMe"
+                  name="rememberMe">
+                <span>Se souvenir de moi</span>
+              </label>
+              <a routerLink="/forgot-password" class="forgot-link">
+                Mot de passe oublié ?
+              </a>
+            </div>
+  
+            <!-- Submit Button -->
+            <button 
+              type="submit" 
+              class="btn btn-primary btn-full"
+              [disabled]="isLoading">
+              <span *ngIf="!isLoading">Se connecter</span>
+              <span *ngIf="isLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Connexion...
+              </span>
+            </button>
+          </form>
+  
+          <!-- Divider -->
+          <div class="divider">
+            <span>Ou continuer avec</span>
+          </div>
+  
+          <!-- Social Login -->
+          <div class="social-login">
+            <button class="btn btn-social btn-google" (click)="loginWithGoogle()">
+              <i class="fab fa-google"></i>
+              Google
+            </button>
+            <button class="btn btn-social btn-facebook" (click)="loginWithFacebook()">
+              <i class="fab fa-facebook-f"></i>
+              Facebook
+            </button>
+          </div>
+  
+          <!-- Register Link -->
+          <div class="form-footer">
+            <p>Vous n'avez pas de compte ? 
+              <a routerLink="/register" class="register-link">Créer un compte</a>
+            </p>
+          </div>
+  
+          <!-- Back to Home -->
+          <div class="back-home">
+            <a routerLink="/">
+              <i class="fas fa-arrow-left"></i>
+              Retour à l'accueil
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

@@ -1,0 +1,48 @@
+<!-- src/app/features/profile/components/addresses/addresses.component.html -->
+<div class="addresses-page">
+  
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Mes adresses</h1>
+      <button class="btn" (click)="addNewAddress()">
+        <i class="fas fa-plus"></i>
+        Ajouter une adresse
+      </button>
+    </div>
+  </div>
+
+  <div class="addresses-content">
+    <div class="addresses-grid">
+      <div *ngFor="let address of addresses" class="address-card" [class.default]="address.is_default">
+        
+        <div class="address-header">
+          <span class="address-type">{{ getTypeLabel(address.type) }}</span>
+          <span *ngIf="address.is_default" class="default-badge">Par défaut</span>
+        </div>
+
+        <div class="address-body">
+          <h3>{{ address.first_name }} {{ address.last_name }}</h3>
+          <p>{{ address.address_line_1 }}</p>
+          <p>{{ address.city }}, {{ address.postal_code }}</p>
+          <p>{{ address.country }}</p>
+          <p class="address-phone">
+            <i class="fas fa-phone"></i>
+            {{ address.phone }}
+          </p>
+        </div>
+
+        <div class="address-actions">
+          <button class="btn btn-primary" (click)="editAddress(address)">
+            <i class="fas fa-edit"></i> Modifier
+          </button>
+          <button *ngIf="!address.is_default" class="btn btn-outline" (click)="setDefaultAddress(address.id)">
+            <i class="fas fa-star"></i> Défaut
+          </button>
+          <button class="btn btn-danger" (click)="deleteAddress(address.id)">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

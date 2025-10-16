@@ -1,0 +1,320 @@
+<!-- src/app/features/admin/pages/dashboard/dashboard.component.html -->
+<div class="dashboard-modern">
+  
+  <!-- Header Section -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <div class="search-container">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search" class="search-input">
+      </div>
+    </div>
+    
+    <div class="header-right">
+      <div class="notification-bell">
+        <span class="bell-icon">🔔</span>
+        <span class="notification-badge">12</span>
+      </div>
+      <div class="user-info">
+        <span class="user-name">Super Admin</span>
+        <div class="user-avatar">👤</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  @if (isLoading) {
+    <div class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>Chargement des données...</p>
+    </div>
+  }
+
+  <!-- Main Content -->
+  @if (!isLoading && stats) {
+    
+    <!-- KPI Cards Section -->
+    <section class="kpi-section">
+      <h2 class="section-title">Tableau de Bord</h2>
+      <div class="kpi-grid">
+        
+        <!-- Card 1: Total Users -->
+        <div class="kpi-card kpi-card--blue">
+          <div class="kpi-header">
+            <h3 class="kpi-title">Utilisateurs Totaux</h3>
+            <div class="kpi-icon">👥</div>
+          </div>
+          <div class="kpi-value">{{ stats.totalOrders | number }}</div>
+          <div class="kpi-change positive">
+            <span class="change-arrow">↗</span>
+            <span class="change-text">+15% ce mois</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Total Revenue -->
+        <div class="kpi-card kpi-card--green">
+          <div class="kpi-header">
+            <h3 class="kpi-title">Revenus Totaux</h3>
+            <div class="kpi-icon">💰</div>
+          </div>
+          <div class="kpi-value">{{ stats.totalRevenue | currency:'XOF':'symbol':'1.0-0' }}</div>
+          <div class="kpi-change positive">
+            <span class="change-arrow">↗</span>
+            <span class="change-text">+1.8% ce mois</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Total Orders -->
+        <div class="kpi-card kpi-card--orange">
+          <div class="kpi-header">
+            <h3 class="kpi-title">Commandes Totales</h3>
+            <div class="kpi-icon">📦</div>
+          </div>
+          <div class="kpi-value">{{ stats.totalOrders | number }}</div>
+          <div class="kpi-change positive">
+            <span class="change-arrow">↗</span>
+            <span class="change-text">+8.5% ce mois</span>
+          </div>
+        </div>
+
+        <!-- Card 4: Active Stores -->
+        <div class="kpi-card kpi-card--brown">
+          <div class="kpi-header">
+            <h3 class="kpi-title">Boutiques Actives</h3>
+            <div class="kpi-icon">🏪</div>
+          </div>
+          <div class="kpi-value">{{ stats.activeShops | number }}</div>
+          <div class="kpi-change positive">
+            <span class="change-arrow">↗</span>
+            <span class="change-text">+8.7% ce mois</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Charts Section -->
+    <section class="charts-section">
+      <div class="charts-grid">
+        
+        <!-- Line Chart -->
+        <div class="chart-card chart-card--large">
+          <h3 class="chart-title">Évolution des Ventes (Annuel)</h3>
+          <div class="chart-placeholder">
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-color" style="background: #10b981;"></div>
+                <span>Revenus</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background: #ef4444;"></div>
+                <span>Commandes</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background: #f59e0b;"></div>
+                <span>Utilisateurs</span>
+              </div>
+            </div>
+            <div class="chart-mock">
+              <p>Graphique linéaire des ventes</p>
+              <div class="mock-chart-line"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Donut Chart -->
+        <div class="chart-card">
+          <h3 class="chart-title">Répartition des Ventes par Catégorie</h3>
+          <div class="chart-placeholder">
+            <div class="donut-chart-mock">
+              <div class="donut-segment donut-segment--green">30%</div>
+              <div class="donut-segment donut-segment--orange">25%</div>
+              <div class="donut-segment donut-segment--red">45%</div>
+            </div>
+            <div class="donut-legend">
+              <div class="legend-item">
+                <div class="legend-color" style="background: #10b981;"></div>
+                <span>Textiles Traditionnels (30%)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background: #f59e0b;"></div>
+                <span>Accessoires (25%)</span>
+              </div>
+              <div class="legend-item">
+                <div class="legend-color" style="background: #ef4444;"></div>
+                <span>Chaussures (45%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Activity and Alerts Section -->
+    <section class="activity-alerts-section">
+      <div class="activity-alerts-grid">
+        
+        <!-- Recent Activity -->
+        <div class="activity-card">
+          <h3 class="card-title">Activité récente</h3>
+          <div class="activity-list">
+            <div class="activity-item">
+              <div class="activity-icon activity-icon--green">●</div>
+              <div class="activity-content">
+                <p class="activity-text">Nouvelle commande #CMD-001235</p>
+                <span class="activity-percentage">40%</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon activity-icon--blue">●</div>
+              <div class="activity-content">
+                <p class="activity-text">Nouvel utilisateur inscrit</p>
+                <span class="activity-percentage">30%</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="activity-icon activity-icon--red">●</div>
+              <div class="activity-content">
+                <p class="activity-text">Acquisition de marchandises</p>
+                <span class="activity-percentage">10%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Alerts -->
+        <div class="alerts-card">
+          <h3 class="card-title">Alertes Système</h3>
+          <div class="alerts-list">
+            <div class="alert-item alert-item--critical">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-content">
+                <p class="alert-text">Erreur de paiement API</p>
+                <span class="alert-level">Critique</span>
+              </div>
+            </div>
+            <div class="alert-item alert-item--critical">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-content">
+                <p class="alert-text">Erreur de données</p>
+                <span class="alert-level">Critique</span>
+              </div>
+            </div>
+            <div class="alert-item alert-item--critical">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-content">
+                <p class="alert-text">Erreur de paiement API</p>
+                <span class="alert-level">Critique</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Recent Orders Section -->
+    <section class="orders-section">
+      <div class="section-card">
+        <div class="section-card__header">
+          <h3 class="section-title">📋 Commandes récentes</h3>
+          <a href="/admin/orders" class="btn-view-all">Voir tout →</a>
+        </div>
+        <div class="section-card__body">
+          <!-- Table des commandes récentes -->
+          <div class="orders-table-container">
+            @if (recentOrders && recentOrders.length > 0) {
+              <table class="orders-table">
+                <thead>
+                  <tr>
+                    <th>N° Commande</th>
+                    <th>Client</th>
+                    <th>Date</th>
+                    <th>Montant</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (order of recentOrders; track order.id) {
+                    <tr>
+                      <td class="order-id">#{{ order.orderNumber }}</td>
+                      <td class="customer-name">{{ order.customerName }}</td>
+                      <td class="order-date">{{ order.createdAt | date:'short' }}</td>
+                      <td class="order-amount">{{ order.totalAmount | currency:'XOF':'symbol':'1.0-0' }}</td>
+                      <td>
+                        <span class="status-badge status-badge--{{ order.status }}">
+                          {{ getStatusLabel(order.status) }}
+                        </span>
+                      </td>
+                      <td>
+                        <button class="btn-action" (click)="viewOrderDetails(order.id)" aria-label="Voir détails">
+                          👁️
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <div class="empty-state">
+                <span class="empty-icon">📭</span>
+                <p>Aucune commande récente</p>
+              </div>
+            }
+          </div>
+          <!-- Décommentez quand le composant est prêt -->
+          <!-- <app-recent-orders [orders]="recentOrders"></app-recent-orders> -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Activity Feed Section -->
+    <section class="activity-section">
+      <div class="section-card">
+        <div class="section-card__header">
+          <h3 class="section-title">🔔 Activités récentes</h3>
+        </div>
+        <div class="section-card__body">
+          <div class="activity-feed">
+            @if (recentActivities && recentActivities.length > 0) {
+              @for (activity of recentActivities; track activity.id) {
+                <div class="activity-item">
+                  <div class="activity-icon" [class]="'activity-icon--' + activity.type">
+                    {{ getActivityIcon(activity.type) }}
+                  </div>
+                  <div class="activity-content">
+                    <p class="activity-message">{{ activity.message }}</p>
+                    <span class="activity-time">{{ activity.timestamp | date:'short' }}</span>
+                  </div>
+                </div>
+              }
+            } @else {
+              <div class="empty-state">
+                <span class="empty-icon">🔕</span>
+                <p>Aucune activité récente</p>
+              </div>
+            }
+          </div>
+          <!-- Décommentez quand le composant est prêt -->
+          <!-- <app-activity-feed [activities]="recentActivities"></app-activity-feed> -->
+        </div>
+      </div>
+    </section>
+
+  }
+
+  <!-- Error State -->
+  @if (hasError) {
+    <div class="error-container">
+      <span class="error-icon">⚠️</span>
+      <h3>Erreur de chargement</h3>
+      <p>Une erreur est survenue lors du chargement des données.</p>
+      <button class="btn-retry" (click)="refreshStats()">
+        Réessayer
+      </button>
+    </div>
+  }
+
+</div>

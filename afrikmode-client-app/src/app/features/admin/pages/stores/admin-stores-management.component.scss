@@ -1,0 +1,342 @@
+.stores-management {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    .header-left {
+      h1 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        color: #7f8c8d;
+        font-size: 16px;
+      }
+    }
+
+    .header-right {
+      button {
+        height: 48px;
+        padding: 0 24px;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 8px;
+
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+
+  .stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .stat-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      }
+
+      .stat-content {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+
+        .stat-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 16px;
+
+          mat-icon {
+            font-size: 24px;
+            color: white;
+          }
+
+          &.total {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+
+          &.active {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          }
+
+          &.pending {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+          }
+
+          &.verified {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+          }
+
+          &.revenue {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+          }
+
+          &.products {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+          }
+        }
+
+        .stat-info {
+          .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 4px;
+          }
+
+          .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+
+  .filters-card {
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    .filters-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+
+      .search-field {
+        flex: 1;
+        min-width: 300px;
+      }
+
+      .status-field,
+      .verification-field {
+        min-width: 150px;
+      }
+
+      button {
+        height: 40px;
+        color: #7f8c8d;
+
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+
+  .table-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+
+    .table-container {
+      overflow-x: auto;
+
+      .stores-table {
+        width: 100%;
+
+        .clickable-row {
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+
+          &:hover {
+            background-color: #f8f9fa;
+          }
+        }
+
+        .store-info {
+          display: flex;
+          align-items: center;
+          padding: 8px 0;
+
+          .store-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-right: 12px;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+
+            mat-icon {
+              font-size: 24px;
+              color: #7f8c8d;
+            }
+          }
+
+          .store-details {
+            .store-name {
+              font-weight: 600;
+              color: #2c3e50;
+              margin-bottom: 4px;
+            }
+
+            .store-owner {
+              font-size: 14px;
+              color: #7f8c8d;
+              margin-bottom: 2px;
+            }
+
+            .store-location {
+              font-size: 12px;
+              color: #95a5a6;
+            }
+          }
+        }
+
+        .verification-badges {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+
+          .verified {
+            background-color: #d4edda;
+            color: #155724;
+          }
+
+          .featured {
+            background-color: #fff3cd;
+            color: #856404;
+          }
+        }
+
+        .store-stats {
+          .stat-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: #7f8c8d;
+
+            mat-icon {
+              font-size: 16px;
+              margin-right: 4px;
+            }
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
+        }
+
+        .status-pending {
+          background-color: #fff3cd;
+          color: #856404;
+        }
+
+        .status-active {
+          background-color: #d4edda;
+          color: #155724;
+        }
+
+        .status-suspended {
+          background-color: #f8d7da;
+          color: #721c24;
+        }
+
+        .status-rejected {
+          background-color: #f5c6cb;
+          color: #721c24;
+        }
+      }
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+
+      .header-right {
+        width: 100%;
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+
+    .stats-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .filters-row {
+      flex-direction: column;
+      align-items: stretch;
+
+      .search-field,
+      .status-field,
+      .verification-field {
+        min-width: auto;
+        width: 100%;
+      }
+    }
+
+    .table-container {
+      .stores-table {
+        .store-info {
+          .store-logo {
+            width: 40px;
+            height: 40px;
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

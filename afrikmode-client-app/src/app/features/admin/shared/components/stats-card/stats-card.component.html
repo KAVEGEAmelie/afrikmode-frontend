@@ -1,0 +1,49 @@
+<!-- src/app/features/admin/shared/components/stats-card/stats-card.component.html -->
+
+<div 
+  class="stats-card" 
+  [ngClass]="[cardColorClass, clickable ? 'clickable' : '']"
+  [class.loading]="loading">
+  
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (!loading) {
+    <div class="card-content">
+      <!-- Header -->
+      <div class="card-header">
+        <div class="card-icon">
+          <span class="material-icons" [ngClass]="iconColorClass">{{ icon }}</span>
+        </div>
+        @if (growth) {
+          <div class="card-growth" [ngClass]="getGrowthClass()">
+            <span class="material-icons growth-icon">{{ getGrowthIcon() }}</span>
+            <span class="growth-percentage">{{ getFormattedGrowthPercentage() }}</span>
+          </div>
+        }
+      </div>
+      
+      <!-- Main Content -->
+      <div class="card-main">
+        <h2 class="card-value">{{ value }}</h2>
+        <h3 class="card-title">{{ title }}</h3>
+        @if (subtitle) {
+          <p class="card-subtitle">{{ subtitle }}</p>
+        }
+      </div>
+      
+      <!-- Growth Details -->
+      @if (growth) {
+        <div class="card-growth-details">
+          <span class="growth-value">{{ getFormattedGrowthValue() }}</span>
+          <span class="growth-period">depuis le mois dernier</span>
+        </div>
+      }
+    </div>
+  }
+</div>

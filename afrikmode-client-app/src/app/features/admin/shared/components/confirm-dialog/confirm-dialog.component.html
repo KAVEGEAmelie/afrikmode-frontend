@@ -1,0 +1,60 @@
+<!-- src/app/features/admin/shared/components/confirm-dialog/confirm-dialog.component.html -->
+
+@if (isOpen) {
+  <div class="confirm-dialog-overlay" (click)="onOverlayClick($event)">
+    <div class="confirm-dialog" [ngClass]="dialogClass" [class.loading]="loading">
+      <!-- Close Button -->
+      <button 
+        class="close-btn" 
+        (click)="onClose()"
+        [disabled]="loading">
+        <span class="material-icons">close</span>
+      </button>
+
+      <!-- Header with Icon -->
+      <div class="dialog-header">
+        <div class="dialog-icon" [ngClass]="getIconClass()">
+          <span class="material-icons">{{ getIcon() }}</span>
+        </div>
+        <h2 class="dialog-title">{{ title }}</h2>
+      </div>
+
+      <!-- Content -->
+      <div class="dialog-content">
+        <div class="message-container">
+          @if (!html) {
+            <p class="dialog-message">{{ message }}</p>
+          } @else {
+            <div class="dialog-message" [innerHTML]="message"></div>
+          }
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="dialog-actions">
+        @if (showCancel) {
+          <button 
+            class="btn btn-cancel" 
+            (click)="onCancel()"
+            [disabled]="loading">
+            {{ cancelText }}
+          </button>
+        }
+        
+        <button 
+          class="btn btn-confirm"
+          [class.btn-info]="type === 'info'"
+          [class.btn-warning]="type === 'warning'"
+          [class.btn-danger]="type === 'danger' || type === 'error'"
+          [class.btn-success]="type === 'success'"
+          (click)="onConfirm()"
+          [disabled]="loading">
+          @if (loading) {
+            <span class="spinner-small"></span>
+          }
+          {{ confirmText }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

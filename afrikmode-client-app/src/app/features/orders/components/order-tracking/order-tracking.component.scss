@@ -1,0 +1,908 @@
+// src/app/features/orders/components/order-tracking/order-tracking.component.scss
+
+$primary-color: #e74c3c;
+$primary-dark: #c0392b;
+$secondary-color: #2c3e50;
+$success-color: #28a745;
+$info-color: #17a2b8;
+$warning-color: #ffc107;
+$danger-color: #dc3545;
+$text-color: #333;
+$text-light: #666;
+$border-color: #e0e0e0;
+$bg-light: #f8f9fa;
+$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.tracking-page {
+  min-height: 100vh;
+  background: $bg-light;
+  padding-bottom: 60px;
+
+  // Loading & Error
+  .loading-container,
+  .error-container {
+    max-width: 600px;
+    margin: 100px auto;
+    padding: 60px 40px;
+    text-align: center;
+    background: white;
+    border-radius: 12px;
+    box-shadow: $shadow-md;
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid $bg-light;
+      border-top-color: $primary-color;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+
+    i {
+      font-size: 4rem;
+      color: $danger-color;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: $text-light;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 12px 32px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: $primary-color;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: $primary-dark;
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  // Tracking Content
+  .tracking-content {
+    
+    // Header
+    .tracking-header {
+      background: linear-gradient(135deg, $secondary-color 0%, $primary-dark 100%);
+      color: white !important;
+      padding: 30px 0;
+      margin-bottom: 30px;
+      box-shadow: $shadow-md;
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+
+        @media (max-width: 768px) {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .back-btn,
+        .refresh-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 16px;
+          border: 2px solid rgba(white, 0.3);
+          border-radius: 8px;
+          background: rgba(white, 0.1);
+          color: white !important;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: rgba(white, 0.2);
+            border-color: rgba(white, 0.5);
+          }
+        }
+
+        .header-info {
+          flex: 1;
+          text-align: center;
+
+          @media (max-width: 768px) {
+            text-align: left;
+          }
+
+          h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 5px 0;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+
+            @media (max-width: 768px) {
+              font-size: 1.4rem;
+              justify-content: flex-start;
+            }
+
+            i {
+              font-size: 1.6rem;
+            }
+          }
+
+          p {
+            font-size: 1rem;
+            color: white !important;
+            opacity: 0.9;
+            margin: 0;
+          }
+        }
+      }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+  }
+
+  // Status Overview Card
+  .status-overview-card {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: $shadow-md;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .overview-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+      }
+
+      .status-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        i {
+          font-size: 2.5rem;
+        }
+      }
+
+      .status-info {
+        h2 {
+          font-size: 1.8rem;
+          font-weight: 700;
+          color: $secondary-color;
+          margin: 0 0 8px 0;
+        }
+
+        p {
+          font-size: 1rem;
+          color: $text-light;
+          margin: 0;
+        }
+      }
+    }
+
+    .overview-right {
+      .delivery-countdown {
+        text-align: center;
+        padding: 20px;
+        background: linear-gradient(135deg, $primary-color, $primary-dark);
+        border-radius: 12px;
+        min-width: 140px;
+
+        .countdown-number {
+          font-size: 3rem;
+          font-weight: 700;
+          color: white;
+          line-height: 1;
+          margin-bottom: 8px;
+
+          &.delayed {
+            color: $warning-color;
+          }
+        }
+
+        .countdown-label {
+          font-size: 0.9rem;
+          color: white;
+          opacity: 0.9;
+        }
+      }
+    }
+  }
+
+  // Progress Bar Section
+  .progress-bar-section {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: $shadow-sm;
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+
+      span {
+        color: $text-light;
+      }
+
+      strong {
+        color: $primary-color;
+        font-size: 1.1rem;
+      }
+    }
+
+    .progress-bar {
+      height: 10px;
+      background: $bg-light;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, $primary-color, $primary-dark);
+        border-radius: 10px;
+        transition: width 0.5s ease;
+        position: relative;
+
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          width: 50px;
+          background: linear-gradient(90deg, transparent, rgba(white, 0.3));
+          animation: shimmer 2s infinite;
+        }
+      }
+    }
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  // Tracking Timeline Section
+  .tracking-timeline-section {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: $shadow-sm;
+
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: $secondary-color;
+      margin: 0 0 30px 0;
+    }
+
+    .timeline {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      padding: 20px 0;
+
+      @media (max-width: 1024px) {
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .timeline-step {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        animation: slideInRight 0.5s ease;
+
+        @media (max-width: 1024px) {
+          flex-direction: row;
+          align-items: flex-start;
+          gap: 15px;
+        }
+
+        .step-connector {
+          position: absolute;
+          top: 25px;
+          left: 50%;
+          width: 100%;
+          height: 3px;
+          background: $border-color;
+          z-index: 0;
+
+          @media (max-width: 1024px) {
+            top: 25px;
+            left: 25px;
+            width: 3px;
+            height: 100%;
+          }
+        }
+
+        &.completed {
+          .step-connector {
+            background: $success-color;
+          }
+
+          .step-icon-wrapper .step-icon {
+            background: $success-color;
+            border-color: $success-color;
+            color: white;
+            box-shadow: 0 0 0 4px rgba($success-color, 0.2);
+          }
+
+          .step-content h3 {
+            color: $success-color;
+          }
+        }
+
+        &.active {
+          .step-icon-wrapper .step-icon {
+            background: $primary-color;
+            border-color: $primary-color;
+            color: white;
+            box-shadow: 0 0 0 4px rgba($primary-color, 0.2);
+            animation: pulse 2s infinite;
+          }
+
+          .step-content h3 {
+            color: $primary-color;
+          }
+
+          .step-active-text {
+            color: $primary-color;
+            font-weight: 600;
+          }
+        }
+
+        .step-icon-wrapper {
+          position: relative;
+          z-index: 1;
+          margin-bottom: 15px;
+
+          @media (max-width: 1024px) {
+            margin-bottom: 0;
+          }
+
+          .step-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid $border-color;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: $text-light;
+            transition: all 0.3s ease;
+
+            i {
+              font-size: 1.3rem;
+            }
+          }
+        }
+
+        .step-content {
+          text-align: center;
+
+          @media (max-width: 1024px) {
+            text-align: left;
+            flex: 1;
+          }
+
+          h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: $text-color;
+            margin: 0 0 5px 0;
+          }
+
+          p {
+            font-size: 0.8rem;
+            color: $text-light;
+            margin: 0;
+
+            &.step-pending {
+              opacity: 0.6;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Tracking Grid
+  .tracking-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 30px;
+
+    @media (max-width: 1024px) {
+      grid-template-columns: 1fr;
+    }
+
+    .tracking-sidebar {
+      @media (max-width: 1024px) {
+        order: -1;
+      }
+    }
+  }
+
+  // Tracking Card
+  .tracking-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 20px;
+    box-shadow: $shadow-sm;
+
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: $secondary-color;
+      margin: 0 0 20px 0;
+      padding-bottom: 15px;
+      border-bottom: 2px solid $bg-light;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      i {
+        color: $primary-color;
+      }
+    }
+
+    // Updates List
+    .updates-list {
+      position: relative;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: $border-color;
+      }
+
+      .update-item {
+        display: flex;
+        gap: 15px;
+        padding-bottom: 25px;
+        position: relative;
+
+        &:last-child {
+          padding-bottom: 0;
+        }
+
+        .update-dot {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: $primary-color;
+          flex-shrink: 0;
+          margin-top: 2px;
+          z-index: 1;
+          box-shadow: 0 0 0 4px white;
+        }
+
+        .update-content {
+          flex: 1;
+          padding-top: 0;
+
+          .update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 5px;
+            gap: 10px;
+
+            strong {
+              color: $secondary-color;
+              font-size: 0.95rem;
+            }
+
+            .update-date {
+              font-size: 0.8rem;
+              color: $text-light;
+              white-space: nowrap;
+            }
+          }
+
+          .update-description {
+            font-size: 0.9rem;
+            color: $text-color;
+            margin: 0 0 5px 0;
+            line-height: 1.5;
+          }
+
+          .update-location {
+            font-size: 0.85rem;
+            color: $text-light;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0;
+
+            i {
+              color: $primary-color;
+              font-size: 0.8rem;
+            }
+          }
+        }
+      }
+    }
+
+    // No Updates
+    &.no-updates {
+      text-align: center;
+      padding: 40px 25px;
+
+      i {
+        font-size: 3rem;
+        color: $info-color;
+        margin-bottom: 15px;
+      }
+
+      h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: $secondary-color;
+        margin: 0 0 10px 0;
+      }
+
+      p {
+        color: $text-light;
+        margin: 0;
+      }
+    }
+
+    // Address Content
+    .address-content {
+      display: flex;
+      gap: 20px;
+
+      .address-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        background: rgba($primary-color, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        i {
+          font-size: 1.5rem;
+          color: $primary-color;
+        }
+      }
+
+      .address-details {
+        flex: 1;
+
+        p {
+          margin: 0 0 8px 0;
+          color: $text-color;
+          line-height: 1.6;
+
+          &.address-contact {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: $text-light;
+
+            i {
+              color: $primary-color;
+              width: 16px;
+            }
+          }
+        }
+      }
+    }
+
+    // Tracking Details
+    .tracking-details {
+      .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid $bg-light;
+
+        &:last-of-type {
+          border-bottom: none;
+          margin-bottom: 15px;
+        }
+
+        .detail-label {
+          font-size: 0.9rem;
+          color: $text-light;
+        }
+
+        strong {
+          font-size: 0.95rem;
+          color: $text-color;
+          text-align: right;
+        }
+      }
+
+      .btn-primary-full {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: $primary-color;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: $primary-dark;
+          transform: translateY(-2px);
+          box-shadow: $shadow-md;
+        }
+      }
+    }
+
+    .no-tracking-info {
+      text-align: center;
+      padding: 30px 20px;
+
+      i {
+        font-size: 2.5rem;
+        color: $text-light;
+        margin-bottom: 15px;
+      }
+
+      p {
+        color: $text-light;
+        margin: 0;
+      }
+    }
+
+    // Items Preview
+    .items-preview {
+      .item-preview {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid $bg-light;
+
+        &:last-of-type {
+          border-bottom: none;
+        }
+
+        img {
+          width: 50px;
+          height: 50px;
+          object-fit: cover;
+          border-radius: 6px;
+          flex-shrink: 0;
+        }
+
+        .item-info {
+          flex: 1;
+          min-width: 0;
+
+          .item-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: $text-color;
+            margin: 0 0 4px 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .item-quantity {
+            font-size: 0.8rem;
+            color: $text-light;
+            margin: 0;
+          }
+        }
+      }
+
+      .more-items {
+        text-align: center;
+        padding-top: 12px;
+        font-size: 0.85rem;
+        color: $text-light;
+        font-weight: 600;
+        margin: 0;
+      }
+    }
+
+    // Help Card
+    &.help-card {
+      .help-content {
+        p {
+          color: $text-color;
+          margin: 0 0 15px 0;
+        }
+
+        .btn-outline-full {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 12px 20px;
+          background: white;
+          color: $secondary-color;
+          border: 2px solid $border-color;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-bottom: 20px;
+
+          &:hover {
+            border-color: $primary-color;
+            color: $primary-color;
+          }
+        }
+
+        .help-links {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          padding-top: 15px;
+          border-top: 1px solid $bg-light;
+
+          a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            color: $text-color;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+
+            i {
+              color: $primary-color;
+              font-size: 1rem;
+              width: 20px;
+            }
+
+            &:hover {
+              background: $bg-light;
+              color: $primary-color;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// ============================================================================
+// RESPONSIVE
+// ============================================================================
+
+@media (max-width: 768px) {
+  .tracking-page {
+    padding-bottom: 40px;
+
+    .tracking-content {
+      .tracking-header {
+        padding: 20px 0;
+
+        .container {
+          .header-info h1 {
+            font-size: 1.3rem;
+
+            i {
+              font-size: 1.2rem;
+            }
+          }
+        }
+      }
+    }
+
+    .status-overview-card {
+      padding: 20px;
+
+      .overview-left {
+        .status-icon {
+          width: 60px;
+          height: 60px;
+
+          i {
+            font-size: 2rem;
+          }
+        }
+
+        .status-info h2 {
+          font-size: 1.4rem;
+        }
+      }
+
+      .overview-right {
+        .delivery-countdown {
+          min-width: 120px;
+
+          .countdown-number {
+            font-size: 2.5rem;
+          }
+        }
+      }
+    }
+
+    .progress-bar-section,
+    .tracking-timeline-section,
+    .tracking-card {
+      padding: 20px;
+    }
+  }
+}

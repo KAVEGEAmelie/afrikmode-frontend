@@ -1,0 +1,568 @@
+@use "sass:color";
+
+// Variables AfrikMode
+$primary-red: #8B2E2E;
+$accent-orange: #D9744F;
+$light-bg: #F5E4D7;
+$white-text: #FFF9F6;
+$dark-text: #2C1810;
+$gold-accent: #DAA520;
+$success-green: #28a745;
+$warning-yellow: #ffc107;
+$danger-red: #dc3545;
+$info-blue: #17a2b8;
+
+.payment-demo {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+
+  // Demo Header
+  .demo-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, rgba(139, 46, 46, 0.05) 0%, rgba(217, 116, 79, 0.05) 100%);
+    border-radius: 20px;
+
+    h1 {
+      color: $dark-text;
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+
+      i {
+        color: $accent-orange;
+        font-size: 2rem;
+      }
+    }
+
+    p {
+      color: #666;
+      font-size: 1.2rem;
+      margin: 0;
+    }
+  }
+
+  // Demo Controls
+  .demo-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+
+    .control-group {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #f0f0f0;
+
+      h3 {
+        color: $dark-text;
+        margin-bottom: 1.5rem;
+        font-size: 1.3rem;
+        font-weight: 700;
+      }
+
+      // Amount Buttons
+      .amount-buttons {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+
+        .amount-btn {
+          padding: 1rem;
+          border: 2px solid #e9ecef;
+          border-radius: 10px;
+          background: white;
+          color: $dark-text;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+
+          &:hover {
+            border-color: $accent-orange;
+            transform: translateY(-2px);
+          }
+
+          &.active {
+            border-color: $primary-red;
+            background: linear-gradient(135deg, rgba(139, 46, 46, 0.05) 0%, rgba(217, 116, 79, 0.05) 100%);
+            color: $primary-red;
+          }
+        }
+      }
+
+      // Customer Buttons
+      .customer-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+
+        .customer-btn {
+          padding: 1rem;
+          border: 2px solid #e9ecef;
+          border-radius: 10px;
+          background: white;
+          color: $dark-text;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+
+          i {
+            color: $accent-orange;
+            font-size: 1.1rem;
+          }
+
+          &:hover {
+            border-color: $accent-orange;
+            transform: translateY(-2px);
+          }
+
+          &.active {
+            border-color: $primary-red;
+            background: linear-gradient(135deg, rgba(139, 46, 46, 0.05) 0%, rgba(217, 116, 79, 0.05) 100%);
+            color: $primary-red;
+          }
+        }
+      }
+
+      // Payment Action
+      .btn {
+        padding: 1rem 2rem;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        font-size: 1rem;
+
+        &.btn-primary {
+          background: linear-gradient(135deg, $primary-red 0%, $accent-orange 100%);
+          color: white;
+          border: none;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(139, 46, 46, 0.3);
+          }
+        }
+
+        &.btn-large {
+          width: 100%;
+          justify-content: center;
+          font-size: 1.1rem;
+          padding: 1.25rem 2rem;
+        }
+      }
+    }
+  }
+
+  // Payment Info
+  .payment-info {
+    margin-bottom: 3rem;
+
+    h3 {
+      color: $dark-text;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .info-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #f0f0f0;
+
+      .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        span:first-child {
+          color: #666;
+          font-weight: 500;
+        }
+
+        strong {
+          color: $dark-text;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  // Payment Result
+  .payment-result {
+    margin-bottom: 3rem;
+
+    h3 {
+      color: $dark-text;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .result-card {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      border: 2px solid #f0f0f0;
+
+      &.success {
+        border-color: $success-green;
+        background: linear-gradient(135deg, rgba(40, 167, 69, 0.05) 0%, rgba(40, 167, 69, 0.02) 100%);
+      }
+
+      &.error {
+        border-color: $danger-red;
+        background: linear-gradient(135deg, rgba(220, 53, 69, 0.05) 0%, rgba(220, 53, 69, 0.02) 100%);
+      }
+
+      .result-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+
+        i {
+          font-size: 1.5rem;
+
+          &.fa-check-circle {
+            color: $success-green;
+          }
+
+          &.fa-times-circle {
+            color: $danger-red;
+          }
+        }
+      }
+
+      .result-details {
+        .detail-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.5rem 0;
+          border-bottom: 1px solid #f0f0f0;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          span:first-child {
+            color: #666;
+            font-weight: 500;
+          }
+
+          strong {
+            color: $dark-text;
+            font-weight: 700;
+          }
+
+          a {
+            color: $primary-red;
+            text-decoration: none;
+            font-weight: 600;
+
+            &:hover {
+              text-decoration: underline;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Payment History
+  .payment-history {
+    margin-bottom: 3rem;
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+
+      h3 {
+        color: $dark-text;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+      }
+
+      .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        font-size: 0.9rem;
+
+        &.btn-outline {
+          background: transparent;
+          color: $danger-red;
+          border-color: $danger-red;
+
+          &:hover {
+            background: $danger-red;
+            color: white;
+          }
+        }
+
+        &.btn-small {
+          padding: 0.5rem 1rem;
+          font-size: 0.8rem;
+        }
+      }
+    }
+
+    .history-list {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #f0f0f0;
+      overflow: hidden;
+
+      .history-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        &:hover {
+          background: #f8f9fa;
+        }
+
+        &.success {
+          border-left: 4px solid $success-green;
+        }
+
+        &.error {
+          border-left: 4px solid $danger-red;
+        }
+
+        .history-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+
+          i {
+            font-size: 1.1rem;
+
+            &.fa-check {
+              color: $success-green;
+            }
+
+            &.fa-times {
+              color: $danger-red;
+            }
+          }
+        }
+
+        .history-details {
+          flex: 1;
+
+          .history-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+
+            .transaction-id {
+              color: $dark-text;
+              font-weight: 600;
+              font-family: 'Courier New', monospace;
+              font-size: 0.9rem;
+            }
+
+            .amount {
+              color: $accent-orange;
+              font-weight: 700;
+              font-size: 0.9rem;
+            }
+          }
+
+          .history-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+
+            .status {
+              color: #666;
+              text-transform: capitalize;
+            }
+
+            .message {
+              color: #999;
+            }
+          }
+        }
+
+        .history-actions {
+          .btn {
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e9ecef;
+            background: white;
+            color: $dark-text;
+            cursor: pointer;
+            transition: all 0.3s ease;
+
+            &:hover {
+              border-color: $accent-orange;
+              color: $accent-orange;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Features List
+  .features-list {
+    h3 {
+      color: $dark-text;
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+
+      .feature-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #f0f0f0;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-icon {
+          width: 60px;
+          height: 60px;
+          background: linear-gradient(135deg, $primary-red, $accent-orange);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1rem;
+          color: white;
+          font-size: 1.5rem;
+        }
+
+        h4 {
+          color: $dark-text;
+          margin-bottom: 0.75rem;
+          font-size: 1.1rem;
+          font-weight: 600;
+        }
+
+        p {
+          color: #666;
+          font-size: 0.9rem;
+          line-height: 1.5;
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .payment-demo {
+    padding: 1rem;
+
+    .demo-header {
+      padding: 1.5rem;
+
+      h1 {
+        font-size: 2rem;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+    }
+
+    .demo-controls {
+      grid-template-columns: 1fr;
+
+      .control-group {
+        padding: 1.5rem;
+
+        .amount-buttons {
+          grid-template-columns: 1fr;
+        }
+      }
+    }
+
+    .payment-history .history-header {
+      flex-direction: column;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .features-list .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+
+
+
+
+

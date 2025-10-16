@@ -1,0 +1,310 @@
+<div class="products-management">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Gestion des Produits</h1>
+      <p>Gérez le catalogue de produits de la marketplace</p>
+    </div>
+    <div class="header-right">
+      <button mat-raised-button color="accent" (click)="exportProducts()" class="export-btn">
+        <mat-icon>download</mat-icon>
+        Exporter
+      </button>
+      <button mat-raised-button color="primary" (click)="addProduct()">
+        <mat-icon>add</mat-icon>
+        Nouveau produit
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-cards">
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon total">
+          <mat-icon>inventory</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ dataSource.data.length }}</div>
+          <div class="stat-label">Total produits</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon active">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ getActiveProductsCount() }}</div>
+          <div class="stat-label">Actifs</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon out-of-stock">
+          <mat-icon>warning</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ getOutOfStockCount() }}</div>
+          <div class="stat-label">Rupture de stock</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon draft">
+          <mat-icon>draft</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ getDraftCount() }}</div>
+          <div class="stat-label">Brouillons</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon sales">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ getTotalSales() }}</div>
+          <div class="stat-label">Ventes totales</div>
+        </div>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon revenue">
+          <mat-icon>account_balance_wallet</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ formatCurrency(getTotalRevenue()) }}</div>
+          <div class="stat-label">Revenus</div>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <form [formGroup]="searchForm" class="filters-form">
+        <div class="filters-row">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Rechercher</mat-label>
+            <input matInput formControlName="search" placeholder="Nom, description, tags...">
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="category-field">
+            <mat-label>Catégorie</mat-label>
+            <mat-select formControlName="category">
+              <mat-option value="">Toutes les catégories</mat-option>
+              <mat-option *ngFor="let category of categories" [value]="category.value">
+                {{ category.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="status-field">
+            <mat-label>Statut</mat-label>
+            <mat-select formControlName="status">
+              <mat-option value="">Tous les statuts</mat-option>
+              <mat-option *ngFor="let status of statuses" [value]="status.value">
+                {{ status.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="price-min-field">
+            <mat-label>Prix min</mat-label>
+            <input matInput type="number" formControlName="priceMin" placeholder="0">
+            <span matSuffix>FCFA</span>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="price-max-field">
+            <mat-label>Prix max</mat-label>
+            <input matInput type="number" formControlName="priceMax" placeholder="100000">
+            <span matSuffix>FCFA</span>
+          </mat-form-field>
+
+          <button mat-button type="button" (click)="clearFilters()" class="clear-btn">
+            <mat-icon>clear</mat-icon>
+            Effacer
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Products Table -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <div class="table-container">
+        <div *ngIf="loading" class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Chargement des produits...</p>
+        </div>
+
+        <table mat-table [dataSource]="dataSource" matSort class="products-table" *ngIf="!loading">
+          <!-- Image Column -->
+          <ng-container matColumnDef="image">
+            <th mat-header-cell *matHeaderCellDef>Image</th>
+            <td mat-cell *matCellDef="let product">
+              <div class="product-image">
+                <img *ngIf="product.images && product.images.length > 0" 
+                     [src]="'https://via.placeholder.com/60x60?text=' + product.name.substring(0, 2)" 
+                     [alt]="product.name">
+                <mat-icon *ngIf="!product.images || product.images.length === 0">image</mat-icon>
+                <div *ngIf="getDiscountPercentage(product)" class="discount-badge">
+                  -{{ getDiscountPercentage(product) }}%
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Name Column -->
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nom</th>
+            <td mat-cell *matCellDef="let product">
+              <div class="product-info">
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-description">{{ product.description }}</div>
+                <div class="product-tags">
+                  <mat-chip *ngFor="let tag of product.tags" class="tag-chip">
+                    {{ tag }}
+                  </mat-chip>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Category Column -->
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Catégorie</th>
+            <td mat-cell *matCellDef="let product">
+              <mat-chip [color]="getCategoryColor(product.category)">
+                {{ getCategoryLabel(product.category) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Price Column -->
+          <ng-container matColumnDef="price">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Prix</th>
+            <td mat-cell *matCellDef="let product">
+              <div class="price-info">
+                <div class="current-price">{{ formatCurrency(product.price) }}</div>
+                <div *ngIf="product.originalPrice && product.originalPrice > product.price" 
+                     class="original-price">
+                  {{ formatCurrency(product.originalPrice) }}
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Stock Column -->
+          <ng-container matColumnDef="stock">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Stock</th>
+            <td mat-cell *matCellDef="let product">
+              <div class="stock-info">
+                <span [ngClass]="getStockClass(product.stock)">
+                  {{ product.stock }}
+                </span>
+                <div class="stock-label">en stock</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Status Column -->
+          <ng-container matColumnDef="status">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Statut</th>
+            <td mat-cell *matCellDef="let product">
+              <mat-chip [color]="getStatusColor(product.status)">
+                {{ getStatusLabel(product.status) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Sales Column -->
+          <ng-container matColumnDef="sales">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Ventes</th>
+            <td mat-cell *matCellDef="let product">
+              <div class="sales-info">
+                <div class="sales-count">{{ product.sales }}</div>
+                <div class="views-count">{{ product.views }} vues</div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Rating Column -->
+          <ng-container matColumnDef="rating">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Note</th>
+            <td mat-cell *matCellDef="let product">
+              <div class="rating-info" *ngIf="product.rating > 0; else noRating">
+                <div class="rating-stars">
+                  <mat-icon *ngFor="let star of getStars(product.rating)" 
+                            [class.filled]="star.filled">star</mat-icon>
+                </div>
+                <div class="rating-value">{{ product.rating }}/5</div>
+              </div>
+              <ng-template #noRating>
+                <span class="no-rating">Aucune note</span>
+              </ng-template>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let product">
+              <button mat-icon-button [matMenuTriggerFor]="productMenu">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #productMenu="matMenu">
+                <button mat-menu-item (click)="viewProduct(product)">
+                  <mat-icon>visibility</mat-icon>
+                  <span>Voir</span>
+                </button>
+                <button mat-menu-item (click)="editProduct(product)">
+                  <mat-icon>edit</mat-icon>
+                  <span>Modifier</span>
+                </button>
+                <button mat-menu-item (click)="duplicateProduct(product)">
+                  <mat-icon>content_copy</mat-icon>
+                  <span>Dupliquer</span>
+                </button>
+                <button mat-menu-item (click)="toggleStatus(product)">
+                  <mat-icon>{{ product.status === 'active' ? 'block' : 'check_circle' }}</mat-icon>
+                  <span>{{ product.status === 'active' ? 'Désactiver' : 'Activer' }}</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="deleteProduct(product)" class="danger">
+                  <mat-icon>delete</mat-icon>
+                  <span>Supprimer</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+              (click)="viewProduct(row)" class="clickable-row"></tr>
+        </table>
+
+        <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" 
+                       showFirstLastButtons
+                       [length]="dataSource.data.length"
+                       [pageSize]="25">
+        </mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,29 @@
+<!-- src/app/features/admin/pages/analytics/analytics.component.html -->
+
+<div class="analytics-page">
+  <div class="page-header">
+    <h1>Analytics et Rapports</h1>
+    <div class="header-actions">
+      <button mat-stroked-button>
+        <mat-icon>download</mat-icon>
+        Exporter Rapport
+      </button>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <mat-tab-group>
+      <mat-tab label="Ventes">
+        <router-outlet name="sales"></router-outlet>
+      </mat-tab>
+      <mat-tab label="Utilisateurs">
+        <router-outlet name="users"></router-outlet>
+      </mat-tab>
+      <mat-tab label="Produits">
+        <div class="tab-content">
+          <p>Analytics des produits à venir...</p>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+</div>

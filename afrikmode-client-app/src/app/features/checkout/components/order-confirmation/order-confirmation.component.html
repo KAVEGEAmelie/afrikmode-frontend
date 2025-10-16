@@ -1,0 +1,261 @@
+<div class="order-confirmation">
+  
+  <!-- Success Header -->
+  <div class="confirmation-header">
+    <div class="success-animation">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <div class="success-particles">
+        <div class="particle" *ngFor="let i of [1,2,3,4,5,6]"></div>
+      </div>
+    </div>
+    
+    <h1>Commande Confirmée !</h1>
+    <p class="confirmation-message">
+      Merci pour votre achat ! Votre commande a été traitée avec succès.
+    </p>
+    
+    <div class="order-number">
+      <span class="label">Numéro de commande :</span>
+      <span class="number">{{ currentOrder?.orderId }}</span>
+    </div>
+  </div>
+
+  <!-- Order Summary -->
+  <div class="order-summary" *ngIf="currentOrder">
+    
+    <!-- Items List -->
+    <div class="summary-section">
+      <h2>
+        <i class="fas fa-shopping-bag"></i>
+        Articles commandés
+      </h2>
+      
+      <div class="items-list">
+        <div *ngFor="let item of currentOrder.items" class="order-item">
+          <img [src]="item.image" 
+               [alt]="item.name" 
+               [title]="item.name"
+               class="item-image">
+          
+          <div class="item-details">
+            <h3>{{ item.name }}</h3>
+            <div class="item-meta">
+              <span>Quantité: {{ item.quantity }}</span>
+              <span>Prix unitaire: {{ item.price | number }} {{ currentOrder.currency }}</span>
+            </div>
+          </div>
+          
+          <div class="item-total">
+            {{ (item.price * item.quantity) | number }} {{ currentOrder.currency }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <div class="summary-section">
+      <h2>
+        <i class="fas fa-map-marker-alt"></i>
+        Adresse de livraison
+      </h2>
+      
+      <div class="address-info">
+        <div class="address-details">
+          <p><strong>{{ currentOrder.shippingAddress.firstName }} {{ currentOrder.shippingAddress.lastName }}</strong></p>
+          <p>{{ currentOrder.shippingAddress.address }}</p>
+          <p>{{ currentOrder.shippingAddress.city }}, {{ currentOrder.shippingAddress.country }}</p>
+          <p class="contact-info">
+            <i class="fas fa-phone"></i>
+            {{ currentOrder.shippingAddress.phone }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Info -->
+    <div class="summary-section">
+      <h2>
+        <i class="fas fa-credit-card"></i>
+        Informations de paiement
+      </h2>
+      
+      <div class="payment-info">
+        <div class="payment-details">
+          <div class="detail-row">
+            <span>Méthode de paiement:</span>
+            <strong>{{ currentOrder.paymentMethod }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Statut:</span>
+            <strong class="status-paid">Payé</strong>
+          </div>
+          <div class="detail-row" *ngIf="currentOrder.trackingNumber">
+            <span>Numéro de suivi:</span>
+            <strong>{{ currentOrder.trackingNumber }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Totals -->
+    <div class="summary-section totals-section">
+      <h2>
+        <i class="fas fa-calculator"></i>
+        Récapitulatif
+      </h2>
+      
+      <div class="totals-breakdown">
+        <div class="total-row">
+          <span>Sous-total</span>
+          <span>{{ getOrderSubtotal() | number }} {{ currentOrder.currency }}</span>
+        </div>
+        <div class="total-row">
+          <span>Livraison</span>
+          <span>{{ getShippingCost() | number }} {{ currentOrder.currency }}</span>
+        </div>
+        <div class="total-row total">
+          <span>Total</span>
+          <span>{{ currentOrder.total | number }} {{ currentOrder.currency }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Info -->
+    <div class="summary-section">
+      <h2>
+        <i class="fas fa-truck"></i>
+        Livraison
+      </h2>
+      
+      <div class="delivery-info">
+        <div class="delivery-timeline">
+          <div class="timeline-item completed">
+            <div class="timeline-icon">
+              <i class="fas fa-check"></i>
+            </div>
+            <div class="timeline-content">
+              <h4>Commande confirmée</h4>
+              <p>Votre commande a été confirmée et est en préparation</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item pending">
+            <div class="timeline-icon">
+              <i class="fas fa-box"></i>
+            </div>
+            <div class="timeline-content">
+              <h4>En préparation</h4>
+              <p>Vos articles sont en cours de préparation</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item pending">
+            <div class="timeline-icon">
+              <i class="fas fa-shipping-fast"></i>
+            </div>
+            <div class="timeline-content">
+              <h4>Expédition</h4>
+              <p>Votre commande sera expédiée sous 24h</p>
+            </div>
+          </div>
+          
+          <div class="timeline-item pending">
+            <div class="timeline-icon">
+              <i class="fas fa-home"></i>
+            </div>
+            <div class="timeline-content">
+              <h4>Livraison prévue</h4>
+              <p>Livraison estimée le {{ formatDate(currentOrder.estimatedDelivery) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="confirmation-actions">
+    <button class="btn btn-outline" (click)="downloadInvoice()">
+      <i class="fas fa-file-download"></i>
+      Télécharger la facture
+    </button>
+    
+    <button class="btn btn-outline" (click)="trackOrder()">
+      <i class="fas fa-map-marker-alt"></i>
+      Suivre ma commande
+    </button>
+    
+    <button class="btn btn-primary" (click)="continueShopping()">
+      <i class="fas fa-shopping-cart"></i>
+      Continuer mes achats
+    </button>
+  </div>
+
+  <!-- Next Steps -->
+  <div class="next-steps">
+    <h3>Prochaines étapes</h3>
+    
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-icon">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <h4>Email de confirmation</h4>
+        <p>Vous recevrez un email de confirmation avec tous les détails de votre commande</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-icon">
+          <i class="fas fa-shipping-fast"></i>
+        </div>
+        <h4>Préparation</h4>
+        <p>Vos articles sont préparés avec soin par notre équipe</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-icon">
+          <i class="fas fa-truck"></i>
+        </div>
+        <h4>Expédition</h4>
+        <p>Vous recevrez un numéro de suivi pour suivre votre colis</p>
+      </div>
+      
+      <div class="step-card">
+        <div class="step-icon">
+          <i class="fas fa-home"></i>
+        </div>
+        <h4>Livraison</h4>
+        <p>Votre commande sera livrée à l'adresse indiquée</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Support Info -->
+  <div class="support-info">
+    <h3>Besoin d'aide ?</h3>
+    <p>Notre équipe support est là pour vous accompagner</p>
+    
+    <div class="support-options">
+      <div class="support-option">
+        <i class="fas fa-phone"></i>
+        <span>+228 XX XX XX XX</span>
+      </div>
+      <div class="support-option">
+        <i class="fas fa-envelope"></i>
+        <span>support@afrikmode.com</span>
+      </div>
+      <div class="support-option">
+        <i class="fas fa-comments"></i>
+        <span>Chat en ligne</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+

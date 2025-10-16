@@ -1,0 +1,67 @@
+<!-- src/app/features/profile/components/profile-layout/profile-layout.component.html -->
+<div class="profile-page">
+  
+  <!-- Mobile Header -->
+  <div class="mobile-header">
+    <button class="menu-toggle" (click)="toggleSidebar()">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h1>Mon Profil</h1>
+  </div>
+
+  <div class="profile-container">
+    
+    <!-- Sidebar -->
+    <aside class="profile-sidebar" [class.open]="isSidebarOpen">
+      <div class="sidebar-overlay" *ngIf="isSidebarOpen" (click)="closeSidebar()"></div>
+      
+      <div class="sidebar-content">
+        <!-- User Info -->
+        <div class="user-info">
+          <div class="user-avatar">
+            <img [src]="user.avatar" [alt]="user.name">
+            <button class="avatar-edit">
+              <i class="fas fa-camera"></i>
+            </button>
+          </div>
+          <h3>{{ user.name }}</h3>
+          <p>{{ user.email }}</p>
+          <div class="member-badge">
+            <i class="fas fa-star"></i>
+            <span>Membre depuis {{ user.memberSince }}</span>
+          </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="sidebar-nav">
+          <ul class="nav-list">
+            <li *ngFor="let item of menuItems" class="nav-item">
+              <a 
+                [routerLink]="item.path" 
+                [class.active]="isActive(item.path)"
+                class="nav-link"
+                (click)="closeSidebar()">
+                <i class="fas" [ngClass]="item.icon"></i>
+                <span>{{ item.label }}</span>
+                <span class="badge" *ngIf="item.badge">{{ item.badge }}</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        <!-- Logout Button -->
+        <div class="sidebar-footer">
+          <button class="btn-logout" (click)="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Déconnexion</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="profile-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

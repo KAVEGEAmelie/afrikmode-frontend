@@ -1,0 +1,64 @@
+<nav class="navbar">
+    <div class="container">
+      <div class="navbar-content">
+        <!-- Menu desktop -->
+        <ul class="nav-links">
+          <li *ngFor="let category of categories" class="nav-item" 
+              (mouseenter)="onCategoryHover(category)">
+            <a 
+              [routerLink]="category.path" 
+              routerLinkActive="active"
+              class="nav-link"
+              [class.hot-item]="category.isHotItem"
+              [title]="category.description"
+              (click)="trackCategoryClick(category.name, category.path)"
+            >
+              <span class="nav-icon">{{ category.icon }}</span>
+              <span class="nav-text">{{ category.name }}</span>
+              <span *ngIf="category.badge" class="nav-badge">{{ category.badge }}</span>
+            </a>
+          </li>
+        </ul>
+  
+        <!-- Bouton menu mobile -->
+        <button 
+          class="mobile-menu-btn" 
+          (click)="toggleMobileMenu()"
+          [class.active]="isMobileMenuOpen"
+          title="Ouvrir/fermer le menu de navigation"
+          aria-label="Menu de navigation mobile"
+          [attr.aria-expanded]="isMobileMenuOpen"
+        >
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+          <span class="hamburger-line"></span>
+        </button>
+      </div>
+  
+      <!-- Menu mobile -->
+      <div class="mobile-menu" [class.active]="isMobileMenuOpen">
+        <!-- Overlay pour fermer en cliquant à côté -->
+        <div class="mobile-menu-overlay" (click)="closeMobileMenu()"></div>
+        
+        <ul class="mobile-nav-links">
+          <li *ngFor="let category of categories" class="mobile-nav-item">
+            <a 
+              [routerLink]="category.path" 
+              routerLinkActive="active"
+              class="mobile-nav-link"
+              [class.hot-item]="category.isHotItem"
+              [title]="category.description"
+              (click)="toggleMobileMenu(); trackCategoryClick(category.name, category.path)"
+            >
+              <span class="nav-icon">{{ category.icon }}</span>
+              <div class="nav-info">
+                <span class="nav-text">{{ category.name }}</span>
+                <span *ngIf="category.description" class="nav-desc">{{ category.description }}</span>
+              </div>
+              <span *ngIf="category.badge" class="nav-badge">{{ category.badge }}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>

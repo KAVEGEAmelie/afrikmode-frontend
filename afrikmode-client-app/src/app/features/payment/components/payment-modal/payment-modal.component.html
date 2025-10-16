@@ -1,0 +1,117 @@
+<div class="payment-modal-overlay" 
+     *ngIf="isOpen"
+     (click)="onBackdropClick($event)"
+     (keydown.escape)="onEscapeKey($event)"
+     tabindex="0">
+  
+  <div class="payment-modal-container">
+    
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2>
+        <i class="fas fa-credit-card"></i>
+        Paiement Sécurisé
+      </h2>
+      <button class="close-btn" (click)="closeModal()" title="Fermer">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- Success State -->
+    <div class="modal-content success-state" *ngIf="showSuccess">
+      <div class="success-animation">
+        <div class="success-icon">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="success-particles">
+          <div class="particle" *ngFor="let i of [1,2,3,4,5,6]"></div>
+        </div>
+      </div>
+      
+      <h3>Paiement Réussi !</h3>
+      <p>{{ successMessage }}</p>
+      
+      <div class="success-details">
+        <div class="detail-item">
+          <span>Montant:</span>
+          <strong>{{ amount | number }} {{ currency }}</strong>
+        </div>
+        <div class="detail-item">
+          <span>Commande:</span>
+          <strong>{{ orderId }}</strong>
+        </div>
+        <div class="detail-item">
+          <span>Statut:</span>
+          <strong class="status-success">Confirmé</strong>
+        </div>
+      </div>
+      
+      <div class="success-actions">
+        <button class="btn btn-primary" (click)="closeModal()">
+          <i class="fas fa-check"></i>
+          Continuer
+        </button>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div class="modal-content error-state" *ngIf="showError">
+      <div class="error-animation">
+        <div class="error-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+      </div>
+      
+      <h3>Paiement Échoué</h3>
+      <p>{{ errorMessage }}</p>
+      
+      <div class="error-actions">
+        <button class="btn btn-outline" (click)="showError = false">
+          <i class="fas fa-redo"></i>
+          Réessayer
+        </button>
+        <button class="btn btn-primary" (click)="closeModal()">
+          <i class="fas fa-times"></i>
+          Fermer
+        </button>
+      </div>
+    </div>
+
+    <!-- Payment Form -->
+    <div class="modal-content payment-state" *ngIf="!showSuccess && !showError">
+      <app-payment-simulation
+        [amount]="amount"
+        [currency]="currency"
+        [orderId]="orderId"
+        [customerInfo]="customerInfo"
+        (paymentSuccess)="onPaymentSuccess($event)"
+        (paymentError)="onPaymentError($event)"
+        (paymentCancelled)="onPaymentCancelled()">
+      </app-payment-simulation>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer" *ngIf="!showSuccess && !showError">
+      <div class="security-badges">
+        <div class="badge">
+          <i class="fas fa-shield-alt"></i>
+          <span>100% Sécurisé</span>
+        </div>
+        <div class="badge">
+          <i class="fas fa-lock"></i>
+          <span>Chiffré</span>
+        </div>
+        <div class="badge">
+          <i class="fas fa-check-circle"></i>
+          <span>PCI DSS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+

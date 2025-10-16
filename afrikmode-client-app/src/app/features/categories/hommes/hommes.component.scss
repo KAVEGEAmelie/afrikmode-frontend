@@ -1,0 +1,165 @@
+// Variables AfrikMode
+$primary-red: #8B2E2E;
+$accent-orange: #D9744F;
+$light-bg: #F5E4D7;
+$white-text: #FFF9F6;
+$dark-text: #2C1810;
+
+.hommes-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, $light-bg 0%, #F8F0E8 100%);
+
+  .hero-section {
+    height: 60vh;
+    background: linear-gradient(135deg, $primary-red 0%, $accent-orange 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $white-text;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    
+    .highlight {
+      color: #DAA520;
+    }
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: $primary-red;
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .categories-section,
+  .products-section {
+    padding: 4rem 0;
+    
+    &:nth-child(even) {
+      background: white;
+    }
+  }
+
+  .categories-grid,
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+
+  .category-card,
+  .product-card {
+    background: white;
+    border-radius: 15px;
+    padding: 2rem;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+  }
+
+  .category-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  .category-name,
+  .product-name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: $primary-red;
+    margin-bottom: 0.5rem;
+  }
+
+  .product-image {
+    height: 200px;
+    overflow: hidden;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    position: relative;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-badges {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+
+      .badge {
+        background: #FF9800;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+    }
+  }
+
+  .product-price {
+    margin-bottom: 1rem;
+
+    .current-price {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: $primary-red;
+    }
+
+    .original-price {
+      text-decoration: line-through;
+      color: #999;
+      margin-left: 0.5rem;
+    }
+  }
+
+  .btn-add-cart {
+    background: linear-gradient(135deg, $primary-red, $accent-orange);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(139, 46, 46, 0.3);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2rem;
+    }
+    
+    .categories-grid,
+    .products-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

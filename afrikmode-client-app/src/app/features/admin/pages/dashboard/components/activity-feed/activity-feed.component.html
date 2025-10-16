@@ -1,0 +1,33 @@
+<!-- src/app/features/admin/pages/dashboard/components/activity-feed/activity-feed.component.html -->
+
+<div class="activity-feed">
+  @if (loading) {
+    <div class="loading">
+      <div class="spinner-small"></div>
+      <p>Chargement...</p>
+    </div>
+  }
+
+  @if (!loading && activities.length > 0) {
+    <div class="activity-list">
+      @for (activity of activities; track activity.id) {
+        <div class="activity-item">
+          <div class="activity-icon" [style.background-color]="activity.iconColor">
+            <span class="material-icons">{{ activity.icon }}</span>
+          </div>
+          <div class="activity-content">
+            <p class="activity-message">{{ activity.message }}</p>
+            <span class="activity-time">{{ getTimeAgo(activity.timestamp) }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (!loading && activities.length === 0) {
+    <div class="empty-state">
+      <span class="material-icons">inbox</span>
+      <p>Aucune activité récente</p>
+    </div>
+  }
+</div>

@@ -1,0 +1,233 @@
+<div class="cart-page">
+  
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="container">
+        <h1>Mon Panier</h1>
+        <p>{{ cartItems.length }} article(s)</p>
+      </div>
+    </div>
+  
+    <div class="container">
+      
+      <!-- Empty Cart State -->
+      <div *ngIf="cartItems.length === 0" class="empty-cart">
+        <div class="empty-icon">
+          <i class="fas fa-shopping-cart"></i>
+        </div>
+        <h2>Votre panier est vide</h2>
+        <p>Découvrez nos collections et ajoutez vos articles préférés</p>
+        <a routerLink="/shop" class="btn btn-primary">
+          <i class="fas fa-shopping-bag"></i>
+          Continuer mes achats
+        </a>
+      </div>
+  
+      <!-- Cart Content -->
+      <div *ngIf="cartItems.length > 0" class="cart-content">
+        
+        <div class="cart-layout">
+          
+          <!-- Cart Items -->
+          <div class="cart-items-section">
+            
+            <!-- Free Shipping Progress -->
+            <div class="shipping-progress" *ngIf="getRemainingForFreeShipping() > 0">
+              <div class="progress-info">
+                <i class="fas fa-truck"></i>
+                <span>
+                  Plus que <strong>{{ getRemainingForFreeShipping() | number }} FCFA</strong> 
+                  pour la livraison gratuite !
+                </span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" 
+                     [style.width.%]="((getSubtotal() / freeShippingThreshold) * 100)">
+                </div>
+              </div>
+            </div>
+  
+            <div *ngIf="getSubtotal() >= freeShippingThreshold" class="free-shipping-badge">
+              <i class="fas fa-check-circle"></i>
+              Vous bénéficiez de la livraison gratuite !
+            </div>
+  
+            <!-- Cart Header -->
+            <div class="cart-header">
+              <h2>Articles ({{ cartItems.length }})</h2>
+              <button class="btn-text" (click)="clearCart()">
+                <i class="fas fa-trash"></i>
+                Vider le panier
+              </button>
+            </div>
+  
+            <!-- Cart Items List -->
+            <div class="cart-items-list">
+              <div *ngFor="let item of cartItems" class="cart-item">
+                
+                <!-- Product Image -->
+                <div class="item-image" [routerLink]="['/products', item.productId]">
+                  <img [src]="item.image" [alt]="item.name">
+                </div>
+  
+                <!-- Product Info -->
+                <div class="item-info">
+                  <h3 class="item-name" [routerLink]="['/products', item.productId]">
+                    {{ item.name }}
+                  </h3>
+                  <div class="item-variants">
+                    <span class="variant">
+                      <strong>Couleur:</strong> {{ item.color }}
+                    </span>
+                    <span class="variant">
+                      <strong>Taille:</strong> {{ item.size }}
+                    </span>
+                  </div>
+                  <div class="item-price-mobile">
+                    {{ item.price | number }} FCFA
+                  </div>
+                </div>
+  
+                <!-- Quantity Controls -->
+                <div class="item-quantity">
+                  <button 
+                    class="qty-btn" 
+                    (click)="decrementQuantity(item)"
+                    [disabled]="item.quantity <= 1">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                  <input 
+                    type="number" 
+                    [(ngModel)]="item.quantity"
+                    (change)="updateQuantity(item, item.quantity)"
+                    [min]="1"
+                    [max]="item.maxStock"
+                    class="qty-input">
+                  <button 
+                    class="qty-btn" 
+                    (click)="incrementQuantity(item)"
+                    [disabled]="item.quantity >= item.maxStock">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+  
+                <!-- Price -->
+                <div class="item-price">
+                  {{ item.price | number }} FCFA
+                </div>
+  
+                <!-- Subtotal -->
+                <div class="item-subtotal">
+                  {{ (item.price * item.quantity) | number }} FCFA
+                </div>
+  
+                <!-- Remove Button -->
+                <button class="item-remove" (click)="removeItem(item.id)">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+  
+            <!-- Continue Shopping -->
+            <div class="continue-shopping">
+              <a routerLink="/shop" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i>
+                Continuer mes achats
+              </a>
+            </div>
+          </div>
+  
+          <!-- Order Summary -->
+          <div class="order-summary-section">
+            <div class="order-summary">
+              <h3>Récapitulatif</h3>
+  
+              <!-- Promo Code -->
+              <div class="promo-section">
+                <label>Code promo</label>
+                <div class="promo-input-group">
+                  <input 
+                    type="text" 
+                    [(ngModel)]="promoCode"
+                    [disabled]="promoApplied"
+                    placeholder="Entrez votre code"
+                    class="promo-input">
+                  <button 
+                    *ngIf="!promoApplied"
+                    class="btn btn-secondary"
+                    (click)="applyPromoCode()">
+                    Appliquer
+                  </button>
+                  <button 
+                    *ngIf="promoApplied"
+                    class="btn btn-outline"
+                    (click)="removePromoCode()">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+                <p class="promo-error" *ngIf="promoError">{{ promoError }}</p>
+                <p class="promo-success" *ngIf="promoApplied">
+                  <i class="fas fa-check-circle"></i>
+                  Code promo appliqué (-{{ promoDiscount }}%)
+                </p>
+              </div>
+  
+              <!-- Price Breakdown -->
+              <div class="price-breakdown">
+                <div class="price-row">
+                  <span>Sous-total</span>
+                  <span>{{ getSubtotal() | number }} FCFA</span>
+                </div>
+  
+                <div class="price-row">
+                  <span>Livraison</span>
+                  <span [class.free]="getShipping() === 0">
+                    {{ getShipping() === 0 ? 'Gratuit' : (getShipping() | number) + ' FCFA' }}
+                  </span>
+                </div>
+  
+                <div class="price-row discount" *ngIf="promoApplied">
+                  <span>Réduction ({{ promoDiscount }}%)</span>
+                  <span>-{{ getDiscount() | number }} FCFA</span>
+                </div>
+  
+                <div class="price-row total">
+                  <span>Total</span>
+                  <span>{{ getTotal() | number }} FCFA</span>
+                </div>
+              </div>
+  
+              <!-- Checkout Button -->
+              <button class="btn btn-primary btn-full" (click)="proceedToCheckout()">
+                <i class="fas fa-lock"></i>
+                Procéder au paiement
+              </button>
+  
+              <!-- Security Badges -->
+              <div class="security-badges">
+                <div class="badge-item">
+                  <i class="fas fa-lock"></i>
+                  <span>Paiement sécurisé</span>
+                </div>
+                <div class="badge-item">
+                  <i class="fas fa-undo"></i>
+                  <span>Retour gratuit 30 jours</span>
+                </div>
+              </div>
+  
+              <!-- Accepted Payments -->
+              <div class="payment-methods">
+                <p>Moyens de paiement acceptés</p>
+                <div class="payment-icons">
+                  <i class="fab fa-cc-visa"></i>
+                  <i class="fab fa-cc-mastercard"></i>
+                  <i class="fas fa-mobile-alt"></i>
+                  <i class="fab fa-cc-paypal"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

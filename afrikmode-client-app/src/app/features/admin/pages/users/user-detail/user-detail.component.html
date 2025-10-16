@@ -1,0 +1,201 @@
+<!-- src/app/features/admin/pages/users/user-detail/user-detail.component.html -->
+
+<div class="user-detail-container" *ngIf="!loading && user">
+  <!-- En-tête avec informations principales -->
+  <mat-card class="user-header-card">
+    <mat-card-header>
+      <div class="header-content">
+        <div class="user-info">
+          <div class="user-avatar">
+            <mat-icon>person</mat-icon>
+          </div>
+          <div class="user-basic-info">
+            <h1>{{ user.first_name }} {{ user.last_name }}</h1>
+            <p class="user-email">{{ user.email }}</p>
+            <div class="user-badges">
+              <mat-chip [style.background-color]="getRoleColor(user.role)" [style.color]="'white'">
+                {{ user.role | userRole }}
+              </mat-chip>
+              <mat-chip [style.background-color]="getStatusColor(user.status)" [style.color]="'white'">
+                {{ getStatusLabel(user.status) }}
+              </mat-chip>
+            </div>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button mat-stroked-button (click)="goBack()">
+            <mat-icon>arrow_back</mat-icon>
+            Retour
+          </button>
+          <button mat-stroked-button color="accent" (click)="editUser()">
+            <mat-icon>edit</mat-icon>
+            Modifier
+          </button>
+          <button mat-stroked-button 
+                  [color]="user.status === 'active' ? 'warn' : 'primary'"
+                  (click)="toggleUserStatus()">
+            <mat-icon>{{ user.status === 'active' ? 'block' : 'check_circle' }}</mat-icon>
+            {{ user.status === 'active' ? 'Désactiver' : 'Activer' }}
+          </button>
+          <button mat-stroked-button color="warn" (click)="deleteUser()" 
+                  *ngIf="user.role !== 'super_admin'">
+            <mat-icon>delete</mat-icon>
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </mat-card-header>
+  </mat-card>
+
+  <!-- Contenu détaillé avec onglets -->
+  <mat-card class="detail-content-card">
+    <mat-tab-group>
+      
+      <!-- Onglet Informations -->
+      <mat-tab label="Informations">
+        <div class="tab-content">
+          <div class="info-grid">
+            <div class="info-section">
+              <h3>Informations personnelles</h3>
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>person</mat-icon>
+                  <div matListItemTitle>Nom complet</div>
+                  <div matListItemLine>{{ user.first_name }} {{ user.last_name }}</div>
+                </mat-list-item>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>email</mat-icon>
+                  <div matListItemTitle>Email</div>
+                  <div matListItemLine>{{ user.email }}</div>
+                </mat-list-item>
+                <mat-list-item *ngIf="user.phone">
+                  <mat-icon matListItemIcon>phone</mat-icon>
+                  <div matListItemTitle>Téléphone</div>
+                  <div matListItemLine>{{ user.phone }}</div>
+                </mat-list-item>
+              </mat-list>
+            </div>
+
+            <div class="info-section">
+              <h3>Statut et permissions</h3>
+              <mat-list>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
+                  <div matListItemTitle>Rôle</div>
+                  <div matListItemLine>{{ user.role | userRole }}</div>
+                </mat-list-item>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>info</mat-icon>
+                  <div matListItemTitle>Statut</div>
+                  <div matListItemLine>{{ getStatusLabel(user.status) }}</div>
+                </mat-list-item>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>verified</mat-icon>
+                  <div matListItemTitle>Email vérifié</div>
+                  <div matListItemLine>{{ user.is_verified ? 'Oui' : 'Non' }}</div>
+                </mat-list-item>
+                <mat-list-item>
+                  <mat-icon matListItemIcon>security</mat-icon>
+                  <div matListItemTitle>Authentification 2FA</div>
+                  <div matListItemLine>{{ user.two_factor_enabled ? 'Activée' : 'Désactivée' }}</div>
+                </mat-list-item>
+              </mat-list>
+            </div>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="info-section full-width">
+            <h3>Dates importantes</h3>
+            <mat-list>
+              <mat-list-item>
+                <mat-icon matListItemIcon>event</mat-icon>
+                <div matListItemTitle>Date de création</div>
+                <div matListItemLine>{{ user.created_at | date:'dd/MM/yyyy à HH:mm' }}</div>
+              </mat-list-item>
+              <mat-list-item *ngIf="user.last_login_at">
+                <mat-icon matListItemIcon>login</mat-icon>
+                <div matListItemTitle>Dernière connexion</div>
+                <div matListItemLine>{{ user.last_login_at | date:'dd/MM/yyyy à HH:mm' }}</div>
+              </mat-list-item>
+              <mat-list-item *ngIf="user.updated_at">
+                <mat-icon matListItemIcon>update</mat-icon>
+                <div matListItemTitle>Dernière modification</div>
+                <div matListItemLine>{{ user.updated_at | date:'dd/MM/yyyy à HH:mm' }}</div>
+              </mat-list-item>
+            </mat-list>
+          </div>
+
+          <div class="info-section full-width" *ngIf="user.admin_notes">
+            <h3>Notes administrateur</h3>
+            <p class="admin-notes">{{ user.admin_notes }}</p>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Onglet Statistiques -->
+      <mat-tab label="Statistiques">
+        <div class="tab-content">
+          <div class="stats-grid">
+            <mat-card class="stat-card">
+              <mat-card-header>
+                <mat-card-title>Commandes</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="stat-value">{{ userStats.totalOrders }}</div>
+                <div class="stat-label">Total des commandes</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+              <mat-card-header>
+                <mat-card-title>Dépenses</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="stat-value">{{ formatCurrency(userStats.totalSpent) }}</div>
+                <div class="stat-label">Total dépensé</div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="stat-card">
+              <mat-card-header>
+                <mat-card-title>Panier moyen</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="stat-value">{{ formatCurrency(userStats.averageOrderValue) }}</div>
+                <div class="stat-label">Valeur moyenne</div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Onglet Activité -->
+      <mat-tab label="Activité récente">
+        <div class="tab-content">
+          <mat-list class="activity-list">
+            <mat-list-item *ngFor="let activity of recentActivity">
+              <mat-icon matListItemIcon>history</mat-icon>
+              <div matListItemTitle>{{ activity.action }}</div>
+              <div matListItemLine>{{ activity.details }}</div>
+              <div matListItemMeta>{{ activity.date | date:'dd/MM à HH:mm' }}</div>
+            </mat-list-item>
+          </mat-list>
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  </mat-card>
+</div>
+
+<!-- État de chargement -->
+<div class="loading-container" *ngIf="loading">
+  <mat-card>
+    <mat-card-content>
+      <div class="loading-content">
+        <mat-icon>hourglass_empty</mat-icon>
+        <p>Chargement des détails de l'utilisateur...</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

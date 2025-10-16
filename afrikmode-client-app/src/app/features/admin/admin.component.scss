@@ -1,0 +1,90 @@
+// src/app/features/admin/admin.component.scss
+
+// Masquer le footer quand on est dans l'admin
+:host {
+  ::ng-deep app-footer {
+    display: none !important;
+  }
+}
+
+.admin-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.admin-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 64px;
+}
+
+.admin-sidenav-container {
+  flex: 1;
+  margin-top: 64px; // Hauteur du topbar
+  height: calc(100vh - 64px);
+}
+
+.admin-sidenav {
+  width: 260px;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #ffffff;
+  
+  ::ng-deep .mat-drawer-inner-container {
+    overflow-x: hidden;
+    
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+      
+      &:hover {
+        background: #555;
+      }
+    }
+  }
+}
+
+.admin-content {
+  background-color: #f5f5f5;
+  min-height: 100%;
+}
+
+.content-wrapper {
+  padding: 24px;
+  max-width: 1920px;
+  margin: 0 auto;
+  
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
+}
+
+// Dark mode support (optionnel)
+@media (prefers-color-scheme: dark) {
+  .admin-sidenav {
+    background-color: #1e1e1e;
+    border-right-color: rgba(255, 255, 255, 0.12);
+  }
+  
+  .admin-content {
+    background-color: #121212;
+  }
+}

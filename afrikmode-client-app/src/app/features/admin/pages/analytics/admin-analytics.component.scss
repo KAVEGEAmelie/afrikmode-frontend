@@ -1,0 +1,441 @@
+.analytics-management {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    .header-left {
+      h1 {
+        margin: 0 0 8px 0;
+        color: #2c3e50;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0;
+        color: #7f8c8d;
+        font-size: 16px;
+      }
+    }
+
+    .header-right {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+
+      .period-field {
+        min-width: 150px;
+      }
+
+      button {
+        height: 48px;
+        padding: 0 24px;
+        font-size: 16px;
+        font-weight: 500;
+        border-radius: 8px;
+
+        mat-icon {
+          margin-right: 8px;
+        }
+      }
+    }
+  }
+
+  .overview-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+
+    .overview-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      }
+
+      .card-content {
+        display: flex;
+        align-items: center;
+        padding: 20px;
+
+        .card-icon {
+          width: 56px;
+          height: 56px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 16px;
+
+          mat-icon {
+            font-size: 28px;
+            color: white;
+          }
+
+          &.revenue {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+
+          &.orders {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+          }
+
+          &.customers {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+          }
+
+          &.products {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+          }
+
+          &.aov {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+          }
+
+          &.conversion {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+          }
+        }
+
+        .card-info {
+          flex: 1;
+
+          .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 4px;
+          }
+
+          .card-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            font-weight: 500;
+            margin-bottom: 8px;
+          }
+
+          .card-change {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+
+            mat-icon {
+              font-size: 16px;
+              margin-right: 4px;
+            }
+
+            &.positive {
+              color: #27ae60;
+            }
+
+            &.negative {
+              color: #e74c3c;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .analytics-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+
+    .tab-content {
+      padding: 24px;
+
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 32px;
+
+        .chart-container {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 20px;
+          text-align: center;
+
+          h3 {
+            margin: 0 0 16px 0;
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 600;
+          }
+
+          .chart-placeholder {
+            height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #7f8c8d;
+
+            mat-icon {
+              font-size: 48px;
+              margin-bottom: 8px;
+            }
+
+            p {
+              margin: 0;
+              font-size: 14px;
+            }
+          }
+        }
+      }
+
+      .data-tables {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+
+        .table-section {
+          h3 {
+            margin: 0 0 16px 0;
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 600;
+          }
+
+          .analytics-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+
+            .percentage-bar {
+              position: relative;
+              background: #e9ecef;
+              border-radius: 4px;
+              height: 20px;
+              overflow: hidden;
+
+              .percentage-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+                transition: width 0.3s ease;
+              }
+
+              .percentage-text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 12px;
+                font-weight: 600;
+                color: #2c3e50;
+              }
+            }
+          }
+        }
+      }
+
+      .customer-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+
+        .stat-card {
+          display: flex;
+          align-items: center;
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+          .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+
+            mat-icon {
+              font-size: 24px;
+              color: white;
+            }
+          }
+
+          .stat-info {
+            .stat-value {
+              font-size: 24px;
+              font-weight: 700;
+              color: #2c3e50;
+              margin-bottom: 4px;
+            }
+
+            .stat-label {
+              font-size: 14px;
+              color: #7f8c8d;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+
+      .product-tables {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+
+        .table-section {
+          h3 {
+            margin: 0 0 16px 0;
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 600;
+          }
+
+          .analytics-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+
+            .stock-empty {
+              background-color: #f8d7da;
+              color: #721c24;
+            }
+
+            .stock-low {
+              background-color: #fff3cd;
+              color: #856404;
+            }
+
+            .stock-normal {
+              background-color: #d4edda;
+              color: #155724;
+            }
+          }
+        }
+      }
+
+      .trends-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 16px;
+
+        .trend-card {
+          background: white;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+
+          .trend-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+
+            h4 {
+              margin: 0;
+              color: #2c3e50;
+              font-size: 16px;
+              font-weight: 600;
+            }
+
+            .positive {
+              background-color: #d4edda;
+              color: #155724;
+            }
+
+            .negative {
+              background-color: #f8d7da;
+              color: #721c24;
+            }
+          }
+
+          .trend-content {
+            .trend-current {
+              font-size: 24px;
+              font-weight: 700;
+              color: #2c3e50;
+              margin-bottom: 4px;
+            }
+
+            .trend-previous {
+              font-size: 14px;
+              color: #7f8c8d;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .page-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+
+      .header-right {
+        width: 100%;
+        flex-direction: column;
+
+        .period-field {
+          width: 100%;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+    }
+
+    .overview-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .charts-grid,
+    .data-tables,
+    .product-tables {
+      grid-template-columns: 1fr;
+    }
+
+    .customer-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .trends-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

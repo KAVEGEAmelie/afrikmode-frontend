@@ -1,0 +1,30 @@
+<!-- src/app/features/admin/admin.component.html -->
+<div class="admin-container">
+  <!-- Topbar -->
+  <app-admin-topbar 
+    (menuClick)="toggleSidenav()"
+    class="admin-topbar">
+  </app-admin-topbar>
+
+  <!-- Sidenav Container -->
+  <mat-sidenav-container class="admin-sidenav-container">
+    
+    <!-- Sidebar -->
+    <mat-sidenav 
+      #drawer
+      [mode]="sidenavMode"
+      [opened]="sidenavOpened"
+      class="admin-sidenav">
+      <app-admin-sidebar-complete></app-admin-sidebar-complete>
+    </mat-sidenav>
+
+    <!-- Main Content -->
+    <mat-sidenav-content class="admin-content">
+      <div class="content-wrapper">
+        <!-- Router Outlet pour afficher les pages -->
+        <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+
+  </mat-sidenav-container>
+</div>

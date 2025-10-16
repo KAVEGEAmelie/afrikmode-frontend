@@ -1,0 +1,158 @@
+<!-- src/app/features/admin/shared/components/admin-data-table/admin-data-table.component.html -->
+
+<div class="admin-data-table">
+  <!-- Search Bar -->
+  <div *ngIf="searchable" class="table-toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Rechercher...</mat-label>
+      <input matInput
+             [(ngModel)]="searchTerm"
+             (input)="onSearch()"
+             placeholder="Tapez pour rechercher...">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+    
+    <div class="toolbar-actions">
+      <span class="results-count">
+        {{ filteredData.length }} résultat(s)
+      </span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Chargement des données...</p>
+  </div>
+
+  <!-- Table Container -->
+  <div *ngIf="!loading" class="table-container">
+    <!-- Empty State -->
+    <div *ngIf="paginatedData.length === 0" class="empty-state">
+      <mat-icon>inbox</mat-icon>
+      <p>{{ emptyMessage }}</p>
+    </div>
+
+    <!-- Data Table -->
+    <table *ngIf="paginatedData.length > 0" mat-table [dataSource]="paginatedData" class="data-table">
+      
+      <!-- Selection Column -->
+      <ng-container *ngIf="selectable" matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox (change)="toggleAllRows()" [checked]="isAllSelected()"
+                        [indeterminate]="selectedRows.size > 0 && !isAllSelected()">
+          </mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox (change)="toggleRow(row)" [checked]="isRowSelected(row)">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Dynamic Columns -->
+      <ng-container *ngFor="let column of columns" [matColumnDef]="column.key">
+        <th mat-header-cell *matHeaderCellDef 
+            [style.width]="column.width"
+            [style.text-align]="column.align || 'left'"
+            [class.sortable]="column.sortable"
+            (click)="column.sortable ? onSort(column) : null">
+          
+          <span>{{ column.label }}</span>
+          
+          <mat-icon *ngIf="column.sortable && sortColumn === column.key" class="sort-icon">
+            {{ sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}
+          </mat-icon>
+        </th>
+        
+        <td mat-cell *matCellDef="let row" 
+            [style.text-align]="column.align || 'left'"
+            (click)="onRowClick(row)">
+          
+          <!-- Text/Number/Date -->
+          <span *ngIf="!column.type || column.type === 'text' || column.type === 'number' || column.type === 'date'">
+            {{ formatCellValue(row, column) }}
+          </span>
+          
+          <!-- Badge -->
+          <span *ngIf="column.type === 'badge'" 
+                class="status-badge" 
+                [ngClass]="'badge-' + (row[column.key] || '').toLowerCase()">
+            {{ row[column.key] }}
+          </span>
+          
+          <!-- Checkbox -->
+          <mat-checkbox *ngIf="column.type === 'checkbox'" 
+                        [checked]="row[column.key]" 
+                        [disabled]="true">
+          </mat-checkbox>
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container *ngIf="actions.length > 0" matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef class="actions-header">Actions</th>
+        <td mat-cell *matCellDef="let row" class="actions-cell">
+          <button *ngFor="let action of actions"
+                  mat-icon-button
+                  [color]="action.color || 'primary'"
+                  [matTooltip]="action.label"
+                  (click)="executeAction(action, row); $event.stopPropagation()"
+                  [style.display]="isActionVisible(action, row) ? 'inline-flex' : 'none'">
+            <mat-icon>{{ action.icon || 'more_vert' }}</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <!-- Header and Row Definitions -->
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+          class="table-row"
+          [class.selected-row]="isRowSelected(row)">
+      </tr>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="paginated && !loading && paginatedData.length > 0" class="pagination-container">
+    <div class="pagination-info">
+      Affichage {{ (currentPage - 1) * pageSize + 1 }} à 
+      {{ Math.min(currentPage * pageSize, filteredData.length) }} sur 
+      {{ filteredData.length }} entrées
+    </div>
+    
+    <div class="pagination-controls">
+      <button mat-icon-button 
+              [disabled]="currentPage === 1" 
+              (click)="onPageChange(1)">
+        <mat-icon>first_page</mat-icon>
+      </button>
+      
+      <button mat-icon-button 
+              [disabled]="currentPage === 1" 
+              (click)="onPageChange(currentPage - 1)">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      
+      <span class="page-numbers">
+        <button *ngFor="let page of getPaginationArray().slice(Math.max(0, currentPage - 3), Math.min(totalPages, currentPage + 2))"
+                mat-button
+                [class.current-page]="page === currentPage"
+                (click)="onPageChange(page)">
+          {{ page }}
+        </button>
+      </span>
+      
+      <button mat-icon-button 
+              [disabled]="currentPage === totalPages" 
+              (click)="onPageChange(currentPage + 1)">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+      
+      <button mat-icon-button 
+              [disabled]="currentPage === totalPages" 
+              (click)="onPageChange(totalPages)">
+        <mat-icon>last_page</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

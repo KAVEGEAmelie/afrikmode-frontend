@@ -1,0 +1,230 @@
+<div class="home-page">
+  
+  <!-- Hero Section / Slider -->
+  <section class="hero-section">
+    <div class="hero-slider">
+      <div class="slides-container">
+        <div *ngFor="let slide of heroSlides; let i = index" 
+             class="slide" 
+             [class.active]="i === currentSlide">
+          <div class="slide-background" [style.background-image]="'url(' + slide.image + ')'"></div>
+          <div class="slide-overlay"></div>
+          <div class="slide-content">
+            <div class="container">
+              <span class="slide-subtitle">{{ slide.subtitle }}</span>
+              <h1 class="slide-title">{{ slide.title }}</h1>
+              <p class="slide-description">{{ slide.description }}</p>
+              <a [routerLink]="slide.buttonLink" class="btn btn-primary">
+                {{ slide.buttonText }}
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Arrows -->
+      <button class="slider-arrow prev" (click)="previousSlide()">
+        <i class="fas fa-chevron-left"></i>
+      </button>
+      <button class="slider-arrow next" (click)="nextSlide()">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+
+      <!-- Dots Navigation -->
+      <div class="slider-dots">
+        <button *ngFor="let slide of heroSlides; let i = index"
+                class="dot"
+                [class.active]="i === currentSlide"
+                (click)="goToSlide(i)">
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services Section -->
+  <section class="services-section">
+    <div class="container">
+      <div class="services-grid">
+        <div class="service-item">
+          <i class="fas fa-shipping-fast"></i>
+          <h3>Livraison Gratuite</h3>
+          <p>Sur toutes les commandes de plus de 50 000 FCFA</p>
+        </div>
+        <div class="service-item">
+          <i class="fas fa-undo"></i>
+          <h3>Retours Faciles</h3>
+          <p>Retour gratuit sous 30 jours</p>
+        </div>
+        <div class="service-item">
+          <i class="fas fa-lock"></i>
+          <h3>Paiement Sécurisé</h3>
+          <p>Transactions 100% sécurisées</p>
+        </div>
+        <div class="service-item">
+          <i class="fas fa-headset"></i>
+          <h3>Support 24/7</h3>
+          <p>Service client disponible</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="categories-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Nos Catégories</h2>
+      <p>Découvrez notre large sélection de produits</p>
+    </div>
+
+    <div class="categories-grid">
+      <div *ngFor="let category of categories" 
+           class="category-card"
+           [routerLink]="['/shop']"
+           [queryParams]="{category: category.name}">
+        <div class="category-image">
+          <img 
+            [src]="category.image" 
+            [alt]="category.name"
+            loading="lazy"
+            onerror="this.src='assets/images/placeholder.jpg'">
+          <div class="category-overlay">
+            <span class="product-count">{{ category.count }} produits</span>
+          </div>
+        </div>
+        <div class="category-info">
+          <h3>{{ category.name }}</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- Featured Products Section -->
+  <section class="products-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Produits en Vedette</h2>
+        <p>Découvrez nos meilleures ventes</p>
+        <a routerLink="/shop" class="view-all">
+          Voir tout <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+
+      <div class="products-grid">
+        <div *ngFor="let product of featuredProducts" 
+             class="product-card"
+             [routerLink]="['/products', product.id]">
+          
+          <!-- Badges -->
+          <div class="product-badges">
+            <span *ngIf="product.isNew" class="badge badge-new">Nouveau</span>
+            <span *ngIf="product.discount" class="badge badge-sale">-{{ product.discount }}%</span>
+          </div>
+
+          <!-- Image -->
+          <div class="product-image">
+            <img [src]="product.image" [alt]="product.name">
+            <div class="product-actions">
+              <button class="action-btn" (click)="addToWishlist(product, $event)" title="Ajouter aux favoris">
+                <i class="far fa-heart"></i>
+              </button>
+              <button class="action-btn" title="Aperçu rapide">
+                <i class="far fa-eye"></i>
+              </button>
+            </div>
+            <button class="add-to-cart-btn" (click)="addToCart(product, $event)">
+              <i class="fas fa-shopping-bag"></i> Ajouter au panier
+            </button>
+          </div>
+
+          <!-- Info -->
+          <div class="product-info">
+            <span class="product-category">{{ product.category }}</span>
+            <h3 class="product-name">{{ product.name }}</h3>
+            <div class="product-rating">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star-half-alt"></i>
+              <span>(4.5)</span>
+            </div>
+            <div class="product-price">
+              <span class="current-price">{{ product.price | number }} FCFA</span>
+              <span *ngIf="product.oldPrice" class="old-price">{{ product.oldPrice | number }} FCFA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Banner Promo -->
+  <section class="promo-banner">
+    <div class="container">
+      <div class="promo-content">
+        <span class="promo-tag">Offre Spéciale</span>
+        <h2>Jusqu'à -50% sur la Collection Été</h2>
+        <p>Profitez de réductions exceptionnelles sur une sélection de produits</p>
+        <a routerLink="/promotions" class="btn btn-light">
+          Voir les Promotions
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- New Arrivals Section -->
+  <section class="products-section new-arrivals-section">
+    <div class="container">
+      <div class="section-header">
+        <h2>Nouveautés</h2>
+        <p>Les derniers ajouts à notre collection</p>
+      </div>
+
+      <div class="products-grid">
+        <div *ngFor="let product of newArrivals" 
+             class="product-card"
+             [routerLink]="['/products', product.id]">
+          
+          <div class="product-badges">
+            <span class="badge badge-new">Nouveau</span>
+          </div>
+
+          <div class="product-image">
+            <img [src]="product.image" [alt]="product.name">
+            <div class="product-actions">
+              <button class="action-btn" (click)="addToWishlist(product, $event)">
+                <i class="far fa-heart"></i>
+              </button>
+              <button class="action-btn">
+                <i class="far fa-eye"></i>
+              </button>
+            </div>
+            <button class="add-to-cart-btn" (click)="addToCart(product, $event)">
+              <i class="fas fa-shopping-bag"></i> Ajouter au panier
+            </button>
+          </div>
+
+          <div class="product-info">
+            <span class="product-category">{{ product.category }}</span>
+            <h3 class="product-name">{{ product.name }}</h3>
+            <div class="product-rating">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star-half-alt"></i>
+            </div>
+            <div class="product-price">
+              <span class="current-price">{{ product.price | number }} FCFA</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

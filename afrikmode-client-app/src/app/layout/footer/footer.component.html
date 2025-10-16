@@ -1,0 +1,83 @@
+<!-- Footer -->
+<footer class="footer">
+  <!-- Newsletter Section -->
+  <div class="newsletter-section">
+    <div class="container">
+      <div class="newsletter-content">
+        <div class="newsletter-text">
+          <h3>Restez informé</h3>
+          <p>Inscrivez-vous à notre newsletter pour recevoir nos offres exclusives</p>
+        </div>
+        <div class="newsletter-form">
+          <input type="email" placeholder="Votre adresse email" class="newsletter-input">
+          <button class="newsletter-btn">S'inscrire</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Footer Content -->
+  <div class="footer-main">
+    <div class="container">
+      <div class="footer-grid">
+        <!-- AfrikMode Column -->
+        <div class="footer-column">
+          <h4 class="afrikmode-title">
+            AfrikMode
+            <span class="sparkle sparkle-1">✨</span>
+            <span class="sparkle sparkle-2">🌟</span>
+            <span class="sparkle sparkle-3">💫</span>
+          </h4>
+          <p>Votre destination mode africaine. Découvrez des créations uniques alliant tradition et modernité.</p>
+          <div class="social-links">
+            <a *ngFor="let social of socialLinks" [href]="social.url" [title]="social.name" class="social-link">
+              <i [class]="social.icon" [attr.data-fallback]="social.fallback"></i>
+              <span class="social-fallback">{{ social.fallback }}</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Entreprise Column -->
+        <div class="footer-column">
+          <h4>Entreprise</h4>
+          <ul class="footer-links">
+            <li *ngFor="let link of footerLinks.company">
+              <a [routerLink]="link.path">{{ link.label }}</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Aide Column -->
+        <div class="footer-column">
+          <h4>Aide</h4>
+          <ul class="footer-links">
+            <li *ngFor="let link of footerLinks.help">
+              <a [routerLink]="link.path">{{ link.label }}</a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Légal Column -->
+        <div class="footer-column">
+          <h4>Légal</h4>
+          <ul class="footer-links">
+            <li *ngFor="let link of footerLinks.legal">
+              <a [routerLink]="link.path">{{ link.label }}</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Bottom -->
+  <div class="footer-bottom">
+    <div class="container">
+      <div class="footer-bottom-content">
+        <p class="copyright">© {{ currentYear }} AfrikMode. Tous droits réservés.</p>
+        <p class="secure-payment">Paiement sécurisé</p>
+      </div>
+    </div>
+  </div>
+</footer>
+

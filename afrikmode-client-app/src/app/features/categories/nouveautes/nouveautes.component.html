@@ -1,0 +1,115 @@
+<div class="nouveautes-page">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1 class="hero-title">
+          <span class="highlight">Nouveautés</span> AfrikMode
+        </h1>
+        <p class="hero-subtitle">
+          Découvrez nos dernières créations inspirées des traditions africaines et des tendances contemporaines
+        </p>
+        <div class="hero-badges">
+          <span class="badge new">Nouveauté</span>
+          <span class="badge trendy">Tendance</span>
+          <span class="badge limited">Édition Limitée</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-overlay"></div>
+  </section>
+
+  <!-- Tendances Section -->
+  <section class="trends-section">
+    <div class="container">
+      <h2 class="section-title">🌟 Tendances du Moment</h2>
+      <div class="trends-grid">
+        <div class="trend-card" *ngFor="let trend of trends">
+          <div class="trend-icon">{{ trend.icon }}</div>
+          <h3 class="trend-title">{{ trend.title }}</h3>
+          <p class="trend-description">{{ trend.description }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Collections Section -->
+  <section class="collections-section">
+    <div class="container">
+      <h2 class="section-title">🎨 Nouvelles Collections</h2>
+      <div class="collections-grid">
+        <div class="collection-card" *ngFor="let collection of collections">
+          <div class="collection-image">
+            <img [src]="collection.image" [alt]="collection.title" [title]="collection.title" />
+            <div class="collection-overlay">
+              <span class="item-count">{{ collection.itemCount }} pièces</span>
+            </div>
+          </div>
+          <div class="collection-info">
+            <h3 class="collection-title">{{ collection.title }}</h3>
+            <p class="collection-description">{{ collection.description }}</p>
+            <button class="btn-explore">Découvrir</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Products Section -->
+  <section class="featured-products">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">✨ Produits Vedettes</h2>
+        <p class="section-subtitle">Les pièces les plus populaires de notre nouvelle collection</p>
+      </div>
+      
+      <div class="products-grid">
+        <div class="product-card" *ngFor="let product of featuredProducts">
+          <div class="product-image">
+            <img [src]="product.image" [alt]="product.name" [title]="product.name" />
+            <div class="product-badges" *ngIf="product.isNew || product.discount">
+              <span class="badge new" *ngIf="product.isNew">Nouveau</span>
+              <span class="badge discount" *ngIf="product.discount">-{{ product.discount }}%</span>
+            </div>
+            <div class="product-actions">
+              <button class="action-btn wishlist" (click)="addToWishlist(product)" title="Ajouter à la wishlist">
+                <i class="icon">♡</i>
+              </button>
+              <button class="action-btn view" (click)="viewProduct(product)" title="Voir le produit">
+                <i class="icon">👁</i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="product-info">
+            <span class="product-category">{{ product.category }}</span>
+            <h3 class="product-name">{{ product.name }}</h3>
+            <div class="product-price">
+              <span class="current-price">{{ product.price }}€</span>
+              <span class="original-price" *ngIf="product.originalPrice">{{ product.originalPrice }}€</span>
+            </div>
+            <button class="btn-add-cart" (click)="addToCart(product)">
+              Ajouter au Panier
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter Section -->
+  <section class="newsletter-section">
+    <div class="container">
+      <div class="newsletter-content">
+        <h2 class="newsletter-title">Restez à la Mode</h2>
+        <p class="newsletter-text">
+          Soyez les premiers informés de nos nouvelles collections et offres exclusives
+        </p>
+        <form class="newsletter-form">
+          <input type="email" placeholder="Votre adresse e-mail" class="newsletter-input" />
+          <button type="submit" class="newsletter-btn">S'abonner</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>

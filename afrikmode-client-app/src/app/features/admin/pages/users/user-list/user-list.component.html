@@ -1,0 +1,63 @@
+<!-- src/app/features/admin/pages/users/user-list/user-list.component.html -->
+
+<div class="user-list-container">
+  <div class="list-header">
+    <div class="search-filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Rechercher un utilisateur</mat-label>
+        <input matInput placeholder="Nom, email..." #searchInput>
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Filtrer par rôle</mat-label>
+        <mat-select>
+          <mat-option value="">Tous les rôles</mat-option>
+          <mat-option value="super_admin">Super Admin</mat-option>
+          <mat-option value="admin">Admin</mat-option>
+          <mat-option value="moderator">Modérateur</mat-option>
+          <mat-option value="user">Utilisateur</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Filtrer par statut</mat-label>
+        <mat-select>
+          <mat-option value="">Tous les statuts</mat-option>
+          <mat-option value="active">Actif</mat-option>
+          <mat-option value="inactive">Inactif</mat-option>
+          <mat-option value="suspended">Suspendu</mat-option>
+          <mat-option value="pending">En attente</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="action-buttons">
+      <button mat-stroked-button (click)="exportUsers()">
+        <mat-icon>download</mat-icon>
+        Exporter
+      </button>
+      
+      <button mat-raised-button color="primary" [routerLink]="['../create']">
+        <mat-icon>add</mat-icon>
+        Nouvel Utilisateur
+      </button>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <app-admin-data-table
+      [data]="users"
+      [columns]="columns"
+      [loading]="loading"
+      [selectable]="true"
+      [actions]="actions"
+      [searchable]="true"
+      [paginated]="true"
+      [pageSize]="10"
+      emptyMessage="Aucun utilisateur trouvé"
+      (selectionChange)="onSelectionChange($event)"
+      (sortChange)="onSortChange($event)">
+    </app-admin-data-table>
+  </div>
+</div>

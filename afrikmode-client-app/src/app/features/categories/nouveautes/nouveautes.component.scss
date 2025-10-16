@@ -1,0 +1,539 @@
+@use "sass:color";
+
+// Variables AfrikMode
+$primary-red: #8B2E2E;
+$accent-orange: #D9744F;
+$light-bg: #F5E4D7;
+$white-text: #FFF9F6;
+$dark-text: #2C1810;
+$gold-accent: #DAA520;
+
+.nouveautes-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, $light-bg 0%, #F8F0E8 100%);
+
+  // Hero Section
+  .hero-section {
+    position: relative;
+    height: 60vh;
+    background: linear-gradient(135deg, $primary-red 0%, $accent-orange 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      color: $white-text;
+      padding: 2rem;
+    }
+
+    .hero-title {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+
+      .highlight {
+        color: $gold-accent;
+        text-shadow: 0 0 20px rgba(218, 165, 32, 0.5);
+      }
+    }
+
+    .hero-subtitle {
+      font-size: 1.3rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.6;
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="white" opacity="0.1"/><circle cx="90" cy="90" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      opacity: 0.3;
+    }
+  }
+
+  // Container
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+  }
+
+  // Section Titles
+  .section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: $primary-red;
+    text-align: center;
+    margin-bottom: 1rem;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -0.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 4px;
+      background: linear-gradient(90deg, $accent-orange, $gold-accent);
+      border-radius: 2px;
+    }
+  }
+
+  .section-subtitle {
+    text-align: center;
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 3rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  // Badges
+  .badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    &.new {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+    }
+
+    &.trendy {
+      background: linear-gradient(135deg, #FF9800, #F57C00);
+      color: white;
+      box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+    }
+
+    &.limited {
+      background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(156, 39, 176, 0.3);
+    }
+
+    &.discount {
+      background: linear-gradient(135deg, #f44336, #d32f2f);
+      color: white;
+      box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+    }
+  }
+
+  // Trends Section
+  .trends-section {
+    padding: 4rem 0;
+    background: white;
+  }
+
+  .trends-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .trend-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(139, 46, 46, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(139, 46, 46, 0.1);
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(139, 46, 46, 0.15);
+    }
+
+    .trend-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .trend-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: $primary-red;
+      margin-bottom: 0.5rem;
+    }
+
+    .trend-description {
+      color: #666;
+      line-height: 1.5;
+    }
+  }
+
+  // Collections Section
+  .collections-section {
+    padding: 4rem 0;
+    background: $light-bg;
+  }
+
+  .collections-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+
+  .collection-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(139, 46, 46, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px rgba(139, 46, 46, 0.2);
+    }
+
+    .collection-image {
+      position: relative;
+      height: 250px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover img {
+        transform: scale(1.05);
+      }
+
+      .collection-overlay {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(139, 46, 46, 0.9);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 15px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+    }
+
+    .collection-info {
+      padding: 1.5rem;
+
+      .collection-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: $primary-red;
+        margin-bottom: 0.5rem;
+      }
+
+      .collection-description {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+      }
+
+      .btn-explore {
+        background: linear-gradient(135deg, $primary-red, $accent-orange);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(139, 46, 46, 0.3);
+        }
+      }
+    }
+  }
+
+  // Featured Products Section
+  .featured-products {
+    padding: 4rem 0;
+    background: white;
+  }
+
+  .section-header {
+    margin-bottom: 3rem;
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+  }
+
+  .product-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .product-image {
+      position: relative;
+      height: 250px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+
+      &:hover img {
+        transform: scale(1.05);
+      }
+
+      .product-badges {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .product-actions {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      &:hover .product-actions {
+        opacity: 1;
+      }
+
+      .action-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(255, 255, 255, 0.9);
+        color: $primary-red;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+          background: $primary-red;
+          color: white;
+          transform: scale(1.1);
+        }
+      }
+    }
+
+    .product-info {
+      padding: 1.5rem;
+
+      .product-category {
+        color: $accent-orange;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .product-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: $dark-text;
+        margin: 0.5rem 0;
+        line-height: 1.3;
+      }
+
+      .product-price {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+
+        .current-price {
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: $primary-red;
+        }
+
+        .original-price {
+          font-size: 1rem;
+          color: #999;
+          text-decoration: line-through;
+        }
+      }
+
+      .btn-add-cart {
+        width: 100%;
+        background: linear-gradient(135deg, $primary-red, $accent-orange);
+        color: white;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(139, 46, 46, 0.3);
+        }
+      }
+    }
+  }
+
+  // Newsletter Section
+  .newsletter-section {
+    padding: 4rem 0;
+    background: linear-gradient(135deg, $primary-red 0%, $accent-orange 100%);
+    color: white;
+    text-align: center;
+  }
+
+  .newsletter-content {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .newsletter-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  .newsletter-text {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+  }
+
+  .newsletter-form {
+    display: flex;
+    gap: 1rem;
+    max-width: 400px;
+    margin: 0 auto;
+
+    .newsletter-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 25px;
+      font-size: 1rem;
+      outline: none;
+
+      &::placeholder {
+        color: #999;
+      }
+    }
+
+    .newsletter-btn {
+      background: $gold-accent;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+
+      &:hover {
+        background: color.adjust($gold-accent, $lightness: -10%);
+        transform: translateY(-2px);
+      }
+    }
+  }
+
+  // Responsive
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.5rem;
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+    }
+
+    .trends-grid,
+    .collections-grid,
+    .products-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .newsletter-form {
+      flex-direction: column;
+    }
+
+    .hero-badges {
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-section {
+      height: 50vh;
+    }
+
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .container {
+      padding: 0 0.5rem;
+    }
+
+    .product-card,
+    .collection-card,
+    .trend-card {
+      margin: 0 0.5rem;
+    }
+  }
+}

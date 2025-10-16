@@ -1,0 +1,469 @@
+@use "sass:color";
+
+// Variables AfrikMode
+$primary-red: #8B2E2E;
+$accent-orange: #D9744F;
+$light-bg: #F5E4D7;
+$white-text: #FFF9F6;
+$dark-text: #2C1810;
+$gold-accent: #DAA520;
+$success-green: #28a745;
+$warning-yellow: #ffc107;
+$danger-red: #dc3545;
+$info-blue: #17a2b8;
+
+.payment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+
+  .payment-modal-container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    animation: slideIn 0.3s ease;
+    position: relative;
+
+    // Modal Header
+    .modal-header {
+      background: linear-gradient(135deg, $primary-red 0%, $accent-orange 100%);
+      color: white;
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        i {
+          color: $gold-accent;
+          font-size: 1.3rem;
+        }
+      }
+
+      .close-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: scale(1.1);
+        }
+      }
+    }
+
+    // Modal Content
+    .modal-content {
+      max-height: 70vh;
+      overflow-y: auto;
+
+      &.success-state {
+        padding: 3rem 2rem;
+        text-align: center;
+
+        .success-animation {
+          position: relative;
+          margin-bottom: 2rem;
+
+          .success-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, $success-green, color.adjust($success-green, $lightness: 10%));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            animation: successPulse 0.6s ease;
+            position: relative;
+            z-index: 2;
+
+            i {
+              font-size: 3rem;
+              color: white;
+              animation: successCheck 0.5s ease 0.3s both;
+            }
+          }
+
+          .success-particles {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+
+            .particle {
+              position: absolute;
+              width: 8px;
+              height: 8px;
+              background: $success-green;
+              border-radius: 50%;
+              animation: successParticles 1s ease forwards;
+
+              &:nth-child(1) { animation-delay: 0.1s; }
+              &:nth-child(2) { animation-delay: 0.2s; }
+              &:nth-child(3) { animation-delay: 0.3s; }
+              &:nth-child(4) { animation-delay: 0.4s; }
+              &:nth-child(5) { animation-delay: 0.5s; }
+              &:nth-child(6) { animation-delay: 0.6s; }
+            }
+          }
+        }
+
+        h3 {
+          color: $dark-text;
+          font-size: 2rem;
+          margin-bottom: 1rem;
+          font-weight: 700;
+        }
+
+        p {
+          color: #666;
+          font-size: 1.1rem;
+          margin-bottom: 2rem;
+        }
+
+        .success-details {
+          background: #f8f9fa;
+          border-radius: 15px;
+          padding: 1.5rem;
+          margin-bottom: 2rem;
+          text-align: left;
+
+          .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e9ecef;
+
+            &:last-child {
+              border-bottom: none;
+            }
+
+            span {
+              color: #666;
+              font-weight: 500;
+            }
+
+            strong {
+              color: $dark-text;
+              font-weight: 700;
+
+              &.status-success {
+                color: $success-green;
+                background: rgba(40, 167, 69, 0.1);
+                padding: 0.25rem 0.75rem;
+                border-radius: 15px;
+                font-size: 0.9rem;
+              }
+            }
+          }
+        }
+
+        .success-actions {
+          .btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, $success-green, color.adjust($success-green, $lightness: 10%));
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 5px 20px rgba(40, 167, 69, 0.3);
+            }
+          }
+        }
+      }
+
+      &.error-state {
+        padding: 3rem 2rem;
+        text-align: center;
+
+        .error-animation {
+          margin-bottom: 2rem;
+
+          .error-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, $danger-red, color.adjust($danger-red, $lightness: 10%));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            animation: errorShake 0.6s ease;
+
+            i {
+              font-size: 3rem;
+              color: white;
+            }
+          }
+        }
+
+        h3 {
+          color: $dark-text;
+          font-size: 2rem;
+          margin-bottom: 1rem;
+          font-weight: 700;
+        }
+
+        p {
+          color: #666;
+          font-size: 1.1rem;
+          margin-bottom: 2rem;
+        }
+
+        .error-actions {
+          display: flex;
+          gap: 1rem;
+          justify-content: center;
+          flex-wrap: wrap;
+
+          .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            &.btn-outline {
+              background: transparent;
+              color: $primary-red;
+              border: 2px solid $primary-red;
+
+              &:hover {
+                background: $primary-red;
+                color: white;
+                transform: translateY(-2px);
+              }
+            }
+
+            &.btn-primary {
+              background: linear-gradient(135deg, $primary-red, $accent-orange);
+              color: white;
+              border: none;
+
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 5px 20px rgba(139, 46, 46, 0.3);
+              }
+            }
+          }
+        }
+      }
+
+    }
+
+    // Modal Footer
+    .modal-footer {
+      padding: 1rem 2rem;
+      background: #f8f9fa;
+      border-top: 1px solid #e9ecef;
+
+      .security-badges {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+
+        .badge {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: $success-green;
+          font-size: 0.9rem;
+          font-weight: 600;
+
+          i {
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-50px) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes successPulse {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes successCheck {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes successParticles {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(var(--x), var(--y)) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x), var(--y)) scale(0);
+  }
+}
+
+@keyframes errorShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-10px);
+  }
+  75% {
+    transform: translateX(10px);
+  }
+}
+
+// Position des particules de succès
+.success-particles .particle {
+  &:nth-child(1) { --x: 60px; --y: -60px; }
+  &:nth-child(2) { --x: 0px; --y: -80px; }
+  &:nth-child(3) { --x: -60px; --y: -60px; }
+  &:nth-child(4) { --x: -80px; --y: 0px; }
+  &:nth-child(5) { --x: -60px; --y: 60px; }
+  &:nth-child(6) { --x: 60px; --y: 60px; }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .payment-modal-overlay {
+    padding: 0.5rem;
+
+    .payment-modal-container {
+      border-radius: 15px;
+      max-height: 95vh;
+
+      .modal-header {
+        padding: 1rem 1.5rem;
+
+        h2 {
+          font-size: 1.3rem;
+        }
+      }
+
+      .modal-content {
+        &.success-state,
+        &.error-state {
+          padding: 2rem 1.5rem;
+
+          h3 {
+            font-size: 1.5rem;
+          }
+
+          .success-details {
+            padding: 1rem;
+
+            .detail-item {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 0.25rem;
+            }
+          }
+
+          .error-actions {
+            flex-direction: column;
+
+            .btn {
+              width: 100%;
+              justify-content: center;
+            }
+          }
+        }
+      }
+
+      .modal-footer {
+        padding: 1rem 1.5rem;
+
+        .security-badges {
+          flex-direction: column;
+          align-items: center;
+          gap: 0.75rem;
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,364 @@
+// src/app/features/admin/styles/admin-theme.scss
+
+// Importation des variables et mixins
+@import 'admin-variables';
+@import 'admin-mixins';
+
+// === STYLES GLOBAUX ADMIN ===
+.admin-layout {
+  min-height: 100vh;
+  background-color: $admin-light-grey;
+  font-family: $admin-font-family;
+}
+
+// === STYLES DE NAVIGATION ===
+.admin-sidebar {
+  width: $admin-sidebar-width;
+  height: 100vh;
+  background-color: $admin-white;
+  @include admin-elevated-shadow;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: $admin-z-index-sidebar;
+  @include admin-transition(width);
+
+  &.collapsed {
+    width: $admin-sidebar-collapsed-width;
+  }
+}
+
+.admin-topbar {
+  height: $admin-topbar-height;
+  background-color: $admin-white;
+  @include admin-card-shadow;
+  position: fixed;
+  top: 0;
+  left: $admin-sidebar-width;
+  right: 0;
+  z-index: $admin-z-index-topbar;
+  @include admin-transition(left);
+
+  .sidebar-collapsed & {
+    left: $admin-sidebar-collapsed-width;
+  }
+}
+
+.admin-main-content {
+  margin-left: $admin-sidebar-width;
+  margin-top: $admin-topbar-height;
+  padding: $admin-spacing-lg;
+  min-height: calc(100vh - #{$admin-topbar-height});
+  @include admin-transition(margin-left);
+
+  .sidebar-collapsed & {
+    margin-left: $admin-sidebar-collapsed-width;
+  }
+}
+
+// === STYLES DE CARTES ===
+.admin-card {
+  @include admin-card;
+  margin-bottom: $admin-spacing-lg;
+
+  &.admin-card-no-padding {
+    padding: 0;
+  }
+
+  .admin-card-header {
+    @include admin-card-header;
+  }
+
+  .admin-card-content {
+    @include admin-body-text;
+  }
+
+  .admin-card-actions {
+    @include admin-flex-start;
+    gap: $admin-spacing-md;
+    padding-top: $admin-spacing-md;
+    margin-top: $admin-spacing-md;
+    border-top: $admin-border-width solid $admin-border-color;
+  }
+}
+
+// === STYLES DE BOUTONS ===
+.admin-btn {
+  @include admin-button-base;
+
+  &.admin-btn-primary {
+    @include admin-button-primary;
+  }
+
+  &.admin-btn-secondary {
+    @include admin-button-secondary;
+  }
+
+  &.admin-btn-success {
+    background-color: $admin-success;
+    color: $admin-white;
+
+    &:hover:not(:disabled) {
+      background-color: darken($admin-success, 10%);
+    }
+  }
+
+  &.admin-btn-warning {
+    background-color: $admin-warning;
+    color: $admin-black;
+
+    &:hover:not(:disabled) {
+      background-color: darken($admin-warning, 10%);
+    }
+  }
+
+  &.admin-btn-danger {
+    background-color: $admin-danger;
+    color: $admin-white;
+
+    &:hover:not(:disabled) {
+      background-color: darken($admin-danger, 10%);
+    }
+  }
+
+  &.admin-btn-small {
+    padding: $admin-spacing-sm $admin-spacing-md;
+    font-size: $admin-font-size-small;
+  }
+
+  &.admin-btn-large {
+    padding: $admin-spacing-lg $admin-spacing-xl;
+    font-size: $admin-font-size-large;
+  }
+}
+
+// === STYLES DE TABLEAUX ===
+.admin-table {
+  @include admin-table;
+  @include admin-border-radius(md);
+  overflow: hidden;
+
+  &.admin-table-striped {
+    tbody tr:nth-child(even) {
+      background-color: $admin-light-grey;
+    }
+  }
+
+  &.admin-table-bordered {
+    th, td {
+      border: $admin-border-width solid $admin-table-border;
+    }
+  }
+}
+
+// === STYLES DE STATUTS ===
+.admin-status {
+  &.admin-status-active {
+    @include admin-status-badge($status-active);
+  }
+
+  &.admin-status-inactive {
+    @include admin-status-badge($status-inactive);
+  }
+
+  &.admin-status-pending {
+    @include admin-status-badge($status-pending);
+  }
+
+  &.admin-status-suspended {
+    @include admin-status-badge($status-suspended);
+  }
+
+  &.admin-status-draft {
+    @include admin-status-badge($status-draft);
+  }
+}
+
+// === STYLES DE RÔLES ===
+.admin-role {
+  &.admin-role-super-admin {
+    @include admin-status-badge($role-super-admin);
+  }
+
+  &.admin-role-admin {
+    @include admin-status-badge($role-admin);
+  }
+
+  &.admin-role-manager {
+    @include admin-status-badge($role-manager);
+  }
+
+  &.admin-role-vendor {
+    @include admin-status-badge($role-vendor);
+  }
+
+  &.admin-role-customer {
+    @include admin-status-badge($role-customer);
+  }
+}
+
+// === STYLES DE FORMULAIRES ===
+.admin-form {
+  .admin-form-group {
+    margin-bottom: $admin-spacing-lg;
+
+    label {
+      display: block;
+      margin-bottom: $admin-spacing-sm;
+      font-weight: $admin-font-weight-medium;
+      color: $admin-black;
+    }
+
+    .admin-form-control {
+      width: 100%;
+      padding: $admin-spacing-md;
+      border: $admin-border-width solid $admin-border-color;
+      @include admin-border-radius(sm);
+      font-family: $admin-font-family;
+      font-size: $admin-font-size-base;
+      @include admin-transition(border-color);
+
+      &:focus {
+        outline: none;
+        border-color: $admin-primary;
+        box-shadow: 0 0 0 2px rgba($admin-primary, 0.2);
+      }
+
+      &.admin-form-control-error {
+        border-color: $admin-danger;
+      }
+    }
+
+    .admin-form-error {
+      margin-top: $admin-spacing-xs;
+      color: $admin-danger;
+      font-size: $admin-font-size-small;
+    }
+
+    .admin-form-help {
+      margin-top: $admin-spacing-xs;
+      color: $admin-dark-grey;
+      font-size: $admin-font-size-small;
+    }
+  }
+
+  .admin-form-actions {
+    @include admin-flex-start;
+    gap: $admin-spacing-md;
+    padding-top: $admin-spacing-lg;
+    margin-top: $admin-spacing-lg;
+    border-top: $admin-border-width solid $admin-border-color;
+  }
+}
+
+// === STYLES D'ALERTES ===
+.admin-alert {
+  padding: $admin-spacing-md $admin-spacing-lg;
+  margin-bottom: $admin-spacing-lg;
+  @include admin-border-radius(sm);
+  @include admin-border;
+
+  &.admin-alert-success {
+    background-color: lighten($admin-success, 45%);
+    border-color: $admin-success;
+    color: darken($admin-success, 20%);
+  }
+
+  &.admin-alert-warning {
+    background-color: lighten($admin-warning, 35%);
+    border-color: $admin-warning;
+    color: darken($admin-warning, 30%);
+  }
+
+  &.admin-alert-danger {
+    background-color: lighten($admin-danger, 40%);
+    border-color: $admin-danger;
+    color: darken($admin-danger, 20%);
+  }
+
+  &.admin-alert-info {
+    background-color: lighten($admin-info, 40%);
+    border-color: $admin-info;
+    color: darken($admin-info, 20%);
+  }
+}
+
+// === STYLES D'UTILITAIRES ===
+.admin-text-center { text-align: center; }
+.admin-text-left { text-align: left; }
+.admin-text-right { text-align: right; }
+
+.admin-text-primary { color: $admin-primary; }
+.admin-text-success { color: $admin-success; }
+.admin-text-warning { color: $admin-warning; }
+.admin-text-danger { color: $admin-danger; }
+.admin-text-muted { color: $admin-dark-grey; }
+
+.admin-bg-primary { background-color: $admin-primary; }
+.admin-bg-light { background-color: $admin-light-grey; }
+.admin-bg-white { background-color: $admin-white; }
+
+.admin-m-0 { margin: 0; }
+.admin-mt-1 { margin-top: $admin-spacing-xs; }
+.admin-mt-2 { margin-top: $admin-spacing-sm; }
+.admin-mt-3 { margin-top: $admin-spacing-md; }
+.admin-mt-4 { margin-top: $admin-spacing-lg; }
+.admin-mt-5 { margin-top: $admin-spacing-xl; }
+
+.admin-mb-1 { margin-bottom: $admin-spacing-xs; }
+.admin-mb-2 { margin-bottom: $admin-spacing-sm; }
+.admin-mb-3 { margin-bottom: $admin-spacing-md; }
+.admin-mb-4 { margin-bottom: $admin-spacing-lg; }
+.admin-mb-5 { margin-bottom: $admin-spacing-xl; }
+
+.admin-p-1 { padding: $admin-spacing-xs; }
+.admin-p-2 { padding: $admin-spacing-sm; }
+.admin-p-3 { padding: $admin-spacing-md; }
+.admin-p-4 { padding: $admin-spacing-lg; }
+.admin-p-5 { padding: $admin-spacing-xl; }
+
+.admin-d-flex { display: flex; }
+.admin-d-block { display: block; }
+.admin-d-inline { display: inline; }
+.admin-d-inline-block { display: inline-block; }
+.admin-d-none { display: none; }
+
+.admin-loading {
+  @include admin-loading-spinner;
+}
+
+.admin-fade-in {
+  @include admin-fade-in;
+}
+
+// === STYLES RESPONSIFS ===
+@include admin-mobile {
+  .admin-sidebar {
+    transform: translateX(-100%);
+    @include admin-transition(transform);
+
+    &.admin-sidebar-open {
+      transform: translateX(0);
+    }
+  }
+
+  .admin-topbar {
+    left: 0;
+  }
+
+  .admin-main-content {
+    margin-left: 0;
+  }
+
+  .admin-card {
+    padding: $admin-spacing-md;
+  }
+
+  .admin-table {
+    font-size: $admin-font-size-small;
+
+    th, td {
+      padding: $admin-spacing-sm;
+    }
+  }
+}
