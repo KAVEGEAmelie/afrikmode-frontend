@@ -9,7 +9,7 @@ import { Order, PaginatedResponse, TrackingInfo } from '../models';
   providedIn: 'root'
 })
 export class OrderService {
-  private baseUrl = 'http://localhost:5000/api';
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 

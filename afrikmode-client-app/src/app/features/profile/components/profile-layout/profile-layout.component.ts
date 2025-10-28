@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { filter } from 'rxjs/operators';
+import { UserService } from '../../../../core/services/user.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface MenuItem {
   path: string;
@@ -27,12 +29,8 @@ export class ProfileLayoutComponent implements OnInit {
   isSaving = false;
   personalForm: FormGroup;
   
-  user = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    avatar: 'assets/images/avatar-placeholder.png',
-    memberSince: '2023'
-  };
+  user: any = null;
+  loading = true;
 
   menuItems: MenuItem[] = [
     {
@@ -84,10 +82,15 @@ export class ProfileLayoutComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router, private fb: FormBuilder) {
+  constructor(
+    private router: Router, 
+    private fb: FormBuilder,
+    private userService: UserService,
+    private authService: AuthService
+  ) {
     this.personalForm = this.fb.group({
-      name: [this.user.name, Validators.required],
-      email: [this.user.email, [Validators.required, Validators.email]]
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]]
     });
   }
 
@@ -101,6 +104,47 @@ export class ProfileLayoutComponent implements OnInit {
         this.currentRoute = event.url;
         this.closeSidebar();
       });
+    
+    // Load user data
+    this.loadUserData();
+  }
+
+  loadUserData(): void {
+    this.loading = true;
+    
+    this.userService.getProfile().subscribe({
+      next: (response) => {
+        console.log('🔍 Données utilisateur reçues (layout):', JSON.stringify(response, null, 2));
+        
+        // L'API retourne les données dans response.data
+        const user = response.data || response;
+        
+        this.user = {
+          name: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur',
+          email: user.email || '',
+          avatar: user.avatarUrl || 'assets/images/avatar-placeholder.png',
+          memberSince: user.createdAt ? new Date(user.createdAt).getFullYear().toString() : '2023'
+        };
+        console.log('✅ Utilisateur formaté (layout):', JSON.stringify(this.user, null, 2));
+        this.loading = false;
+        
+        // Update form with real data
+        this.personalForm.patchValue({
+          name: this.user.name,
+          email: this.user.email
+        });
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement du profil:', error);
+        this.loading = false;
+        
+        // Si erreur d'authentification, rediriger vers la connexion
+        if (error.status === 401 || error.status === 403) {
+          this.authService.logout();
+          this.router.navigate(['/auth/login']);
+        }
+      }
+    });
   }
 
   toggleSidebar(): void {

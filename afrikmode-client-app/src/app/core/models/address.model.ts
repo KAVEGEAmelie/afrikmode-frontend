@@ -2,14 +2,23 @@
 
 export interface Address {
   id?: string;
-  street: string;
+  user_id?: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+  email?: string;
+  address_line_1: string;
+  address_line_2?: string;
   city: string;
   postal_code: string;
   country: string;
-  phone?: string;
-  email?: string;
-  first_name?: string;
-  last_name?: string;
-  address_line_1?: string;
-  address_line_2?: string;
+  state?: string;
+  type: 'shipping' | 'billing';
+  is_default: boolean;
+  label?: string;
+  latitude?: number;
+  longitude?: number;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string;
 }

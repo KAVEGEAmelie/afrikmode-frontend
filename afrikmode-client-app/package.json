@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "start": "node --max-old-space-size=16384 --max-semi-space-size=1024 ./node_modules/@angular/cli/bin/ng serve --port 4200 --host 0.0.0.0 --disable-host-check --configuration development",
+    "start:light": "node --max-old-space-size=8192 ./node_modules/@angular/cli/bin/ng serve --port 4200 --host 0.0.0.0 --disable-host-check --configuration development --source-map=false",
+    "build": "node --max-old-space-size=16384 ./node_modules/@angular/cli/bin/ng build",
+    "watch": "node --max-old-space-size=8192 ./node_modules/@angular/cli/bin/ng build --watch --configuration development",
     "test": "ng test"
   },
   "prettier": {
@@ -37,10 +38,12 @@
     "@ngrx/entity": "^20.0.1",
     "@ngrx/store": "^20.0.1",
     "@ngrx/store-devtools": "^20.0.1",
+    "chart.js": "^4.5.1",
     "jwt-decode": "^4.0.0",
+    "ng2-charts": "^8.0.0",
     "ngx-toastr": "^19.1.0",
     "rxjs": "^7.8.1",
-    "socket.io-client": "^4.7.2",
+    "socket.io-client": "^4.8.1",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
   },
@@ -49,6 +52,7 @@
     "@angular/build": "^20.3.2",
     "@angular/cli": "^20.3.2",
     "@angular/compiler-cli": "^20.3.0",
+    "@tailwindcss/postcss": "^4.1.16",
     "@types/jasmine": "~5.1.0",
     "@types/socket.io-client": "^3.0.0",
     "autoprefixer": "^10.4.21",

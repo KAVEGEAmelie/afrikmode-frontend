@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { PaymentModalComponent } from '../payment/components/payment-modal/payment-modal.component';
@@ -27,7 +27,7 @@ interface ShippingAddress {
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, CommonModule, PaymentModalComponent],
+  imports: [CommonModule, RouterModule, FormsModule, NgIf, NgFor, PaymentModalComponent],
   templateUrl: './checkout.component.html',
   styleUrls: ['./checkout.component.scss']
 })

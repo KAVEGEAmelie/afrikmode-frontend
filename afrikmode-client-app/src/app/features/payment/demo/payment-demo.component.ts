@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { PaymentModalComponent } from '../components/payment-modal/payment-modal.component';
 import { PaymentSimulationService, PaymentResponse } from '../../../core/services/payment-simulation.service';
 
 @Component({
   selector: 'app-payment-demo',
   standalone: true,
-  imports: [CommonModule, NgIf, PaymentModalComponent],
+  imports: [CommonModule, NgIf, NgFor, PaymentModalComponent],
   templateUrl: './payment-demo.component.html',
   styleUrls: ['./payment-demo.component.scss']
 })

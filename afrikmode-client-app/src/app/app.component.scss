@@ -4,6 +4,58 @@
 :host {
   display: block;
   padding-top: 80px; // Hauteur approximative du header
+  min-height: 100vh;
+}
+
+// Loader de navigation entre les pages
+.navigation-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  z-index: 99999;
+  background: transparent;
+  overflow: hidden;
+}
+
+.loader-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #8B2E2E 0%, #D9744F 50%, #8B2E2E 100%);
+  animation: loading 1.5s ease-in-out infinite;
+  box-shadow: 0 2px 8px rgba(139, 46, 46, 0.3);
+}
+
+@keyframes loading {
+  0% {
+    width: 0%;
+    margin-left: 0%;
+  }
+  50% {
+    width: 50%;
+    margin-left: 25%;
+  }
+  100% {
+    width: 0%;
+    margin-left: 100%;
+  }
+}
+
+// Transition smooth pour le contenu principal
+main {
+  animation: fadeInContent 0.4s ease-in-out;
+  min-height: calc(100vh - 400px); // Ajuster selon la hauteur header + footer
+}
+
+@keyframes fadeInContent {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .connectivity-status-container {

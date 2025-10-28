@@ -1,0 +1,191 @@
+<div class="vendor-orders">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <mat-icon>shopping_cart</mat-icon>
+        Gestion des Commandes
+      </h1>
+      <p class="subtitle">Suivez et gérez toutes vos commandes clients</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="accent" (click)="exportOrders()">
+        <mat-icon>download</mat-icon>
+        Exporter
+      </button>
+      <button mat-raised-button color="primary" (click)="refreshOrders()">
+        <mat-icon>refresh</mat-icon>
+        Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card pending">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>schedule</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.pending }}</h3>
+          <p>En attente</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card processing">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>local_shipping</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.processing }}</h3>
+          <p>En traitement</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card completed">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>check_circle</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.completed }}</h3>
+          <p>Complétées</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card cancelled">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>cancel</mat-icon>
+        </div>
+        <div class="stat-info">
+          <h3>{{ stats.cancelled }}</h3>
+          <p>Annulées</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Rechercher une commande</mat-label>
+          <input matInput [(ngModel)]="searchTerm" (input)="filterOrders()" placeholder="N° commande, client...">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Statut</mat-label>
+          <mat-select [(value)]="statusFilter" (selectionChange)="filterOrders()">
+            <mat-option value="">Tous</mat-option>
+            <mat-option value="pending">En attente</mat-option>
+            <mat-option value="processing">En traitement</mat-option>
+            <mat-option value="shipped">Expédiée</mat-option>
+            <mat-option value="delivered">Livrée</mat-option>
+            <mat-option value="cancelled">Annulée</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Date</mat-label>
+          <mat-select [(value)]="dateFilter" (selectionChange)="filterOrders()">
+            <mat-option value="all">Toutes</mat-option>
+            <mat-option value="today">Aujourd'hui</mat-option>
+            <mat-option value="week">Cette semaine</mat-option>
+            <mat-option value="month">Ce mois</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Orders List -->
+  <mat-card class="orders-list-card">
+    <mat-card-header>
+      <mat-card-title>
+        Commandes ({{ filteredOrders.length }})
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="orders-table">
+        @for (order of filteredOrders; track order.id) {
+          <div class="order-row" (click)="viewOrderDetails(order)">
+            <div class="order-main-info">
+              <div class="order-number">
+                <mat-icon>receipt</mat-icon>
+                <strong>#{{ order.id }}</strong>
+              </div>
+              <mat-chip [class]="'status-chip ' + order.status">
+                {{ getStatusLabel(order.status) }}
+              </mat-chip>
+            </div>
+
+            <div class="order-details">
+              <div class="customer-info">
+                <mat-icon>person</mat-icon>
+                <span>{{ order.customer_name }}</span>
+              </div>
+              <div class="order-date">
+                <mat-icon>schedule</mat-icon>
+                <span>{{ order.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <div class="order-items">
+                <mat-icon>shopping_bag</mat-icon>
+                <span>{{ order.items_count }} article(s)</span>
+              </div>
+            </div>
+
+            <div class="order-amount">
+              <div class="total">{{ order.total.toLocaleString('fr-FR') }} FCFA</div>
+              <div class="payment-status" [class.paid]="order.payment_status === 'paid'">
+                <mat-icon>{{ order.payment_status === 'paid' ? 'check_circle' : 'schedule' }}</mat-icon>
+                {{ order.payment_status === 'paid' ? 'Payé' : 'En attente' }}
+              </div>
+            </div>
+
+            <div class="order-actions">
+              <button mat-icon-button [matMenuTriggerFor]="orderMenu" (click)="$event.stopPropagation()">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #orderMenu="matMenu">
+                <button mat-menu-item (click)="viewOrderDetails(order)">
+                  <mat-icon>visibility</mat-icon>
+                  <span>Voir détails</span>
+                </button>
+                <button mat-menu-item (click)="updateStatus(order)" [disabled]="order.status === 'delivered' || order.status === 'cancelled'">
+                  <mat-icon>edit</mat-icon>
+                  <span>Changer statut</span>
+                </button>
+                <button mat-menu-item (click)="printInvoice(order)">
+                  <mat-icon>print</mat-icon>
+                  <span>Imprimer facture</span>
+                </button>
+                <mat-divider></mat-divider>
+                <button mat-menu-item (click)="cancelOrder(order)" [disabled]="order.status === 'delivered' || order.status === 'cancelled'" class="danger">
+                  <mat-icon>cancel</mat-icon>
+                  <span>Annuler</span>
+                </button>
+              </mat-menu>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+        }
+
+        @if (filteredOrders.length === 0) {
+          <div class="empty-state">
+            <mat-icon>inbox</mat-icon>
+            <h3>Aucune commande trouvée</h3>
+            <p>Vous n'avez pas encore de commandes ou aucune ne correspond à vos critères de recherche</p>
+          </div>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -3,12 +3,13 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Store, PaginatedResponse, Product } from '../models';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StoreService {
-  private baseUrl = 'http://localhost:5000/api';
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) {}
 
@@ -24,6 +25,31 @@ export class StoreService {
       headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
+  }
+
+  // Créer une boutique (devenir vendeur)
+  createStore(payload: {
+    name: string;
+    description: string;
+    shortDescription?: string;
+    email?: string;
+    phone?: string;
+    whatsapp?: string;
+    website?: string;
+    country?: string;
+    region?: string;
+    city: string;
+    address: string;
+    postalCode?: string;
+    businessType?: string;
+    returnPolicy?: string;
+    shippingPolicy?: string;
+    defaultLanguage?: string;
+    defaultCurrency?: string;
+  }): Observable<any> {
+    return this.http.post(`${this.baseUrl}/stores`, payload, {
+      headers: this.getHeaders()
+    });
   }
 
   private buildParams(params?: any): HttpParams {

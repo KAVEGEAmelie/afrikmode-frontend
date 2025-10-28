@@ -1,82 +1,59 @@
-import { HttpInterceptorFn, HttpErrorResponse, HttpEvent, HttpRequest, HttpHandlerFn } from '@angular/common/http';
+import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { throwError, BehaviorSubject, Observable } from 'rxjs';
-import { catchError, filter, take, switchMap } from 'rxjs/operators';
+import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { catchError, switchMap } from 'rxjs/operators';
+import { throwError } from 'rxjs';
 
-// Variable globale pour gérer l'état de rafraîchissement
-let isRefreshing = false;
-const refreshTokenSubject = new BehaviorSubject<string | null>(null);
-
-export const authInterceptor: HttpInterceptorFn = (req, next): Observable<HttpEvent<unknown>> => {
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
-  
+  const router = inject(Router);
+
   // Ajouter le token d'authentification si disponible
   const token = localStorage.getItem('auth_token');
+  
   if (token) {
-    req = addTokenHeader(req, token);
+    req = req.clone({
+      setHeaders: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Accept-Language': localStorage.getItem('language') || 'fr',
+        'X-Currency': localStorage.getItem('currency') || 'XOF'
+      }
+    });
   }
 
   return next(req).pipe(
-    catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && !req.url.includes('/auth/')) {
-        return handle401Error(req, next, authService);
+    catchError((error) => {
+      if (error.status === 401) {
+        // Token expiré ou invalide - essayer de rafraîchir
+        return authService.refreshToken().pipe(
+          switchMap((authResponse) => {
+            // Token rafraîchi avec succès, retry la requête
+            const newReq = req.clone({
+              setHeaders: {
+                'Authorization': `Bearer ${authResponse.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Accept-Language': localStorage.getItem('language') || 'fr',
+                'X-Currency': localStorage.getItem('currency') || 'XOF'
+              }
+            });
+            return next(newReq);
+          }),
+          catchError((refreshError) => {
+            // Impossible de rafraîchir le token, rediriger vers la page de connexion
+            authService.logout().subscribe();
+            router.navigate(['/login']);
+            return throwError(() => refreshError);
+          })
+        );
+      } else if (error.status === 403) {
+        // Accès refusé
+        console.error('Accès refusé - Permissions insuffisantes');
       }
       return throwError(() => error);
     })
   );
 };
-
-function addTokenHeader(request: HttpRequest<unknown>, token: string): HttpRequest<unknown> {
-  return request.clone({
-    setHeaders: {
-      'Authorization': `Bearer ${token}`
-    }
-  });
-}
-
-function handle401Error(request: HttpRequest<unknown>, next: HttpHandlerFn, authService: AuthService): Observable<HttpEvent<unknown>> {
-  if (!isRefreshing) {
-    isRefreshing = true;
-    refreshTokenSubject.next(null);
-
-    const refreshToken = localStorage.getItem('refresh_token');
-    if (refreshToken) {
-      return authService.refreshToken().pipe(
-        switchMap((response: any) => {
-          isRefreshing = false;
-          
-          if (response.success && response.data && response.data.token) {
-            refreshTokenSubject.next(response.data.token);
-            return next(addTokenHeader(request, response.data.token));
-          } else {
-            // Refresh token invalide, déconnecter l'utilisateur
-            authService.logout().subscribe();
-            return throwError(() => new Error('Session expirée'));
-          }
-        }),
-        catchError((error) => {
-          isRefreshing = false;
-          authService.logout().subscribe();
-          return throwError(() => error);
-        })
-      );
-    } else {
-      // Pas de refresh token, déconnecter l'utilisateur
-      isRefreshing = false;
-      authService.logout().subscribe();
-      return throwError(() => new Error('Session expirée'));
-    }
-  }
-
-  return refreshTokenSubject.pipe(
-    filter(token => token !== null),
-    take(1),
-    switchMap((token) => next(addTokenHeader(request, token)))
-  );
-}
-
-// Export de la classe pour compatibilité avec l'ancienne syntaxe
-export class AuthInterceptor {
-  // Cette classe est maintenue pour la compatibilité mais n'est plus utilisée
-}

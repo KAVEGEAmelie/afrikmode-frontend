@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -81,6 +81,7 @@ export interface SupportStats {
   standalone: true,
   imports: [
     CommonModule,
+    NgIf,
     MatIconModule,
     MatCardModule,
     MatTableModule,
@@ -665,6 +666,29 @@ export class AdminSupportManagementComponent implements OnInit {
     console.log('Supprimer ticket:', ticket);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

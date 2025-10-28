@@ -1,0 +1,543 @@
+<div class="vendor-apply-page">
+  <div class="container">
+    <!-- Header avec titre et progression -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1 class="page-title">Devenir Vendeur sur AfrikMode</h1>
+        <p class="page-subtitle">Ouvrez votre boutique et commencez à vendre vos produits africains</p>
+      </div>
+      
+      <!-- Progress Bar -->
+      <div class="progress-bar-container">
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="(currentStep / totalSteps) * 100"></div>
+        </div>
+        <div class="progress-text">Étape {{ currentStep }} sur {{ totalSteps }}</div>
+      </div>
+    </div>
+
+    <!-- Steps Navigation -->
+    <div class="steps-navigation">
+      <div *ngFor="let step of steps; let i = index" 
+           class="step-item"
+           [class.active]="currentStep === i + 1"
+           [class.completed]="currentStep > i + 1">
+        <div class="step-number">
+          <span *ngIf="currentStep <= i + 1">{{ i + 1 }}</span>
+          <svg *ngIf="currentStep > i + 1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          </svg>
+        </div>
+        <div class="step-info">
+          <div class="step-title">{{ step.title }}</div>
+          <div class="step-desc">{{ step.description }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Card -->
+    <div class="form-card">
+      <form (ngSubmit)="onSubmit()" #vendorForm="ngForm" novalidate>
+        
+        <!-- STEP 1: Informations Boutique -->
+        <div class="form-step" *ngIf="currentStep === 1">
+          <h2 class="step-heading">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
+            </svg>
+            Informations de la Boutique
+          </h2>
+          
+          <div class="form-grid">
+            <div class="form-group full">
+              <label class="form-label required">Nom de la boutique</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.name"
+                name="name"
+                placeholder="Ex: Tissus & Wax d'Afrique"
+                required
+                #nameInput="ngModel">
+              <span class="field-hint">Ce nom sera visible par tous les clients</span>
+              <span class="error-message" *ngIf="nameInput.invalid && nameInput.touched">
+                Le nom de la boutique est obligatoire
+              </span>
+            </div>
+
+            <div class="form-group full">
+              <label class="form-label required">Description complète</label>
+              <textarea 
+                class="form-control"
+                [(ngModel)]="form.description"
+                name="description"
+                rows="4"
+                placeholder="Décrivez votre boutique, vos produits, votre histoire..."
+                required
+                #descInput="ngModel"></textarea>
+              <span class="field-hint">Minimum 50 caractères - Soyez convaincant !</span>
+              <span class="error-message" *ngIf="descInput.invalid && descInput.touched">
+                La description est obligatoire
+              </span>
+            </div>
+
+            <div class="form-group full">
+              <label class="form-label">Description courte (optionnel)</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.shortDescription"
+                name="shortDescription"
+                placeholder="Ex: Spécialiste du wax et tissus africains"
+                maxlength="100">
+              <span class="field-hint">Maximum 100 caractères - Sera affiché dans les listes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Contact et Adresse -->
+        <div class="form-step" *ngIf="currentStep === 2">
+          <h2 class="step-heading">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+            </svg>
+            Contact et Localisation
+          </h2>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Email de contact</label>
+              <input 
+                type="email" 
+                class="form-control"
+                [(ngModel)]="form.email"
+                name="email"
+                placeholder="contact@maboutique.com">
+              <span class="field-hint">Email public pour les clients</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Téléphone</label>
+              <input 
+                type="tel" 
+                class="form-control"
+                [(ngModel)]="form.phone"
+                name="phone"
+                placeholder="+228 XX XX XX XX">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">WhatsApp</label>
+              <input 
+                type="tel" 
+                class="form-control"
+                [(ngModel)]="form.whatsapp"
+                name="whatsapp"
+                placeholder="+228 XX XX XX XX">
+              <span class="field-hint">Pour les commandes via WhatsApp</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Site web (optionnel)</label>
+              <input 
+                type="url" 
+                class="form-control"
+                [(ngModel)]="form.website"
+                name="website"
+                placeholder="https://maboutique.com">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Pays</label>
+              <select class="form-control" [(ngModel)]="form.country" name="country" title="Sélectionnez votre pays" required>
+                <option value="">Sélectionnez un pays</option>
+                <option *ngFor="let c of countries" [value]="c.code">
+                  {{ c.flag }} {{ c.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Région/État</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.region"
+                name="region"
+                placeholder="Ex: Maritime, Dakar, Abidjan...">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label required">Ville</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.city"
+                name="city"
+                placeholder="Ex: Lomé, Dakar, Abidjan..."
+                required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Code postal</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.postalCode"
+                name="postalCode"
+                placeholder="Ex: BP 1234">
+            </div>
+
+            <div class="form-group full">
+              <label class="form-label required">Adresse complète</label>
+              <textarea 
+                class="form-control"
+                [(ngModel)]="form.address"
+                name="address"
+                rows="3"
+                placeholder="Numéro, rue, quartier, point de repère..."
+                required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Informations Légales -->
+        <div class="form-step" *ngIf="currentStep === 3">
+          <h2 class="step-heading">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+            </svg>
+            Informations Légales et Business
+          </h2>
+          
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label required">Type d'entreprise</label>
+              <select class="form-control" [(ngModel)]="form.businessType" name="businessType" title="Sélectionnez le type d'entreprise" required>
+                <option value="">Sélectionnez</option>
+                <option value="individual">Entrepreneur Individuel</option>
+                <option value="company">Société (SARL, SA, SAS...)</option>
+                <option value="cooperative">Coopérative</option>
+                <option value="association">Association</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Numéro d'enregistrement</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.registrationNumber"
+                name="registrationNumber"
+                placeholder="Ex: RCCM XXXXX">
+              <span class="field-hint">RCCM, NINEA, ou équivalent</span>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Numéro de TVA (si applicable)</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.taxNumber"
+                name="taxNumber"
+                placeholder="Ex: TG-XXXX-XXXX">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Banque</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.bankName"
+                name="bankName"
+                placeholder="Nom de votre banque">
+            </div>
+
+            <div class="form-group full">
+              <label class="form-label">Numéro de compte bancaire (IBAN)</label>
+              <input 
+                type="text" 
+                class="form-control"
+                [(ngModel)]="form.bankAccount"
+                name="bankAccount"
+                placeholder="Ex: TG XX XXXX XXXX XXXX XXXX XXXX">
+              <span class="field-hint">Pour recevoir vos paiements</span>
+            </div>
+
+            <div class="form-group full">
+              <label class="form-label">Politique de retour</label>
+              <textarea 
+                class="form-control"
+                [(ngModel)]="form.returnPolicy"
+                name="returnPolicy"
+                rows="3"
+                placeholder="Décrivez votre politique de retour et remboursement..."></textarea>
+              <span class="field-hint">Ex: Retours acceptés sous 14 jours</span>
+            </div>
+
+            <div class="form-group full">
+              <label class="form-label">Politique d'expédition</label>
+              <textarea 
+                class="form-control"
+                [(ngModel)]="form.shippingPolicy"
+                name="shippingPolicy"
+                rows="3"
+                placeholder="Décrivez vos délais et conditions de livraison..."></textarea>
+              <span class="field-hint">Ex: Livraison sous 3-5 jours ouvrables</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Documents -->
+        <div class="form-step" *ngIf="currentStep === 4">
+          <h2 class="step-heading">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            </svg>
+            Documents Requis
+          </h2>
+
+          <div class="documents-info">
+            <div class="info-card">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+              </svg>
+              <p>Veuillez préparer les documents suivants en format PDF, JPG ou PNG (max 5MB chacun)</p>
+            </div>
+          </div>
+          
+          <div class="documents-grid">
+            <!-- Pièce d'identité -->
+            <div class="document-upload">
+              <label class="document-label required">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+                </svg>
+                Pièce d'identité
+              </label>
+              <div class="upload-zone" [class.has-file]="documents.idCard">
+                <input 
+                  type="file" 
+                  (change)="onFileSelect($event, 'idCard')"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  #idCardInput>
+                <div class="upload-placeholder" *ngIf="!documents.idCard">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <span>Cliquez ou glissez pour télécharger</span>
+                  <small>CNI, Passeport, Permis de conduire</small>
+                </div>
+                <div class="upload-preview" *ngIf="documents.idCard">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{{ documents.idCard.name }}</span>
+                  <button type="button" (click)="removeFile('idCard')" class="remove-btn">×</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Preuve d'adresse -->
+            <div class="document-upload">
+              <label class="document-label required">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+                Preuve d'adresse
+              </label>
+              <div class="upload-zone" [class.has-file]="documents.proofOfAddress">
+                <input 
+                  type="file" 
+                  (change)="onFileSelect($event, 'proofOfAddress')"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  #proofAddressInput>
+                <div class="upload-placeholder" *ngIf="!documents.proofOfAddress">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <span>Cliquez ou glissez pour télécharger</span>
+                  <small>Facture eau/électricité (- 3 mois)</small>
+                </div>
+                <div class="upload-preview" *ngIf="documents.proofOfAddress">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{{ documents.proofOfAddress.name }}</span>
+                  <button type="button" (click)="removeFile('proofOfAddress')" class="remove-btn">×</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Certificat d'entreprise (optionnel) -->
+            <div class="document-upload">
+              <label class="document-label">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                </svg>
+                Certificat d'entreprise (optionnel)
+              </label>
+              <div class="upload-zone" [class.has-file]="documents.businessCertificate">
+                <input 
+                  type="file" 
+                  (change)="onFileSelect($event, 'businessCertificate')"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  #businessCertInput>
+                <div class="upload-placeholder" *ngIf="!documents.businessCertificate">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                  </svg>
+                  <span>Cliquez ou glissez pour télécharger</span>
+                  <small>RCCM, Statuts, Certificat d'immatriculation</small>
+                </div>
+                <div class="upload-preview" *ngIf="documents.businessCertificate">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{{ documents.businessCertificate.name }}</span>
+                  <button type="button" (click)="removeFile('businessCertificate')" class="remove-btn">×</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 5: Revue et Validation -->
+        <div class="form-step" *ngIf="currentStep === 5">
+          <h2 class="step-heading">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Vérification et Soumission
+          </h2>
+
+          <div class="review-section">
+            <div class="review-card">
+              <h3>Informations de la boutique</h3>
+              <div class="review-item">
+                <span class="review-label">Nom:</span>
+                <span class="review-value">{{ form.name || 'Non renseigné' }}</span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Description:</span>
+                <span class="review-value">{{ form.description ? (form.description.substring(0, 100) + (form.description.length > 100 ? '...' : '')) : 'Non renseigné' }}</span>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <h3>Contact et localisation</h3>
+              <div class="review-item">
+                <span class="review-label">Email:</span>
+                <span class="review-value">{{ form.email || 'Non renseigné' }}</span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Téléphone:</span>
+                <span class="review-value">{{ form.phone || 'Non renseigné' }}</span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Adresse:</span>
+                <span class="review-value">{{ form.address }}, {{ form.city }}, {{ form.country }}</span>
+              </div>
+            </div>
+
+            <div class="review-card">
+              <h3>Informations légales</h3>
+              <div class="review-item">
+                <span class="review-label">Type:</span>
+                <span class="review-value">{{ getBusinessTypeLabel(form.businessType) }}</span>
+              </div>
+              <div class="review-item">
+                <span class="review-label">Documents:</span>
+                <span class="review-value">
+                  {{ documents.idCard ? '✓ Pièce d\'identité ' : '' }}
+                  {{ documents.proofOfAddress ? '✓ Preuve d\'adresse ' : '' }}
+                  {{ documents.businessCertificate ? '✓ Certificat entreprise' : '' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="terms-section">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                [(ngModel)]="acceptTerms"
+                name="acceptTerms"
+                required>
+              <span>
+                J'ai lu et j'accepte les 
+                <a href="/terms-vendor" target="_blank">conditions générales pour vendeurs</a> 
+                et la 
+                <a href="/privacy" target="_blank">politique de confidentialité</a>
+              </span>
+            </label>
+          </div>
+
+          <div class="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <div>
+              <strong>Délai d'examen:</strong> Votre demande sera examinée dans un délai de 24 à 48 heures. Vous recevrez un email une fois votre boutique approuvée.
+            </div>
+          </div>
+        </div>
+
+        <!-- Error/Success Messages -->
+        <div class="alert alert-error" *ngIf="errorMessage">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          {{ errorMessage }}
+        </div>
+
+        <div class="alert alert-success" *ngIf="successMessage">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {{ successMessage }}
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            *ngIf="currentStep > 1"
+            (click)="previousStep()"
+            [disabled]="isLoading">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+            Précédent
+          </button>
+
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            *ngIf="currentStep < totalSteps"
+            (click)="nextStep()"
+            [disabled]="!canProceedToNextStep()">
+            Suivant
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-submit"
+            *ngIf="currentStep === totalSteps"
+            [disabled]="isLoading || !acceptTerms">
+            <svg *ngIf="!isLoading" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            <span class="spinner" *ngIf="isLoading"></span>
+            {{ isLoading ? 'Envoi en cours...' : 'Soumettre ma candidature' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

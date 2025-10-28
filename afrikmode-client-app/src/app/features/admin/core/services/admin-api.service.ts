@@ -22,7 +22,7 @@ export interface User {
   lastName: string;
   email: string;
   phone?: string;
-  role: 'customer' | 'vendor' | 'manager' | 'admin' | 'super_admin';
+  role: 'customer' | 'vendor' | 'admin';
   status: 'active' | 'inactive' | 'suspended' | 'banned';
   isEmailVerified: boolean;
   isPhoneVerified: boolean;

@@ -1,44 +1,46 @@
 // src/app/features/profile/components/order-history/order-history.component.scss
-@import '../../styles/profile-shared';
+@use '../../styles/profile-shared' as *;
 
 .order-history {
   @include fade-in;
+  padding: 0;
+  background: #f8fafc;
+  min-height: 100vh;
 
   .page-header {
-    @include page-header;
-    
-    & {
-      background: linear-gradient(135deg, #8B2E2E 0%, #6B1F1F 100%);
-      position: relative;
-      overflow: hidden;
-      border-radius: 16px;
-      margin-bottom: 32px;
+    background: linear-gradient(135deg, #8B2E2E 0%, #6B1F1F 100%);
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    margin: 0 0 32px 0;
+    padding: 48px 32px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(139, 46, 46, 0.2);
 
-      &::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at 30% 20%, rgba(217, 116, 79, 0.2) 0%, transparent 60%);
-        animation: float 8s ease-in-out infinite;
-      }
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 30% 20%, rgba(217, 116, 79, 0.15) 0%, transparent 60%);
+      animation: float 8s ease-in-out infinite;
+    }
 
-      &::after {
-        content: '🛍️';
-        position: absolute;
-        top: 20px;
-        right: 30px;
-        font-size: 80px;
-        opacity: 0.1;
-        z-index: 1;
-        
-        @include mobile-only {
-          font-size: 50px;
-          right: 15px;
-          top: 15px;
-        }
+    &::after {
+      content: '🛍️';
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 80px;
+      opacity: 0.1;
+      z-index: 1;
+      
+      @include mobile-only {
+        font-size: 50px;
+        right: 15px;
+        top: 15px;
       }
     }
 
@@ -49,238 +51,289 @@
 
     h1 {
       font-family: 'Playfair Display', serif;
-      font-size: 2.5rem;
+      font-size: 2.8rem;
       font-weight: 700;
-      margin: 0 0 12px 0;
+      margin: 0 0 16px 0;
+      color: white;
       text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       letter-spacing: -0.5px;
 
+      i {
+        margin-right: 12px;
+        color: #D9744F;
+      }
+
       @include mobile-only {
-        font-size: 2rem;
+        font-size: 2.2rem;
       }
     }
 
     p {
-      font-size: 1.1rem;
-      opacity: 0.9;
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.9);
       margin: 0;
       max-width: 600px;
       margin-left: auto;
       margin-right: auto;
+      font-weight: 400;
     }
   }
 
-  .orders-content {
-    padding: $spacing-2xl 0;
+  .orders-filters {
+    background: white;
+    padding: 28px;
+    margin-bottom: 32px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
 
-    // Filtres
-    .orders-filters {
-      @include section-card;
+    @include mobile-only {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 20px;
       padding: 24px;
-      margin-bottom: 32px;
+    }
+
+    .filter-group {
       display: flex;
       align-items: center;
-      gap: 20px;
-      flex-wrap: wrap;
-      border-radius: 16px;
-      border: 2px solid #f3f4f6;
-      background: white;
+      gap: 12px;
 
-      @include mobile-only {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 16px;
+      label {
+        font-weight: 700;
+        color: #374151;
+        font-size: 0.95rem;
+        white-space: nowrap;
       }
 
-      .filter-group {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+      select {
+        min-width: 200px;
+        font-size: 0.95rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 12px 16px;
+        background: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        cursor: pointer;
 
-        label {
-          font-weight: 700;
-          color: #374151;
-          font-size: 0.9rem;
-          white-space: nowrap;
-        }
-
-        select {
-          @include input-style;
-          min-width: 180px;
-          font-size: 0.9rem;
-          border: 2px solid #e5e7eb;
-          border-radius: 10px;
-          padding: 10px 16px;
-          background: white;
-          font-weight: 500;
-          transition: all 0.3s ease;
-
-          &:focus {
-            border-color: #D9744F;
-            box-shadow: 0 0 0 3px rgba(217, 116, 79, 0.1);
-          }
-        }
-      }
-
-      .search-box {
-        flex: 1;
-        min-width: 250px;
-        position: relative;
-
-        input {
-          @include input-style;
-          width: 100%;
-          padding: 12px 16px 12px 44px;
-          border: 2px solid #e5e7eb;
-          border-radius: 10px;
-          font-size: 0.95rem;
-          transition: all 0.3s ease;
-          background: white;
-
-          &::placeholder {
-            color: #9ca3af;
-          }
-
-          &:focus {
-            border-color: #D9744F;
-            box-shadow: 0 0 0 3px rgba(217, 116, 79, 0.1);
-          }
-        }
-
-        &::before {
-          content: '🔍';
-          position: absolute;
-          left: 14px;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: 18px;
-          z-index: 1;
+        &:focus {
+          border-color: #D9744F;
+          box-shadow: 0 0 0 3px rgba(217, 116, 79, 0.1);
+          outline: none;
         }
       }
     }
 
-    // Liste des commandes
-    .orders-list {
+    .search-box {
+      flex: 1;
+      min-width: 280px;
+      position: relative;
+
+      input {
+        width: 100%;
+        padding: 12px 16px 12px 48px;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        background: white;
+        font-weight: 400;
+
+        &::placeholder {
+          color: #9ca3af;
+          font-weight: 400;
+        }
+
+        &:focus {
+          border-color: #D9744F;
+          box-shadow: 0 0 0 3px rgba(217, 116, 79, 0.1);
+          outline: none;
+        }
+      }
+
+      &::before {
+        content: '🔍';
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 18px;
+        z-index: 1;
+      }
+    }
+
+    .stats {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+
+      @include mobile-only {
+        justify-content: space-around;
+        gap: 16px;
+      }
+
+      .stat-item {
+        text-align: center;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        min-width: 80px;
+
+        .stat-number {
+          display: block;
+          font-family: 'Playfair Display', serif;
+          font-size: 1.5rem;
+          font-weight: 700;
+          color: #8B2E2E;
+          margin-bottom: 4px;
+        }
+
+        .stat-label {
+          font-size: 0.8rem;
+          color: #6b7280;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+    }
+  }
+
+  // Liste des commandes
+  .orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .orders-grid {
       display: flex;
       flex-direction: column;
       gap: 24px;
+    }
 
-      .order-card {
-        @include card-style;
-        padding: 28px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 2px solid #e5e7eb;
-        border-radius: 16px;
-        background: white;
-        position: relative;
-        overflow: hidden;
+    .order-card {
+      background: white;
+      padding: 32px;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, transparent 0%, #D9744F 50%, transparent 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      &:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 12px 32px rgba(139, 46, 46, 0.15), 
+                    0 8px 20px rgba(139, 46, 46, 0.1);
+        border-color: #D9744F;
 
         &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 5px;
-          background: linear-gradient(90deg, transparent 0%, #D9744F 50%, transparent 100%);
-          opacity: 0;
-          transition: opacity 0.3s ease;
+          opacity: 1;
         }
+      }
 
-        &:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 24px -10px rgba(139, 46, 46, 0.2), 
-                      0 8px 16px -8px rgba(139, 46, 46, 0.1);
-          border-color: #D9744F;
+      .order-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #f1f5f9;
+        flex-wrap: wrap;
+        gap: 20px;
 
-          &::before {
-            opacity: 1;
+        .order-info {
+          flex: 1;
+          min-width: 0;
+
+          .order-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1f2937;
+            letter-spacing: -0.3px;
+            margin: 0 0 8px 0;
           }
-        }
 
-        .order-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 24px;
-          padding-bottom: 16px;
-          border-bottom: 2px solid #f3f4f6;
-          flex-wrap: wrap;
-          gap: 16px;
+          .order-date {
+            color: #6b7280;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin: 0 0 12px 0;
+          }
 
-          .order-info {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-
-            @include mobile-only {
-              flex-direction: column;
-              align-items: flex-start;
-              gap: 8px;
-            }
-
-            .order-number {
+          .order-total {
+            .total-amount {
               font-family: 'Playfair Display', serif;
               font-size: 1.3rem;
               font-weight: 700;
-              color: #1f2937;
-              letter-spacing: -0.3px;
-            }
-
-            .order-date {
-              color: #6b7280;
-              font-size: 0.9rem;
-              font-weight: 500;
-            }
-
-            .order-total {
-              font-family: 'Playfair Display', serif;
-              font-size: 1.2rem;
-              font-weight: 700;
               color: #8B2E2E;
-            }
-          }
-
-          .order-status {
-            .status-badge {
-              @include status-badge('info');
-              font-size: 0.8rem;
-              padding: 10px 18px;
-              font-weight: 700;
-              text-transform: uppercase;
-              letter-spacing: 0.8px;
-              border-radius: 20px;
-              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-              &.pending {
-                background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-                color: white;
-              }
-
-              &.processing {
-                background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-                color: white;
-              }
-
-              &.shipped {
-                background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-                color: white;
-              }
-
-              &.delivered {
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: white;
-              }
-
-              &.cancelled {
-                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                color: white;
-              }
+              background: linear-gradient(135deg, #fef3f2 0%, #fef7f6 100%);
+              padding: 8px 16px;
+              border-radius: 12px;
+              border: 1px solid #fed7d7;
             }
           }
         }
 
-        .order-items {
+        .order-status {
+          .status-badge {
+            font-size: 0.85rem;
+            padding: 12px 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            border: none;
+
+            &.status-pending {
+              background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+              color: white;
+            }
+
+            &.status-processing {
+              background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+              color: white;
+            }
+
+            &.status-shipped {
+              background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+              color: white;
+            }
+
+            &.status-delivered {
+              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+              color: white;
+            }
+
+            &.status-cancelled {
+              background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+              color: white;
+            }
+          }
+        }
+      }
+
+      .order-items {
           margin-bottom: 24px;
 
           .items-header {
@@ -394,65 +447,69 @@
           }
         }
 
-        .order-actions {
+      .order-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-top: 24px;
+
+        @include mobile-only {
+          justify-content: stretch;
+        }
+
+        .btn {
+          padding: 12px 24px;
+          font-size: 0.9rem;
+          font-weight: 600;
+          border-radius: 12px;
+          transition: all 0.3s ease;
+          border: 2px solid transparent;
+          cursor: pointer;
           display: flex;
-          gap: 12px;
-          flex-wrap: wrap;
-          justify-content: flex-end;
+          align-items: center;
+          gap: 8px;
 
           @include mobile-only {
-            justify-content: stretch;
+            flex: 1;
+            justify-content: center;
           }
 
-          .btn {
-            @include button-outline;
-            padding: 12px 24px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            border-radius: 10px;
-            transition: all 0.3s ease;
+          &.btn-primary {
+            background: linear-gradient(135deg, #8B2E2E 0%, #6B1F1F 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(139, 46, 46, 0.25);
 
-            @include mobile-only {
-              flex: 1;
-              justify-content: center;
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 16px rgba(139, 46, 46, 0.35);
             }
+          }
 
-            &.btn-primary {
-              background: linear-gradient(135deg, #8B2E2E 0%, #6B1F1F 100%);
+          &.btn-outline {
+            border: 2px solid #D9744F;
+            color: #D9744F;
+            background: transparent;
+
+            &:hover {
+              background: #D9744F;
               color: white;
-              border: none;
-              box-shadow: 0 4px 12px rgba(139, 46, 46, 0.25);
-
-              &:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 16px rgba(139, 46, 46, 0.35);
-              }
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(217, 116, 79, 0.25);
             }
+          }
 
-            &.btn-outline {
-              border: 2px solid #D9744F;
-              color: #D9744F;
-              background: transparent;
+          &.btn-danger {
+            background: transparent;
+            color: #ef4444;
+            border: 2px solid #ef4444;
 
-              &:hover {
-                background: #D9744F;
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(217, 116, 79, 0.25);
-              }
-            }
-
-            &.btn-danger {
-              background: transparent;
-              color: #ef4444;
-              border: 2px solid #ef4444;
-
-              &:hover {
-                background: #ef4444;
-                color: white;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
-              }
+            &:hover {
+              background: #ef4444;
+              color: white;
+              transform: translateY(-2px);
+              box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
             }
           }
         }

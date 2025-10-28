@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { CartService } from '../../core/services/cart.service';
+import { WishlistService } from '../../core/services/wishlist.service';
+import { ProductService } from '../../core/services/product.service';
+import { AuthService } from '../../core/services/auth.service';
 
 interface Product {
   id: number;
@@ -202,8 +206,46 @@ export class ShopComponent implements OnInit {
   // Sidebar mobile
   showMobileFilters: boolean = false;
 
+  // État des favoris (pour affichage visuel)
+  wishlistProductIds: Set<string> = new Set();
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private cartService: CartService,
+    private wishlistService: WishlistService,
+    private productService: ProductService,
+    private authService: AuthService
+  ) {}
+
   ngOnInit(): void {
-    this.applyFilters();
+    // Récupérer le paramètre de recherche de l'URL
+    this.route.queryParams.subscribe(params => {
+      if (params['search']) {
+        this.searchQuery = params['search'];
+      }
+      this.applyFilters();
+    });
+
+    // Charger les IDs des produits dans la wishlist
+    this.loadWishlistIds();
+  }
+
+  loadWishlistIds(): void {
+    this.wishlistService.getWishlist().subscribe({
+      next: (response) => {
+        if (response.data && Array.isArray(response.data)) {
+          this.wishlistProductIds = new Set(response.data.map((item: any) => item.id || item.product_id));
+        }
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement de la wishlist:', error);
+      }
+    });
+  }
+
+  isInWishlist(productId: number): boolean {
+    return this.wishlistProductIds.has(productId.toString());
   }
 
   // Gestion des filtres
@@ -328,20 +370,111 @@ export class ShopComponent implements OnInit {
 
   // Navigation
   viewProduct(productId: number): void {
-    console.log('View product:', productId);
-    // TODO: Navigation vers détails produit
+    this.router.navigate(['/product', productId]);
   }
 
   addToCart(product: Product, event: Event): void {
     event.stopPropagation();
-    console.log('Add to cart:', product.name);
-    // TODO: Ajouter au panier
+    
+    // Vérifier si l'utilisateur est connecté
+    if (!this.authService.isAuthenticated()) {
+      if (confirm('Vous devez être connecté pour ajouter des produits au panier. Voulez-vous vous connecter maintenant ?')) {
+        this.router.navigate(['/auth/login'], {
+          queryParams: { returnUrl: this.router.url }
+        });
+      }
+      return;
+    }
+
+    // Ajouter au panier via le service
+    this.cartService.addToCart({
+      product_id: product.id.toString(),
+      quantity: 1
+    }).subscribe({
+      next: (cartItem) => {
+        console.log('✅ Produit ajouté au panier:', cartItem);
+        // Afficher une notification de succès
+        this.showNotification(`${product.name} ajouté au panier !`, 'success');
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors de l\'ajout au panier:', error);
+        this.showNotification('Erreur lors de l\'ajout au panier. Veuillez réessayer.', 'error');
+      }
+    });
   }
 
   addToWishlist(product: Product, event: Event): void {
     event.stopPropagation();
-    console.log('Add to wishlist:', product.name);
-    // TODO: Ajouter aux favoris
+    
+    // Vérifier si l'utilisateur est connecté
+    if (!this.authService.isAuthenticated()) {
+      if (confirm('Vous devez être connecté pour ajouter des produits aux favoris. Voulez-vous vous connecter maintenant ?')) {
+        this.router.navigate(['/auth/login'], {
+          queryParams: { returnUrl: this.router.url }
+        });
+      }
+      return;
+    }
+
+    const productIdStr = product.id.toString();
+
+    // Si déjà dans la wishlist, retirer
+    if (this.isInWishlist(product.id)) {
+      this.wishlistService.removeFromWishlist(productIdStr).subscribe({
+        next: () => {
+          console.log('✅ Produit retiré des favoris');
+          this.wishlistProductIds.delete(productIdStr);
+          this.showNotification(`${product.name} retiré des favoris`, 'info');
+        },
+        error: (error) => {
+          console.error('❌ Erreur lors du retrait des favoris:', error);
+          this.showNotification('Erreur lors du retrait des favoris', 'error');
+        }
+      });
+    } else {
+      // Ajouter aux favoris
+      this.wishlistService.addToWishlist(productIdStr).subscribe({
+        next: () => {
+          console.log('✅ Produit ajouté aux favoris');
+          this.wishlistProductIds.add(productIdStr);
+          this.showNotification(`${product.name} ajouté aux favoris !`, 'success');
+        },
+        error: (error) => {
+          console.error('❌ Erreur lors de l\'ajout aux favoris:', error);
+          this.showNotification('Erreur lors de l\'ajout aux favoris', 'error');
+        }
+      });
+    }
+  }
+
+  // Afficher une notification temporaire
+  private showNotification(message: string, type: 'success' | 'error' | 'info'): void {
+    // Créer un élément de notification
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+      color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 9999;
+      animation: slideIn 0.3s ease;
+    `;
+
+    document.body.appendChild(notification);
+
+    // Supprimer après 3 secondes
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 300);
+    }, 3000);
   }
 
   // Pagination helper

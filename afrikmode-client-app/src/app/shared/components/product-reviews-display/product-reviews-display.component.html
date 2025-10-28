@@ -1,0 +1,208 @@
+<!-- src/app/shared/components/product-reviews-display/product-reviews-display.component.html -->
+<div class="product-reviews-display">
+  <!-- En-tête avec statistiques -->
+  <div class="reviews-header" *ngIf="stats">
+    <div class="reviews-summary">
+      <div class="average-rating">
+        <h2>{{ stats.average_rating | number:'1.1-1' }}</h2>
+        <div class="stars">
+          <i class="fas fa-star" *ngFor="let star of getStarsArray(stats.average_rating)" [class.filled]="star === 1"></i>
+        </div>
+        <p>{{ stats.total_reviews }} avis</p>
+      </div>
+      
+      <div class="rating-distribution">
+        <div class="rating-bar" *ngFor="let rating of [5, 4, 3, 2, 1]">
+          <span class="rating-label">{{ rating }} ⭐</span>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getRatingPercentage(rating)"></div>
+          </div>
+          <span class="rating-count">{{ stats.rating_distribution[rating] || 0 }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="review-actions">
+      <button class="btn btn-primary" (click)="openReviewForm()" *ngIf="isAuthenticated">
+        <i class="fas fa-plus"></i> Laisser un avis
+      </button>
+      <button class="btn btn-outline-primary" (click)="openReviewForm()" *ngIf="!isAuthenticated">
+        <i class="fas fa-sign-in-alt"></i> Connectez-vous pour laisser un avis
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres et tri -->
+  <div class="reviews-filters">
+    <div class="filter-group">
+      <label>Filtrer par note :</label>
+      <div class="filter-buttons">
+        <button class="filter-btn" [class.active]="selectedRating === null" (click)="filterByRating(null)">
+          Toutes
+        </button>
+        <button class="filter-btn" *ngFor="let rating of [5, 4, 3, 2, 1]" 
+                [class.active]="selectedRating === rating" (click)="filterByRating(rating)">
+          {{ rating }} ⭐
+        </button>
+      </div>
+    </div>
+    
+      <div class="sort-group">
+        <label>Trier par :</label>
+        <select [(ngModel)]="sortBy" (change)="changeSortBy(sortBy)" class="sort-select" title="Trier les avis" aria-label="Sélectionner l'ordre de tri des avis">
+        <option value="recent">Plus récents</option>
+        <option value="helpful">Plus utiles</option>
+        <option value="rating">Note décroissante</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Liste des avis -->
+  <div class="reviews-list" *ngIf="!loading && reviews.length > 0">
+    <div class="review-card" *ngFor="let review of reviews">
+      <div class="review-header">
+        <div class="review-author">
+          <img [src]="review.user?.avatar || 'assets/images/default-avatar.png'" 
+               [alt]="getUserDisplayName(review.user)" class="author-avatar">
+          <div class="author-info">
+            <h4>{{ getUserDisplayName(review.user) }}</h4>
+            <div class="review-meta">
+              <div class="stars">
+                <i class="fas fa-star" *ngFor="let star of getStarsArray(review.rating)" [class.filled]="star === 1"></i>
+              </div>
+              <span class="review-date">{{ formatDate(review.created_at) }}</span>
+              <span class="verified-badge" *ngIf="review.is_verified_purchase">
+                <i class="fas fa-check-circle"></i> Achat vérifié
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-content">
+        <h5 *ngIf="review.title">{{ review.title }}</h5>
+        <p>{{ review.comment }}</p>
+        
+        <div class="review-images" *ngIf="review.images && review.images.length > 0">
+          <img *ngFor="let image of review.images" [src]="image" [alt]="review.title" class="review-image">
+        </div>
+      </div>
+
+      <div class="review-actions-bar">
+        <button class="action-btn" (click)="markHelpful(review.id, true)">
+          <i class="fas fa-thumbs-up"></i> Utile ({{ review.helpful_count || 0 }})
+        </button>
+        <button class="action-btn" (click)="markHelpful(review.id, false)">
+          <i class="fas fa-thumbs-down"></i> Pas utile
+        </button>
+      </div>
+
+      <!-- Réponse du vendeur -->
+      <div class="vendor-response" *ngIf="review.vendor_response">
+        <div class="response-header">
+          <i class="fas fa-store"></i>
+          <strong>Réponse du vendeur</strong>
+          <span class="response-date" *ngIf="review.vendor_response_date">
+            {{ formatDate(review.vendor_response_date) }}
+          </span>
+        </div>
+        <p>{{ review.vendor_response }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- État de chargement -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Chargement des avis...</p>
+  </div>
+
+  <!-- État vide -->
+  <div class="empty-state" *ngIf="!loading && reviews.length === 0">
+    <i class="fas fa-comments fa-3x"></i>
+    <h3>Aucun avis pour le moment</h3>
+    <p>Soyez le premier à laisser un avis sur ce produit !</p>
+    <button class="btn btn-primary" (click)="openReviewForm()" *ngIf="isAuthenticated">
+      Laisser un avis
+    </button>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="btn-page" [disabled]="currentPage === 1" (click)="previousPage()">
+      <i class="fas fa-chevron-left"></i> Précédent
+    </button>
+    <span class="page-info">Page {{ currentPage }} sur {{ totalPages }}</span>
+    <button class="btn-page" [disabled]="currentPage === totalPages" (click)="nextPage()">
+      Suivant <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Modal de création d'avis -->
+<div class="modal-overlay" *ngIf="showReviewForm" (click)="closeReviewForm()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Laisser un avis</h3>
+      <button class="btn-close" (click)="closeReviewForm()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form (ngSubmit)="submitReview()">
+        <div class="form-group">
+          <label>Votre note *</label>
+          <div class="rating-input">
+            <button type="button" *ngFor="let star of [1, 2, 3, 4, 5]" class="star-btn"
+                    [class.active]="star <= newReview.rating" (click)="newReview.rating = star">
+              <i class="fas fa-star"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Titre (optionnel)</label>
+          <input type="text" [(ngModel)]="newReview.title" name="title" class="form-control"
+                 placeholder="Résumez votre expérience">
+        </div>
+
+        <div class="form-group">
+          <label>Votre avis *</label>
+          <textarea [(ngModel)]="newReview.comment" name="comment" class="form-control" rows="5" required
+                    placeholder="Partagez votre expérience avec ce produit..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Photos (optionnel, max 5)</label>
+          <div class="image-upload">
+            <input type="file" #fileInput (change)="onImagesSelected($event)" accept="image/*" multiple style="display: none;">
+            <button type="button" class="btn btn-outline-primary" (click)="fileInput.click()"
+                    [disabled]="newReview.images.length >= 5">
+              <i class="fas fa-camera"></i> Ajouter des photos
+            </button>
+          </div>
+          
+          <div class="image-previews" *ngIf="imagePreviews.length > 0">
+            <div class="image-preview" *ngFor="let preview of imagePreviews; let i = index">
+              <img [src]="preview" alt="Preview">
+              <button type="button" class="btn-remove" (click)="removeImage(i)">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="closeReviewForm()">
+            Annuler
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading || !newReview.comment.trim()">
+            <i class="fas fa-paper-plane"></i>
+            {{ loading ? 'Publication...' : 'Publier mon avis' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -42,9 +42,7 @@ export class UserFormComponent implements OnInit {
   roles: {value: UserRoleType, label: string}[] = [
     { value: 'customer', label: 'Client' },
     { value: 'vendor', label: 'Vendeur' },
-    { value: 'admin', label: 'Administrateur' },
-    { value: 'manager', label: 'Manager' },
-    { value: 'super_admin', label: 'Super Admin' }
+    { value: 'admin', label: 'Administrateur' }
   ];
 
   statuses: {value: UserStatus, label: string}[] = [

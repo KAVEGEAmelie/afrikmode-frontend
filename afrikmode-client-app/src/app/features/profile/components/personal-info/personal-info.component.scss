@@ -1,13 +1,67 @@
 // src/app/features/profile/components/personal-info/personal-info.component.scss
-@import '../../styles/profile-shared';
+@use '../../styles/profile-shared' as *;
 
 .personal-info {
   @include fade-in;
 
   .section-header {
-    @include page-header;
     margin-bottom: $spacing-2xl;
+    @include page-header;
   }
+
+// Messages d'état
+.loading-message, .error-message, .success-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.loading-message {
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #bbdefb;
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.success-message {
+  background: #e8f5e8;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+// Photo de profil
+.photo-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.avatar-circle {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+}
+
+.photo-overlay {
+  transition: opacity 0.2s ease;
+}
+
+.avatar-circle:hover .photo-overlay {
+  opacity: 1;
+}
 
   .personal-info-form {
     @include section-card;

@@ -81,9 +81,7 @@ export interface UserDialogData {
               <mat-select formControlName="role" [disabled]="isViewMode">
                 <mat-option value="customer">Client</mat-option>
                 <mat-option value="vendor">Vendeur</mat-option>
-                <mat-option value="manager">Manager</mat-option>
                 <mat-option value="admin">Admin</mat-option>
-                <mat-option value="super_admin">Super Admin</mat-option>
               </mat-select>
             </mat-form-field>
 

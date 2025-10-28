@@ -30,8 +30,9 @@ interface WishlistItem {
 export class WishlistComponent implements OnInit {
   wishlistItems: Product[] = [];
   loading = false;
-
   viewMode: 'grid' | 'list' = 'grid';
+  sortBy: 'date' | 'name' | 'price' = 'date';
+  sortOrder: 'asc' | 'desc' = 'desc';
 
   constructor(
     private wishlistService: WishlistService,
@@ -132,7 +133,57 @@ export class WishlistComponent implements OnInit {
   }
 
   shareWishlist(): void {
-    console.log('Partager la wishlist');
-    // TODO: Implémenter le partage
+    if (navigator.share) {
+      navigator.share({
+        title: 'Ma liste de souhaits Afrikmode',
+        text: `Découvrez ma liste de souhaits avec ${this.wishlistItems.length} articles sur Afrikmode`,
+        url: window.location.href
+      }).catch(console.error);
+    } else {
+      // Fallback pour les navigateurs qui ne supportent pas l'API Web Share
+      const url = window.location.href;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Lien de votre liste de souhaits copié dans le presse-papiers !');
+      }).catch(() => {
+        prompt('Copiez ce lien pour partager votre liste de souhaits :', url);
+      });
+    }
+  }
+
+  sortWishlist(): void {
+    this.wishlistItems.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (this.sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'price':
+          comparison = a.price - b.price;
+          break;
+        case 'date':
+        default:
+          // Pour la date, on utilise l'ordre d'ajout (simulé)
+          comparison = 0;
+          break;
+      }
+      
+      return this.sortOrder === 'asc' ? comparison : -comparison;
+    });
+  }
+
+  toggleSortOrder(): void {
+    this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    this.sortWishlist();
+  }
+
+  get totalValue(): number {
+    return this.wishlistItems.reduce((total, item) => total + item.price, 0);
+  }
+
+  get averageRating(): number {
+    if (this.wishlistItems.length === 0) return 0;
+    const totalRating = this.wishlistItems.reduce((total, item) => total + (item.average_rating || 0), 0);
+    return totalRating / this.wishlistItems.length;
   }
 }

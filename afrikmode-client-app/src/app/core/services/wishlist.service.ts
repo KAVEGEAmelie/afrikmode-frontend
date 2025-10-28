@@ -55,6 +55,12 @@ export class WishlistService {
 
   // Méthode publique pour charger la wishlist après authentification
   loadWishlistData(): void {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      console.log('⚠️ Aucun token, abandon du chargement de la wishlist');
+      this.wishlistCountSubject.next(0);
+      return;
+    }
     this.loadWishlistCount();
   }
 

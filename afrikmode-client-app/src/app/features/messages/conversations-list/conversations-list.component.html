@@ -1,0 +1,131 @@
+<!-- src/app/features/messages/conversations-list/conversations-list.component.html -->
+<div class="conversations-page">
+  <div class="container">
+    <!-- En-tête -->
+    <div class="page-header">
+      <h1>
+        <i class="fas fa-comments"></i> Mes conversations
+        <span class="unread-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+      </h1>
+    </div>
+
+    <!-- Filtres et recherche -->
+    <div class="conversations-toolbar">
+      <div class="filter-buttons">
+        <button class="filter-btn" [class.active]="filterStatus === 'all'" (click)="changeFilter('all')">
+          <i class="fas fa-inbox"></i> Toutes
+        </button>
+        <button class="filter-btn" [class.active]="filterStatus === 'active'" (click)="changeFilter('active')">
+          <i class="fas fa-circle" style="color: #27ae60;"></i> Actives
+        </button>
+        <button class="filter-btn" [class.active]="filterStatus === 'closed'" (click)="changeFilter('closed')">
+          <i class="fas fa-check-circle"></i> Clôturées
+        </button>
+        <button class="filter-btn" [class.active]="filterStatus === 'archived'" (click)="changeFilter('archived')">
+          <i class="fas fa-archive"></i> Archivées
+        </button>
+      </div>
+
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" [(ngModel)]="searchQuery" (input)="onSearchChange()" 
+               placeholder="Rechercher une conversation...">
+      </div>
+    </div>
+
+    <!-- Liste des conversations -->
+    <div class="conversations-list" *ngIf="!loading && filteredConversations.length > 0">
+      <div class="conversation-card" *ngFor="let conversation of filteredConversations"
+           [class.unread]="conversation.unread_count > 0"
+           (click)="openConversation(conversation)">
+        
+        <!-- Avatar -->
+        <div class="conversation-avatar">
+          <img [src]="getOtherParticipant(conversation).avatar" 
+               [alt]="getOtherParticipant(conversation).name">
+          <span class="status-indicator" 
+                [class.active]="conversation.status === 'active'"
+                [class.closed]="conversation.status === 'closed'"
+                [class.archived]="conversation.status === 'archived'"></span>
+        </div>
+
+        <!-- Contenu -->
+        <div class="conversation-content">
+          <div class="conversation-header">
+            <h3 class="participant-name">{{ getOtherParticipant(conversation).name }}</h3>
+            <span class="conversation-date">{{ formatDate((conversation.last_message_at || conversation.created_at) ?? '') }}</span>
+          </div>
+
+          <div class="conversation-subject" *ngIf="conversation.subject">
+            <i class="fas fa-tag"></i> {{ conversation.subject }}
+          </div>
+
+          <div class="product-info" *ngIf="conversation.product_name">
+            <img [src]="conversation.product_image" [alt]="conversation.product_name" class="product-thumb">
+            <span class="product-name">{{ conversation.product_name }}</span>
+          </div>
+
+          <p class="last-message">{{ conversation.last_message }}</p>
+
+          <div class="conversation-meta">
+            <span class="unread-indicator" *ngIf="conversation.unread_count > 0">
+              <i class="fas fa-envelope"></i> {{ conversation.unread_count }} non lu(s)
+            </span>
+            <span class="status-badge" [class.active]="conversation.status === 'active'"
+                  [class.closed]="conversation.status === 'closed'"
+                  [class.archived]="conversation.status === 'archived'">
+              {{ conversation.status === 'active' ? 'Active' : conversation.status === 'closed' ? 'Clôturée' : 'Archivée' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="conversation-actions">
+          <button class="action-btn" (click)="closeConversation(conversation, $event)" 
+                  *ngIf="conversation.status === 'active'"
+                  title="Clôturer">
+            <i class="fas fa-check"></i>
+          </button>
+          <button class="action-btn" (click)="archiveConversation(conversation, $event)"
+                  *ngIf="conversation.status !== 'archived'"
+                  title="Archiver">
+            <i class="fas fa-archive"></i>
+          </button>
+          <button class="action-btn danger" (click)="deleteConversation(conversation, $event)"
+                  title="Supprimer">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- État de chargement -->
+    <div class="loading-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Chargement des conversations...</p>
+    </div>
+
+    <!-- État vide -->
+    <div class="empty-state" *ngIf="!loading && filteredConversations.length === 0">
+      <i class="fas fa-comments fa-3x"></i>
+      <h3>Aucune conversation</h3>
+      <p *ngIf="searchQuery">Aucun résultat pour "{{ searchQuery }}"</p>
+      <p *ngIf="!searchQuery && filterStatus === 'all'">Vous n'avez pas encore de conversations.</p>
+      <p *ngIf="!searchQuery && filterStatus !== 'all'">Aucune conversation {{ filterStatus }}.</p>
+      <button class="btn btn-primary" routerLink="/shop">
+        <i class="fas fa-shopping-bag"></i> Parcourir la boutique
+      </button>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1 && filteredConversations.length > 0">
+      <button class="btn-page" [disabled]="currentPage === 1" (click)="previousPage()">
+        <i class="fas fa-chevron-left"></i> Précédent
+      </button>
+      <span class="page-info">Page {{ currentPage }} sur {{ totalPages }}</span>
+      <button class="btn-page" [disabled]="currentPage === totalPages" (click)="nextPage()">
+        Suivant <i class="fas fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+</div>

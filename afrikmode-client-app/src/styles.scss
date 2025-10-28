@@ -22,6 +22,40 @@ html, body {
 body {
   margin: 0;
   background-color: #f8f9fa;
+  // Empêcher le flash blanc au chargement
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Empêcher le contenu de bouger pendant le chargement
+html {
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+// Animation pour tous les éléments qui se chargent
+* {
+  &:not(.no-transition) {
+    transition: opacity 0.2s ease-in-out;
+  }
+}
+
+// Styles pour le lazy loading des images
+img {
+  &.lazy-loading {
+    opacity: 0.5;
+    filter: blur(5px);
+    transition: opacity 0.3s ease-in-out, filter 0.3s ease-in-out;
+  }
+
+  &.lazy-loaded {
+    opacity: 1;
+    filter: blur(0);
+  }
+
+  &.lazy-error {
+    opacity: 0.3;
+  }
 }
 
 // Scrollbar personnalisée
@@ -51,6 +85,57 @@ body {
 
 .mat-mdc-chip {
   border-radius: 16px !important;
+}
+
+// Fix pour les overlays Material (menus, dialogs, etc.)
+.cdk-overlay-container {
+  z-index: 10000 !important;
+}
+
+.cdk-overlay-backdrop {
+  z-index: 9999 !important;
+}
+
+.cdk-overlay-pane {
+  z-index: 10001 !important;
+}
+
+// Fix spécifique pour les menus Material
+.mat-mdc-menu-panel {
+  z-index: 10001 !important;
+  max-width: 400px !important;
+  
+  &.profile-menu {
+    min-width: 320px !important;
+  }
+}
+
+// Fix pour les dialogs de catégories
+.category-dialog-backdrop {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(4px);
+}
+
+.category-dialog-panel {
+  .mat-mdc-dialog-container {
+    border-radius: 16px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+    overflow: hidden !important;
+    
+    .mdc-dialog__surface {
+      border-radius: 16px !important;
+      overflow: hidden !important;
+    }
+  }
+}
+
+// Empêcher la fermeture accidentelle du dialog
+.mat-mdc-dialog-container {
+  pointer-events: auto !important;
+  
+  .mdc-dialog__surface {
+    pointer-events: auto !important;
+  }
 }
 
 // Container global

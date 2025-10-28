@@ -1,0 +1,551 @@
+.vendor-sidebar {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+
+  &.collapsed {
+    .brand-info,
+    .subtitle,
+    .menu-label,
+    .badge,
+    .submenu-arrow,
+    .hidden {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+    }
+    
+    .sidebar-nav {
+      .mat-list-item {
+        padding: 0 16px;
+        justify-content: center;
+        
+        .mat-list-item-content {
+          justify-content: center;
+        }
+      }
+    }
+
+    .footer-info {
+      opacity: 0;
+    }
+  }
+
+  &.mobile {
+    width: 100%;
+    box-shadow: none;
+  }
+}
+
+// ========== HEADER ==========
+.sidebar-header {
+  padding: 20px 16px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 80px;
+  background: #ffffff;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+
+  &.collapsed {
+    justify-content: center;
+  }
+}
+
+.brand-icon {
+  width: 45px;
+  height: 45px;
+  background: linear-gradient(135deg, #8B2E2E 0%, #D9744F 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 4px 12px rgba(139, 46, 46, 0.4);
+  transition: transform 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+  
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.brand-info {
+  transition: all 0.3s ease;
+  
+  h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    letter-spacing: 0.3px;
+  }
+  
+  .subtitle {
+    font-size: 11px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+    margin-top: 2px;
+    display: block;
+  }
+}
+
+.toggle-btn {
+  color: #7f8c8d;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #f5f5f5;
+    color: #2c3e50;
+  }
+}
+
+// ========== NAVIGATION ==========
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 0;
+
+  /* Scrollbar personnalisée */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f5f5f5;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #d0d0d0;
+    border-radius: 3px;
+    
+    &:hover {
+      background: #b0b0b0;
+    }
+  }
+
+  .mat-list-item {
+    margin: 4px 12px;
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #2c3e50;
+    min-height: 48px;
+    cursor: pointer;
+    position: relative;
+    padding: 0;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 0;
+      background: #8B2E2E;
+      border-radius: 0 3px 3px 0;
+      transition: height 0.3s ease;
+    }
+    
+    &:not(.active):hover {
+      background: #fef3f2;
+      color: #8B2E2E;
+      transform: translateX(3px);
+      
+      .mat-icon {
+        color: #8B2E2E;
+        transform: scale(1.1);
+      }
+      
+      .menu-label {
+        color: #8B2E2E;
+      }
+    }
+    
+    &.active {
+      background: linear-gradient(90deg, rgba(139, 46, 46, 0.1) 0%, rgba(217, 116, 79, 0.05) 100%);
+      color: #8B2E2E;
+      font-weight: 500;
+      
+      &::before {
+        height: 70%;
+      }
+      
+      .mat-icon {
+        color: #8B2E2E;
+      }
+      
+      .menu-label {
+        color: #8B2E2E;
+      }
+      
+      .badge {
+        background: #8B2E2E;
+        color: white;
+      }
+    }
+    
+    .mat-icon {
+      color: #7f8c8d;
+      transition: all 0.3s ease;
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.menu-label {
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+// Styles pour les éléments Material - Fix pour Material MDC
+::ng-deep {
+  .mat-list-item {
+    .mdc-list-item__content {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 12px !important;
+      padding: 0 16px !important;
+      cursor: pointer !important;
+      width: 100% !important;
+    }
+  }
+  
+  .mat-icon {
+    color: #7f8c8d;
+    transition: all 0.3s ease;
+    font-size: 22px !important;
+    width: 22px !important;
+    height: 22px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .mat-list-item:not(.active):hover .mat-icon {
+    color: #8B2E2E;
+    transform: scale(1.1);
+  }
+  
+  .mat-list-item.active .mat-icon {
+    color: #8B2E2E;
+  }
+}
+
+// ========== SUBMENU ==========
+.submenu {
+  background: #f8f9fa;
+  margin: 4px 12px 8px 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border-left: 2px solid #8B2E2E;
+  
+  .mat-list-item {
+    margin: 0;
+    padding-left: 48px;
+    font-size: 13px;
+    min-height: 36px;
+    border-radius: 0;
+    cursor: pointer !important;
+    
+    &:first-child {
+      margin-top: 2px;
+    }
+    
+    &:last-child {
+      margin-bottom: 2px;
+    }
+    
+    &::before {
+      display: none;
+    }
+    
+    &:hover {
+      background: #fef3f2;
+      transform: translateX(4px);
+      cursor: pointer;
+      color: #8B2E2E;
+    }
+    
+    &.active {
+      background: #fef3f2;
+      color: #8B2E2E;
+      font-weight: 600;
+      
+      .mat-icon {
+        color: #8B2E2E;
+      }
+    }
+
+    .mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+// ========== BADGES ==========
+.badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  
+  &.badge-primary {
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+  
+  &.badge-accent {
+    background: #f3e5f5;
+    color: #7b1fa2;
+  }
+  
+  &.badge-warn {
+    background: #fff3e0;
+    color: #f57c00;
+  }
+  
+  &.badge-error {
+    background: #ffebee;
+    color: #d32f2f;
+  }
+  
+  &.badge-success {
+    background: #e8f5e9;
+    color: #388e3c;
+  }
+  
+  &.badge-info {
+    background: #e0f2f1;
+    color: #00796b;
+  }
+  
+  &.badge-warning {
+    background: #fff8e1;
+    color: #f9a825;
+  }
+}
+
+.submenu-arrow {
+  color: #7f8c8d;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  margin-left: auto;
+  opacity: 1 !important;
+  visibility: visible !important;
+  
+  &.expanded {
+    transform: rotate(180deg);
+    color: #8B2E2E;
+  }
+}
+
+// ========== DIVIDER ==========
+mat-divider {
+  border-top-color: #e0e0e0;
+  margin: 8px 16px;
+}
+
+// ========== FOOTER ==========
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.footer-info {
+  text-align: center;
+  
+  small {
+    display: block;
+    color: #7f8c8d;
+    font-size: 11px;
+    margin: 3px 0;
+    transition: all 0.3s ease;
+    
+    &:first-child {
+      font-weight: 600;
+      color: #5a6c7d;
+    }
+  }
+}
+
+// ========== ANIMATIONS ==========
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.mat-list-item {
+  animation: slideIn 0.3s ease forwards;
+  
+  @for $i from 1 through 10 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{$i * 0.03}s;
+    }
+  }
+}
+
+// ========== RESPONSIVE ==========
+@media (max-width: 768px) {
+  .vendor-sidebar {
+    width: 100%;
+  }
+  
+  .sidebar-header {
+    padding: 16px 12px;
+    min-height: 70px;
+  }
+  
+  .brand-icon {
+    width: 40px;
+    height: 40px;
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+  
+  .brand-info h2 {
+    font-size: 16px;
+  }
+  
+  .sidebar-nav .mat-list-item {
+    margin: 3px 8px;
+  }
+}
+
+// ========== ÉTATS SPÉCIAUX ==========
+.mat-list-item {
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  &.highlighted {
+    animation: pulse 2s infinite;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  50% {
+    background: rgba(102, 126, 234, 0.15);
+  }
+}
+
+// Forcer l'alignement des éléments dans les list items
+::ng-deep {
+  .vendor-sidebar {
+    .mat-mdc-list-item {
+      height: 48px !important;
+      padding: 0 !important;
+      
+      .mdc-list-item__content {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 0 16px !important;
+        height: 100% !important;
+        gap: 12px !important;
+      }
+      
+      .mat-mdc-list-item-icon {
+        margin: 0 !important;
+        padding: 0 !important;
+        flex-shrink: 0 !important;
+      }
+      
+      .mdc-list-item__primary-text {
+        flex: 1 !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+      }
+      
+      .mat-mdc-list-item-meta {
+        margin-left: auto !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+      }
+    }
+    
+    // Sous-menus
+    .submenu {
+      .mat-mdc-list-item {
+        height: 36px !important;
+        
+        .mdc-list-item__content {
+          padding: 0 16px 0 48px !important;
+        }
+      }
+    }
+    
+    // Mode collapsed
+    &.collapsed {
+      .mat-mdc-list-item {
+        .mdc-list-item__content {
+          justify-content: center !important;
+          padding: 0 16px !important;
+        }
+      }
+    }
+  }
+}
+
+// ========== CORRECTIFS HOVER ==========
+.mat-mdc-list-item:hover {
+  .submenu-arrow {
+    color: #8B2E2E !important;
+  }
+}

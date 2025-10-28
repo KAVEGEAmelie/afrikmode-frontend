@@ -1,0 +1,252 @@
+$burgundy: #8B2E2E;
+$terracotta: #D9744F;
+$cream: #FFF9F6;
+$dark-grey: #2C2C2C;
+$light-grey: #F5F5F5;
+
+.vendor-settings {
+  padding: 24px;
+  background-color: $light-grey;
+  min-height: 100vh;
+
+  .page-header {
+    margin-bottom: 24px;
+    padding: 24px;
+    background: linear-gradient(135deg, $burgundy 0%, #6B1F1F 100%);
+    border-radius: 12px;
+    color: white;
+
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .subtitle {
+      margin: 0;
+      opacity: 0.9;
+    }
+  }
+
+  .settings-tabs {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    ::ng-deep {
+      .mat-mdc-tab-labels {
+        background-color: $cream;
+        border-radius: 12px 12px 0 0;
+      }
+
+      .mat-mdc-tab-label {
+        color: $dark-grey;
+        font-weight: 600;
+      }
+
+      .mat-mdc-tab-label-active {
+        color: $burgundy;
+      }
+
+      .mdc-tab-indicator__content--underline {
+        background-color: $burgundy;
+      }
+    }
+
+    .tab-content {
+      padding: 24px;
+
+      mat-card {
+        margin-bottom: 24px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+
+  .settings-form {
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+    }
+
+    mat-form-field {
+      width: 100%;
+    }
+
+    .form-actions {
+      margin-top: 24px;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+
+      button {
+        min-width: 150px;
+      }
+    }
+  }
+
+  .notification-settings {
+    mat-slide-toggle {
+      display: block;
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      margin: 0 0 16px 0;
+      color: $burgundy;
+      font-weight: 600;
+    }
+  }
+
+  .two-factor-section {
+    .qr-code-section {
+      margin-top: 24px;
+      padding: 24px;
+      background-color: $cream;
+      border-radius: 8px;
+      text-align: center;
+
+      .qr-placeholder {
+        width: 200px;
+        height: 200px;
+        margin: 20px auto;
+        background: white;
+        border: 2px dashed $burgundy;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        mat-icon {
+          font-size: 64px;
+          width: 64px;
+          height: 64px;
+          color: $burgundy;
+          opacity: 0.5;
+        }
+
+        p {
+          margin: 8px 0 0;
+          color: #666;
+        }
+      }
+    }
+  }
+
+  .subscription-info {
+    .current-plan {
+      text-align: center;
+      padding: 32px;
+      background: linear-gradient(135deg, $burgundy 0%, $terracotta 100%);
+      border-radius: 12px;
+      color: white;
+      margin-bottom: 24px;
+
+      h2 {
+        margin: 0 0 12px 0;
+        font-size: 32px;
+        font-weight: 700;
+      }
+
+      .plan-price {
+        font-size: 24px;
+        margin: 0 0 16px 0;
+      }
+
+      .plan-status {
+        margin: 0 0 12px 0;
+
+        mat-chip {
+          background-color: white;
+          color: $burgundy;
+          font-weight: 600;
+
+          &.expired {
+            background-color: #ff5252;
+            color: white;
+          }
+        }
+      }
+
+      .renewal-date {
+        margin: 0;
+        opacity: 0.9;
+      }
+    }
+
+    .plan-features {
+      margin-bottom: 24px;
+
+      h3 {
+        color: $burgundy;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px;
+          background-color: $cream;
+          margin-bottom: 8px;
+          border-radius: 8px;
+
+          mat-icon {
+            color: #4caf50;
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+      }
+    }
+
+    .plan-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+
+      button {
+        min-width: 200px;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .tab-content {
+      padding: 16px;
+    }
+
+    .form-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .plan-actions {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

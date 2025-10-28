@@ -365,22 +365,36 @@ export class AdminSidebarCompleteComponent implements OnInit {
           id: 'marketing-coupons',
           label: 'Coupons',
           icon: 'local_offer',
-          route: '/admin/coupons',
+          route: '/admin/marketing/coupons',
           badge: 45
         },
         {
           id: 'marketing-promotions',
           label: 'Promotions',
           icon: 'percent',
-          route: '/admin/coupons',
+          route: '/admin/marketing/promotions',
           badge: 12
         },
         {
           id: 'marketing-newsletter',
           label: 'Newsletter',
           icon: 'email',
-          route: '/admin/coupons',
+          route: '/admin/marketing/newsletter',
           badge: 1234
+        },
+        {
+          id: 'marketing-loyalty',
+          label: 'Programme de Fidélité',
+          icon: 'loyalty',
+          route: '/admin/loyalty',
+          badge: 89
+        },
+        {
+          id: 'marketing-email',
+          label: 'Marketing par E-mail',
+          icon: 'campaign',
+          route: '/admin/email-marketing',
+          badge: 45
         }
       ]
     },

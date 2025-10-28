@@ -41,14 +41,9 @@ export interface RolePermissions {
 }
 
 export type AdminRoleType = 
-  | 'super_admin'    // Accès total 
-  | 'admin'          // Accès large mais limité
-  | 'manager'        // Gestion des opérations
-  | 'vendor_admin'   // Gestion de magasin
-  | 'support'        // Support client
-  | 'analyst'        // Analytics et rapports
-  | 'content_manager'// Gestion du contenu
-  | 'moderator';     // Modération
+  | 'admin'          // Accès total à l'administration
+  | 'vendor'         // Gestion de magasin
+  | 'customer';      // Utilisateur final
 
 export interface RoleRestriction {
   module: ModuleType;
@@ -343,68 +338,22 @@ export const MODULE_PERMISSIONS: Record<ModuleType, Permission[]> = {
 
 // Configuration des permissions par rôle
 export const ROLE_PERMISSIONS_CONFIG: Record<AdminRoleType, RolePermissions> = {
-  super_admin: {
-    role: 'super_admin',
+  admin: {
+    role: 'admin',
     permissions: Object.values(MODULE_PERMISSIONS).flat(), // Toutes les permissions
     restrictions: []
   },
 
-  admin: {
-    role: 'admin',
-    permissions: [
-      ...MODULE_PERMISSIONS.dashboard,
-      ...MODULE_PERMISSIONS.users,
-      ...MODULE_PERMISSIONS.products,
-      ...MODULE_PERMISSIONS.orders,
-      ...MODULE_PERMISSIONS.stores,
-      ...MODULE_PERMISSIONS.analytics,
-      ...MODULE_PERMISSIONS.marketing,
-      ...MODULE_PERMISSIONS.reports,
-      ...MODULE_PERMISSIONS.support
-    ],
-    restrictions: [
-      {
-        module: 'settings',
-        action: 'configure',
-        message: 'Seuls les super admins peuvent modifier les paramètres système'
-      },
-      {
-        module: 'security',
-        action: 'manage',
-        message: 'Gestion de la sécurité réservée aux super admins'
-      }
-    ]
-  },
-
-  manager: {
-    role: 'manager',
-    permissions: [
-      ...MODULE_PERMISSIONS.dashboard,
-      ...MODULE_PERMISSIONS.users.filter(p => !p.actions.includes('delete')),
-      ...MODULE_PERMISSIONS.products,
-      ...MODULE_PERMISSIONS.orders,
-      ...MODULE_PERMISSIONS.stores.filter(p => !p.actions.includes('delete')),
-      ...MODULE_PERMISSIONS.analytics,
-      ...MODULE_PERMISSIONS.reports
-    ],
-    restrictions: [
-      {
-        module: 'users',
-        action: 'delete',
-        message: 'Les managers ne peuvent pas supprimer des utilisateurs'
-      }
-    ]
-  },
-
-  vendor_admin: {
-    role: 'vendor_admin',
+  vendor: {
+    role: 'vendor',
     permissions: [
       ...MODULE_PERMISSIONS.dashboard,
       ...MODULE_PERMISSIONS.products,
       ...MODULE_PERMISSIONS.orders,
       MODULE_PERMISSIONS.stores.find(p => p.id === 'stores.view')!,
       MODULE_PERMISSIONS.stores.find(p => p.id === 'stores.edit')!,
-      ...MODULE_PERMISSIONS.analytics.filter(p => p.actions.includes('view'))
+      ...MODULE_PERMISSIONS.analytics.filter(p => p.actions.includes('view')),
+      ...MODULE_PERMISSIONS.support
     ],
     restrictions: [
       {
@@ -412,55 +361,28 @@ export const ROLE_PERMISSIONS_CONFIG: Record<AdminRoleType, RolePermissions> = {
         action: 'view',
         condition: 'own_customers_only',
         message: 'Accès limité aux clients de votre magasin'
+      },
+      {
+        module: 'settings',
+        action: 'configure',
+        message: 'Configuration système réservée aux administrateurs'
       }
     ]
   },
 
-  support: {
-    role: 'support',
+  customer: {
+    role: 'customer',
     permissions: [
-      MODULE_PERMISSIONS.dashboard.find(p => p.id === 'dashboard.view')!,
-      MODULE_PERMISSIONS.users.find(p => p.id === 'users.view')!,
-      MODULE_PERMISSIONS.users.find(p => p.id === 'users.edit')!,
-      MODULE_PERMISSIONS.orders.find(p => p.id === 'orders.view')!,
-      MODULE_PERMISSIONS.orders.find(p => p.id === 'orders.edit')!,
-      ...MODULE_PERMISSIONS.support
-    ],
-    restrictions: []
-  },
-
-  analyst: {
-    role: 'analyst',
-    permissions: [
-      MODULE_PERMISSIONS.dashboard.find(p => p.id === 'dashboard.view')!,
-      ...MODULE_PERMISSIONS.analytics,
-      ...MODULE_PERMISSIONS.reports
-    ],
-    restrictions: []
-  },
-
-  content_manager: {
-    role: 'content_manager',
-    permissions: [
-      MODULE_PERMISSIONS.dashboard.find(p => p.id === 'dashboard.view')!,
-      ...MODULE_PERMISSIONS.content,
-      ...MODULE_PERMISSIONS.marketing
-    ],
-    restrictions: []
-  },
-
-  moderator: {
-    role: 'moderator',
-    permissions: [
-      MODULE_PERMISSIONS.dashboard.find(p => p.id === 'dashboard.view')!,
-      MODULE_PERMISSIONS.users.find(p => p.id === 'users.view')!,
-      MODULE_PERMISSIONS.users.find(p => p.id === 'users.suspend')!,
       MODULE_PERMISSIONS.products.find(p => p.id === 'products.view')!,
-      MODULE_PERMISSIONS.products.find(p => p.id === 'products.approve')!,
-      MODULE_PERMISSIONS.stores.find(p => p.id === 'stores.view')!,
-      MODULE_PERMISSIONS.stores.find(p => p.id === 'stores.approve')!,
+      MODULE_PERMISSIONS.orders.find(p => p.id === 'orders.view')!,
       ...MODULE_PERMISSIONS.support
     ],
-    restrictions: []
+    restrictions: [
+      {
+        module: 'dashboard',
+        action: 'view',
+        message: 'Dashboard réservé aux vendeurs et administrateurs'
+      }
+    ]
   }
 };

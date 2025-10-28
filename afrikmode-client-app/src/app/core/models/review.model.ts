@@ -15,6 +15,8 @@ export interface Review {
     is_verified_purchase: boolean;
     is_approved: boolean;
     helpful_count: number;
+    vendor_response?: string;  // Réponse du vendeur
+    vendor_response_date?: string;  // Date de la réponse
     created_at: string;
     updated_at: string;
   }

@@ -1,0 +1,271 @@
+<div class="vendor-dashboard">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>Tableau de Bord Vendeur</h1>
+      <p class="subtitle">Vue d'ensemble de votre boutique AfrikMode</p>
+    </div>
+    <!-- <div class="header-actions">
+      <button mat-raised-button color="primary" routerLink="/vendor/products/add">
+        <mat-icon>add</mat-icon>
+        Nouveau Produit
+      </button>
+    </div> -->
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    @for (kpi of kpiCards; track kpi.title) {
+      <mat-card class="kpi-card" [style.border-left-color]="kpi.color">
+        <mat-card-content>
+          <div class="kpi-header">
+            <div class="kpi-icon" [style.background-color]="kpi.color + '20'">
+              <mat-icon [style.color]="kpi.color">{{ kpi.icon }}</mat-icon>
+            </div>
+            <div class="kpi-info">
+              <h3>{{ kpi.title }}</h3>
+              <p class="kpi-description">{{ kpi.description }}</p>
+            </div>
+          </div>
+          
+          <div class="kpi-value">
+            <span class="value">{{ kpi.value }}</span>
+            <span class="change" [ngClass]="'change-' + kpi.changeType">
+              <mat-icon>
+                @if (kpi.changeType === 'increase') {
+                  trending_up
+                } @else if (kpi.changeType === 'decrease') {
+                  trending_down
+                } @else {
+                  trending_flat
+                }
+              </mat-icon>
+              {{ Math.abs(kpi.change) }}%
+            </span>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+
+  <!-- Charts and Analytics -->
+  <div class="charts-grid">
+    <!-- Revenue Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Évolution des Revenus</mat-card-title>
+        <mat-card-subtitle>7 derniers jours</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <div class="chart-placeholder">
+            <mat-icon>show_chart</mat-icon>
+            <p>Graphique des revenus</p>
+            <small>Bientôt disponible avec Chart.js</small>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Orders Chart -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Commandes par Statut</mat-card-title>
+        <mat-card-subtitle>Ce mois</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <div class="chart-placeholder">
+            <mat-icon>pie_chart</mat-icon>
+            <p>Graphique des commandes</p>
+            <small>Bientôt disponible avec Chart.js</small>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Recent Orders and Top Products -->
+  <div class="data-grid">
+    <!-- Recent Orders -->
+    <mat-card class="data-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>shopping_cart</mat-icon>
+          Commandes Récentes
+        </mat-card-title>
+        <mat-card-subtitle>Dernières commandes reçues</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="orders-list">
+          @for (order of recentOrders; track order.id) {
+            <div class="order-item">
+              <div class="order-info">
+                <div class="order-id">#{{ order.id }}</div>
+                <div class="order-customer">
+                  <mat-icon>person</mat-icon>
+                  {{ order.customer }}
+                </div>
+                <div class="order-date">
+                  <mat-icon>schedule</mat-icon>
+                  {{ order.date }}
+                </div>
+              </div>
+              <div class="order-details">
+                <div class="order-amount">{{ order.amount.toLocaleString('fr-FR') }} FCFA</div>
+                <mat-chip [style.background-color]="order.statusColor" [style.color]="'white'">
+                  {{ order.status }}
+                </mat-chip>
+              </div>
+            </div>
+            @if (!$last) {
+              <mat-divider></mat-divider>
+            }
+          }
+        </div>
+        <div class="card-actions">
+          <button mat-button color="primary" routerLink="/vendor/orders">
+            Voir toutes les commandes
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Top Products -->
+    <mat-card class="data-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>trending_up</mat-icon>
+          Top Produits
+        </mat-card-title>
+        <mat-card-subtitle>Meilleurs vendeurs ce mois</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="products-list">
+          @for (product of topProducts; track product.name; let i = $index) {
+            <div class="product-item">
+              <div class="product-rank" [class.gold]="i === 0" [class.silver]="i === 1" [class.bronze]="i === 2">
+                {{ i + 1 }}
+              </div>
+              <div class="product-image">
+                <img [src]="product.image" [alt]="product.name" onerror="this.src='assets/images/placeholder-product.jpg'">
+              </div>
+              <div class="product-info">
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-stats">
+                  <span>
+                    <mat-icon>shopping_bag</mat-icon>
+                    {{ product.sales }} ventes
+                  </span>
+                  <span>
+                    <mat-icon>attach_money</mat-icon>
+                    {{ product.revenue.toLocaleString('fr-FR') }} FCFA
+                  </span>
+                </div>
+              </div>
+              <div class="product-change" [ngClass]="product.change > 0 ? 'positive' : 'negative'">
+                <mat-icon>{{ product.change > 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+                {{ Math.abs(product.change) }}%
+              </div>
+            </div>
+            @if (!$last) {
+              <mat-divider></mat-divider>
+            }
+          }
+        </div>
+        <div class="card-actions">
+          <button mat-button color="primary" routerLink="/vendor/products">
+            Voir tous les produits
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Quick Actions -->
+  <mat-card class="quick-actions-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>flash_on</mat-icon>
+        Actions Rapides
+      </mat-card-title>
+      <mat-card-subtitle>Gérez votre boutique efficacement</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="quick-actions-grid">
+        <button mat-raised-button class="action-btn" routerLink="/vendor/products/add">
+          <mat-icon>add_circle</mat-icon>
+          <span>Ajouter Produit</span>
+        </button>
+        <button mat-raised-button class="action-btn" routerLink="/vendor/orders">
+          <mat-icon>shopping_cart</mat-icon>
+          <span>Voir Commandes</span>
+        </button>
+        <button mat-raised-button class="action-btn" routerLink="/vendor/inventory">
+          <mat-icon>inventory</mat-icon>
+          <span>Gérer Stock</span>
+        </button>
+        <button mat-raised-button class="action-btn" routerLink="/vendor/marketing/promotions">
+          <mat-icon>local_offer</mat-icon>
+          <span>Créer Promotion</span>
+        </button>
+        <button mat-raised-button class="action-btn" routerLink="/vendor/analytics">
+          <mat-icon>analytics</mat-icon>
+          <span>Voir Analytics</span>
+        </button>
+        <button mat-raised-button class="action-btn" routerLink="/vendor/settings">
+          <mat-icon>settings</mat-icon>
+          <span>Paramètres</span>
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Store Health Status -->
+  <mat-card class="health-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>health_and_safety</mat-icon>
+        Santé de la Boutique
+      </mat-card-title>
+      <mat-card-subtitle>Indicateurs de performance</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="health-metrics">
+        <div class="health-metric">
+          <div class="metric-info">
+            <span class="metric-label">Taux de satisfaction</span>
+            <span class="metric-value">97%</span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="97" color="primary"></mat-progress-bar>
+        </div>
+        
+        <div class="health-metric">
+          <div class="metric-info">
+            <span class="metric-label">Temps de réponse</span>
+            <span class="metric-value">2.3h</span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="85" color="accent"></mat-progress-bar>
+        </div>
+        
+        <div class="health-metric">
+          <div class="metric-info">
+            <span class="metric-label">Taux de livraison</span>
+            <span class="metric-value">92%</span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="92" color="warn"></mat-progress-bar>
+        </div>
+        
+        <div class="health-metric">
+          <div class="metric-info">
+            <span class="metric-label">Produits actifs</span>
+            <span class="metric-value">124/150</span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="83" [color]="'primary'"></mat-progress-bar>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

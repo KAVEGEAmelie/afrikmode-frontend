@@ -37,8 +37,7 @@
             <mat-icon>{{ user.status === 'active' ? 'block' : 'check_circle' }}</mat-icon>
             {{ user.status === 'active' ? 'Désactiver' : 'Activer' }}
           </button>
-          <button mat-stroked-button color="warn" (click)="deleteUser()" 
-                  *ngIf="user.role !== 'super_admin'">
+          <button mat-stroked-button color="warn" (click)="deleteUser()">
             <mat-icon>delete</mat-icon>
             Supprimer
           </button>

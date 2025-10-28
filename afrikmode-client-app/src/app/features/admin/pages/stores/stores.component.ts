@@ -1,6 +1,6 @@
 // src/app/features/admin/pages/stores/stores.component.ts
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 
@@ -48,6 +48,8 @@ interface Store {
   standalone: true,
   imports: [
     CommonModule,
+    NgIf,
+    NgFor,
     FormsModule,
     ReactiveFormsModule,
     MatTableModule,

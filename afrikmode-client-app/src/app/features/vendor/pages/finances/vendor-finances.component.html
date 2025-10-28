@@ -1,0 +1,225 @@
+<div class="vendor-finances">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <mat-icon>account_balance_wallet</mat-icon>
+        Finances & Revenus
+      </h1>
+      <p class="subtitle">Suivez vos revenus, paiements et transactions</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="accent" (click)="downloadStatement()">
+        <mat-icon>download</mat-icon>
+        Télécharger Relevé
+      </button>
+      <button mat-raised-button color="primary" (click)="requestPayout()">
+        <mat-icon>payments</mat-icon>
+        Demander un Retrait
+      </button>
+    </div>
+  </div>
+
+  <!-- Financial Summary -->
+  <div class="summary-grid">
+    <mat-card class="summary-card balance">
+      <mat-card-content>
+        <div class="card-header">
+          <div class="icon-wrapper">
+            <mat-icon>account_balance_wallet</mat-icon>
+          </div>
+          <h3>Solde Disponible</h3>
+        </div>
+        <div class="amount">{{ balance.available.toLocaleString('fr-FR') }} FCFA</div>
+        <p class="description">Prêt à être retiré</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card pending">
+      <mat-card-content>
+        <div class="card-header">
+          <div class="icon-wrapper">
+            <mat-icon>schedule</mat-icon>
+          </div>
+          <h3>En Attente</h3>
+        </div>
+        <div class="amount">{{ balance.pending.toLocaleString('fr-FR') }} FCFA</div>
+        <p class="description">Commandes en traitement</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card revenue">
+      <mat-card-content>
+        <div class="card-header">
+          <div class="icon-wrapper">
+            <mat-icon>trending_up</mat-icon>
+          </div>
+          <h3>Revenus du Mois</h3>
+        </div>
+        <div class="amount">{{ monthlyRevenue.toLocaleString('fr-FR') }} FCFA</div>
+        <div class="trend positive">
+          <mat-icon>arrow_upward</mat-icon>
+          <span>+15.2%</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="summary-card commission">
+      <mat-card-content>
+        <div class="card-header">
+          <div class="icon-wrapper">
+            <mat-icon>percent</mat-icon>
+          </div>
+          <h3>Commission Plateforme</h3>
+        </div>
+        <div class="amount">{{ commission.toLocaleString('fr-FR') }} FCFA</div>
+        <p class="description">10% du total des ventes</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-section">
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>Évolution des Revenus (30 jours)</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <div class="chart-placeholder">
+            <mat-icon>show_chart</mat-icon>
+            <p>Graphique des revenus (Chart.js)</p>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="breakdown-card">
+      <mat-card-header>
+        <mat-card-title>Répartition des Revenus</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="breakdown-list">
+          <div class="breakdown-item">
+            <div class="label">
+              <span class="dot" style="background: #4caf50"></span>
+              <span>Ventes de produits</span>
+            </div>
+            <div class="value">2,450,000 FCFA</div>
+            <div class="percentage">85%</div>
+          </div>
+          <mat-divider></mat-divider>
+          <div class="breakdown-item">
+            <div class="label">
+              <span class="dot" style="background: #2196f3"></span>
+              <span>Promotions</span>
+            </div>
+            <div class="value">320,000 FCFA</div>
+            <div class="percentage">11%</div>
+          </div>
+          <mat-divider></mat-divider>
+          <div class="breakdown-item">
+            <div class="label">
+              <span class="dot" style="background: #ff9800"></span>
+              <span>Publicités</span>
+            </div>
+            <div class="value">115,000 FCFA</div>
+            <div class="percentage">4%</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Transactions History -->
+  <mat-card class="transactions-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>receipt_long</mat-icon>
+        Historique des Transactions
+      </mat-card-title>
+      <div class="header-actions">
+        <mat-form-field appearance="outline" class="period-select">
+          <mat-label>Période</mat-label>
+          <mat-select [(value)]="selectedPeriod">
+            <mat-option value="7days">7 derniers jours</mat-option>
+            <mat-option value="30days">30 derniers jours</mat-option>
+            <mat-option value="3months">3 derniers mois</mat-option>
+            <mat-option value="year">Cette année</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="transactions-table">
+        @for (transaction of transactions; track transaction.id) {
+          <div class="transaction-row" [class]="transaction.type">
+            <div class="transaction-icon">
+              <mat-icon>
+                @if (transaction.type === 'sale') {
+                  shopping_cart
+                } @else if (transaction.type === 'payout') {
+                  payments
+                } @else if (transaction.type === 'refund') {
+                  undo
+                } @else {
+                  receipt
+                }
+              </mat-icon>
+            </div>
+            <div class="transaction-info">
+              <div class="transaction-description">{{ transaction.description }}</div>
+              <div class="transaction-date">
+                <mat-icon>schedule</mat-icon>
+                {{ transaction.date | date:'dd/MM/yyyy HH:mm' }}
+              </div>
+            </div>
+            <div class="transaction-amount" [class]="transaction.type">
+              @if (transaction.type === 'sale') {
+                +{{ transaction.amount.toLocaleString('fr-FR') }} FCFA
+              } @else {
+                -{{ transaction.amount.toLocaleString('fr-FR') }} FCFA
+              }
+            </div>
+            <div class="transaction-status">
+              <mat-chip [class]="'status-' + transaction.status">
+                {{ getStatusLabel(transaction.status) }}
+              </mat-chip>
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Payout History -->
+  <mat-card class="payouts-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>account_balance</mat-icon>
+        Historique des Retraits
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="payouts-list">
+        @for (payout of payouts; track payout.id) {
+          <div class="payout-item">
+            <div class="payout-info">
+              <div class="payout-date">
+                <mat-icon>calendar_today</mat-icon>
+                {{ payout.date | date:'dd/MM/yyyy' }}
+              </div>
+              <div class="payout-method">{{ payout.method }}</div>
+            </div>
+            <div class="payout-amount">{{ payout.amount.toLocaleString('fr-FR') }} FCFA</div>
+            <mat-chip [class]="'status-' + payout.status">
+              {{ getPayoutStatusLabel(payout.status) }}
+            </mat-chip>
+          </div>
+          <mat-divider></mat-divider>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

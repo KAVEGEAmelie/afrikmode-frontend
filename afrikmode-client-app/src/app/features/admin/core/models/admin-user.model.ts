@@ -20,7 +20,7 @@ export interface AdminUser {
 }
 
 // Type pour les rôles simples
-export type UserRoleType = 'customer' | 'vendor' | 'admin' | 'super_admin' | 'manager';
+export type UserRoleType = 'customer' | 'vendor' | 'admin';
 
 export type UserStatus = 'active' | 'inactive' | 'suspended' | 'banned';
 

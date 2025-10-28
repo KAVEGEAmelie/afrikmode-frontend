@@ -41,6 +41,12 @@ export class CartService {
 
   // Méthode publique pour charger le panier après authentification
   loadCartData(): void {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      console.log('⚠️ Aucun token, abandon du chargement du panier');
+      this.cartSubject.next(null);
+      return;
+    }
     this.loadCart();
   }
 

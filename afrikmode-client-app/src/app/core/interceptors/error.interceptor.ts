@@ -1,74 +1,87 @@
-// src/app/core/interceptors/error.interceptor.ts
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
+import { NotificationService } from '../services/notification.service';
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Router } from '@angular/router';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const router = inject(Router);
+  const notificationService = inject(NotificationService);
 
   return next(req).pipe(
-    catchError((error: HttpErrorResponse) => {
-      let errorMessage = '';
+    catchError((error) => {
+      let errorMessage = 'Une erreur est survenue';
+      let errorTitle = 'Erreur';
 
       if (error.error instanceof ErrorEvent) {
+        // Erreur côté client
         errorMessage = `Erreur: ${error.error.message}`;
-        console.error('Erreur client:', error.error.message);
+        errorTitle = 'Erreur Client';
       } else {
-        errorMessage = getServerErrorMessage(error);
-        console.error(`Erreur ${error.status}:`, errorMessage);
-        handleSpecificErrors(error, router);
+        // Erreur côté serveur
+        switch (error.status) {
+          case 400:
+            errorTitle = 'Requête invalide';
+            errorMessage = error.error?.message || 'Les données fournies sont invalides';
+            break;
+          case 401:
+            errorTitle = 'Non autorisé';
+            errorMessage = 'Votre session a expiré. Veuillez vous reconnecter.';
+            break;
+          case 403:
+            errorTitle = 'Accès refusé';
+            errorMessage = 'Vous n\'avez pas les permissions nécessaires pour cette action';
+            break;
+          case 404:
+            errorTitle = 'Non trouvé';
+            errorMessage = 'La ressource demandée n\'a pas été trouvée';
+            break;
+          case 409:
+            errorTitle = 'Conflit';
+            errorMessage = error.error?.message || 'Un conflit a été détecté';
+            break;
+          case 422:
+            errorTitle = 'Données invalides';
+            errorMessage = error.error?.message || 'Les données fournies ne sont pas valides';
+            break;
+          case 429:
+            errorTitle = 'Trop de requêtes';
+            errorMessage = 'Vous avez fait trop de requêtes. Veuillez patienter.';
+            break;
+          case 500:
+            errorTitle = 'Erreur serveur';
+            errorMessage = 'Une erreur interne du serveur s\'est produite';
+            break;
+          case 502:
+            errorTitle = 'Passerelle invalide';
+            errorMessage = 'Le serveur est temporairement indisponible';
+            break;
+          case 503:
+            errorTitle = 'Service indisponible';
+            errorMessage = 'Le service est temporairement indisponible';
+            break;
+          case 504:
+            errorTitle = 'Timeout';
+            errorMessage = 'Le serveur met trop de temps à répondre';
+            break;
+          default:
+            errorTitle = `Erreur ${error.status}`;
+            errorMessage = error.error?.message || error.message || 'Une erreur inattendue s\'est produite';
+        }
       }
 
-      showErrorNotification(errorMessage);
+      // Afficher la notification d'erreur
+      notificationService.showError(errorMessage, errorTitle);
 
-      return throwError(() => ({
+      // Logger l'erreur pour le debugging
+      console.error('HTTP Error:', {
         status: error.status,
         message: errorMessage,
-        originalError: error
-      }));
+        url: req.url,
+        method: req.method,
+        error: error.error
+      });
+
+      return throwError(() => error);
     })
   );
 };
-
-function getServerErrorMessage(error: HttpErrorResponse): string {
-  if (error.error?.message) {
-    return error.error.message;
-  }
-
-  const errorMessages: Record<number, string> = {
-    400: 'Requête invalide. Veuillez vérifier les données saisies.',
-    401: 'Session expirée. Veuillez vous reconnecter.',
-    403: 'Vous n\'avez pas les permissions nécessaires.',
-    404: 'La ressource demandée n\'a pas été trouvée.',
-    409: 'Conflit avec les données existantes.',
-    422: 'Les données fournies ne sont pas valides.',
-    429: 'Trop de requêtes. Veuillez patienter.',
-    500: 'Erreur serveur. Veuillez réessayer plus tard.',
-    502: 'Service temporairement indisponible.',
-    503: 'Service en maintenance. Veuillez réessayer plus tard.',
-    504: 'Délai d\'attente dépassé. Veuillez réessayer.'
-  };
-
-  return errorMessages[error.status] || `Erreur ${error.status}: ${error.statusText}`;
-}
-
-function handleSpecificErrors(error: HttpErrorResponse, router: Router): void {
-  switch (error.status) {
-    case 401:
-      if (!router.url.includes('/login')) {
-        router.navigate(['/login'], {
-          queryParams: { returnUrl: router.url }
-        });
-      }
-      break;
-    case 403:
-      router.navigate(['/unauthorized']);
-      break;
-  }
-}
-
-function showErrorNotification(message: string): void {
-  console.error('Notification:', message);
-}

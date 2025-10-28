@@ -13,7 +13,7 @@ export interface WebSocketMessage {
   providedIn: 'root'
 })
 export class WebsocketService {
-  private baseUrl = 'http://localhost:5000';
+  private baseUrl = 'http://localhost:3001';
   private socket: Socket | null = null;
   private messageSubject = new Subject<WebSocketMessage>();
   public messages$ = this.messageSubject.asObservable();

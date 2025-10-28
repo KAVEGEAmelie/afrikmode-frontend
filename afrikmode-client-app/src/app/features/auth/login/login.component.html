@@ -34,8 +34,17 @@
           <div class="form-header">
             <h2>Bienvenue</h2>
             <p>Connectez-vous à votre compte</p>
+            <div class="role-info">
+              <small>Clients, Vendeurs et Administrateurs</small>
+            </div>
           </div>
   
+          <!-- Success Message -->
+          <div class="alert alert-success" *ngIf="successMessage">
+            <i class="fas fa-check-circle"></i>
+            {{ successMessage }}
+          </div>
+
           <!-- Error Message -->
           <div class="alert alert-error" *ngIf="errorMessage">
             <i class="fas fa-exclamation-circle"></i>

@@ -1,150 +1,229 @@
-// src/app/core/services/notification.service.ts
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Notification, NotificationPreferences, PaginatedResponse } from '../models';
+import { WebsocketService } from './websocket.service';
+import { ApiService } from './api.service';
+
+export interface Notification {
+  id: string;
+  type: 'order' | 'payment' | 'stock' | 'review' | 'message' | 'system';
+  title: string;
+  message: string;
+  data?: any;
+  read: boolean;
+  createdAt: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  icon?: string;
+  time?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  private baseUrl = 'http://localhost:5000/api';
+  private notificationsSubject = new BehaviorSubject<Notification[]>([]);
+  public notifications$ = this.notificationsSubject.asObservable();
+  
   private unreadCountSubject = new BehaviorSubject<number>(0);
   public unreadCount$ = this.unreadCountSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    this.loadUnreadCount();
+  constructor(
+    private websocketService: WebsocketService,
+    private apiService: ApiService
+  ) {
+    this.initializeWebSocketListeners();
   }
 
-  private getHeaders() {
-    const token = localStorage.getItem('auth_token');
-    const headers: any = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    };
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    return headers;
-  }
+  private initializeWebSocketListeners(): void {
+    // Écouter les notifications en temps réel
+    this.websocketService.on('notification').subscribe((data: any) => {
+      this.addNotification(data);
+    });
 
-  private buildParams(params?: any): HttpParams {
-    let httpParams = new HttpParams();
-    if (params) {
-      Object.keys(params).forEach(key => {
-        const value = params[key];
-        if (value !== null && value !== undefined && value !== '') {
-          httpParams = httpParams.set(key, value.toString());
-        }
+    // Écouter les mises à jour de commandes
+    this.websocketService.on('order_update').subscribe((data: any) => {
+      this.addNotification({
+        id: `order_${data.orderId}_${Date.now()}`,
+        type: 'order',
+        title: 'Commande mise à jour',
+        message: `Commande #${data.orderNumber} - ${data.status}`,
+        data: data,
+        read: false,
+        createdAt: new Date().toISOString(),
+        priority: 'medium'
       });
+    });
+
+    // Écouter les nouveaux paiements
+    this.websocketService.on('payment_received').subscribe((data: any) => {
+      this.addNotification({
+        id: `payment_${data.paymentId}_${Date.now()}`,
+        type: 'payment',
+        title: 'Paiement reçu',
+        message: `Paiement de ${data.amount} FCFA confirmé`,
+        data: data,
+        read: false,
+        createdAt: new Date().toISOString(),
+        priority: 'high'
+      });
+    });
+
+    // Écouter les alertes de stock
+    this.websocketService.on('stock_alert').subscribe((data: any) => {
+      this.addNotification({
+        id: `stock_${data.productId}_${Date.now()}`,
+        type: 'stock',
+        title: 'Stock faible',
+        message: `Produit "${data.productName}" - Stock: ${data.stock} unités`,
+        data: data,
+        read: false,
+        createdAt: new Date().toISOString(),
+        priority: 'urgent'
+      });
+    });
+
+    // Écouter les nouveaux avis
+    this.websocketService.on('new_review').subscribe((data: any) => {
+      this.addNotification({
+        id: `review_${data.reviewId}_${Date.now()}`,
+        type: 'review',
+        title: 'Nouvel avis client',
+        message: `Avis ${data.rating} étoiles pour "${data.productName}"`,
+        data: data,
+        read: false,
+        createdAt: new Date().toISOString(),
+        priority: 'medium'
+      });
+    });
+
+    // Écouter les nouveaux messages
+    this.websocketService.on('chat_message').subscribe((data: any) => {
+      this.addNotification({
+        id: `message_${data.messageId}_${Date.now()}`,
+        type: 'message',
+        title: 'Nouveau message',
+        message: `${data.senderName}: ${data.message}`,
+        data: data,
+        read: false,
+        createdAt: new Date().toISOString(),
+        priority: 'medium'
+      });
+    });
+  }
+
+  private addNotification(notification: Notification): void {
+    const currentNotifications = this.notificationsSubject.value;
+    const updatedNotifications = [notification, ...currentNotifications];
+    this.notificationsSubject.next(updatedNotifications);
+    
+    if (!notification.read) {
+      this.updateUnreadCount();
     }
-    return httpParams;
   }
 
-  private loadUnreadCount(): void {
-    this.getUnreadCount().subscribe({
-      next: (response: any) => {
-        const count = response.count || response.data?.count || 0;
-        this.unreadCountSubject.next(count);
-      },
-      error: () => this.unreadCountSubject.next(0)
-    });
+  private updateUnreadCount(): void {
+    const notifications = this.notificationsSubject.value;
+    const unreadCount = notifications.filter(n => !n.read).length;
+    this.unreadCountSubject.next(unreadCount);
   }
 
-  getNotifications(params?: {
-    page?: number;
-    limit?: number;
-    type?: string;
-    is_read?: boolean;
-  }): Observable<PaginatedResponse<Notification>> {
-    return this.http.get<PaginatedResponse<Notification>>(`${this.baseUrl}/notifications`, {
-      headers: this.getHeaders(),
-      params: params ? this.buildParams(params) : undefined
-    });
+  // Méthodes publiques
+  getNotifications(): Observable<Notification[]> {
+    return this.notifications$;
   }
 
-  getNotification(id: string): Observable<Notification> {
-    return this.http.get<Notification>(`${this.baseUrl}/notifications/${id}`, {
-      headers: this.getHeaders()
-    });
+  getUnreadCount(): Observable<number> {
+    return this.unreadCount$;
   }
 
-  markAsRead(id: string): Observable<Notification> {
-    return this.http.put<Notification>(`${this.baseUrl}/notifications/${id}/read`, {}, {
-      headers: this.getHeaders()
-    }).pipe(
-      tap(() => this.loadUnreadCount())
+  markAsRead(notificationId: string): void {
+    const notifications = this.notificationsSubject.value;
+    const updatedNotifications = notifications.map(n => 
+      n.id === notificationId ? { ...n, read: true } : n
     );
+    this.notificationsSubject.next(updatedNotifications);
+    this.updateUnreadCount();
   }
 
-  markAllAsRead(): Observable<any> {
-    return this.http.put(`${this.baseUrl}/notifications/mark-all-read`, {}, {
-      headers: this.getHeaders()
-    }).pipe(
-      tap(() => this.unreadCountSubject.next(0))
-    );
+  markAllAsRead(): void {
+    const notifications = this.notificationsSubject.value;
+    const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+    this.notificationsSubject.next(updatedNotifications);
+    this.unreadCountSubject.next(0);
   }
 
-  deleteNotification(id: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/notifications/${id}`, {
-      headers: this.getHeaders()
+  removeNotification(notificationId: string): void {
+    const notifications = this.notificationsSubject.value;
+    const updatedNotifications = notifications.filter(n => n.id !== notificationId);
+    this.notificationsSubject.next(updatedNotifications);
+    this.updateUnreadCount();
+  }
+
+  clearAllNotifications(): void {
+    this.notificationsSubject.next([]);
+    this.unreadCountSubject.next(0);
+  }
+
+  // Méthodes pour les notifications persistantes (API)
+  getPersistentNotifications(): Observable<Notification[]> {
+    return this.apiService.get<Notification[]>('vendor/notifications');
+  }
+
+  markPersistentNotificationAsRead(notificationId: string): Observable<any> {
+    return this.apiService.put<any>(`vendor/notifications/${notificationId}/read`, {});
+  }
+
+  markAllPersistentNotificationsAsRead(): Observable<any> {
+    return this.apiService.put<any>('vendor/notifications/read-all', {});
+  }
+
+  // Méthodes pour créer des notifications personnalisées
+  createNotification(notification: Omit<Notification, 'id' | 'createdAt'>): void {
+    const newNotification: Notification = {
+      ...notification,
+      id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString()
+    };
+    this.addNotification(newNotification);
+  }
+
+  // Méthodes pour les notifications système
+  showSuccess(message: string, title: string = 'Succès'): void {
+    this.createNotification({
+      type: 'system',
+      title,
+      message,
+      read: false,
+      priority: 'low'
     });
   }
 
-  deleteAllNotifications(): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/notifications/all`, {
-      headers: this.getHeaders()
+  showError(message: string, title: string = 'Erreur'): void {
+    this.createNotification({
+      type: 'system',
+      title,
+      message,
+      read: false,
+      priority: 'high'
     });
   }
 
-  getUnreadCount(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/notifications/unread-count`, {
-      headers: this.getHeaders()
+  showWarning(message: string, title: string = 'Attention'): void {
+    this.createNotification({
+      type: 'system',
+      title,
+      message,
+      read: false,
+      priority: 'medium'
     });
   }
 
-  getPreferences(): Observable<NotificationPreferences> {
-    return this.http.get<NotificationPreferences>(`${this.baseUrl}/notifications/preferences`, {
-      headers: this.getHeaders()
+  showInfo(message: string, title: string = 'Information'): void {
+    this.createNotification({
+      type: 'system',
+      title,
+      message,
+      read: false,
+      priority: 'low'
     });
-  }
-
-  updatePreferences(preferences: Partial<NotificationPreferences>): Observable<NotificationPreferences> {
-    return this.http.put<NotificationPreferences>(`${this.baseUrl}/notifications/preferences`, preferences, {
-      headers: this.getHeaders()
-    });
-  }
-
-  subscribeToPush(subscription: any): Observable<any> {
-    return this.http.post(`${this.baseUrl}/notifications/push/subscribe`, subscription, {
-      headers: this.getHeaders()
-    });
-  }
-
-  unsubscribeFromPush(): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/notifications/push/unsubscribe`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  registerFCMToken(token: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/notifications/fcm/register`, { token }, {
-      headers: this.getHeaders()
-    });
-  }
-
-  unregisterFCMToken(): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/notifications/fcm/unregister`, {
-      headers: this.getHeaders()
-    });
-  }
-
-  getCurrentUnreadCount(): number {
-    return this.unreadCountSubject.value;
-  }
-
-  refreshUnreadCount(): void {
-    this.loadUnreadCount();
   }
 }

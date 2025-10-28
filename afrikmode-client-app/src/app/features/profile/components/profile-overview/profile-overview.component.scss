@@ -1,12 +1,33 @@
 // src/app/features/profile/components/profile-overview/profile-overview.component.scss
-@import '../../styles/profile-shared';
+@use '../../styles/profile-shared' as *;
+
+// Messages d'état
+.loading-message, .error-message {
+  padding: 20px;
+  text-align: center;
+  border-radius: 8px;
+  margin: 20px 0;
+  font-weight: 500;
+}
+
+.loading-message {
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #bbdefb;
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
 
 .profile-overview {
   @include fade-in;
 
   h1 {
-    @include page-header;
     margin-bottom: $spacing-2xl;
+    @include page-header;
   }
   .section-header {
     margin-bottom: 2rem;

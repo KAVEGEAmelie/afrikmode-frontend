@@ -10,7 +10,7 @@ export interface AdminUser {
   firstName: string;
   lastName: string;
   email: string;
-  role: 'admin' | 'super_admin' | 'manager';
+  role: 'admin';
   permissions: string[];
   profilePicture?: string;
   lastLoginAt?: string;
@@ -149,14 +149,14 @@ export class AdminAuthService {
     const user = this.getCurrentUser();
     if (!user) return false;
     
-    return user.permissions.includes(permission) || user.role === 'super_admin';
+    return user.permissions.includes(permission) || user.role === 'admin';
   }
 
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
     if (!user) return false;
     
-    return user.role === role || user.role === 'super_admin';
+    return user.role === role;
   }
 
   getToken(): string | null {

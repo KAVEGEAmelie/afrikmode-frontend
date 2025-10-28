@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { PermissionGuard } from '../../core/guards/permission.guard';
 import { AdminAuthGuard } from './core/guards/admin-auth.guard';
+import { AdminGuard } from '../../core/guards/admin.guard';
 
 // Layout
 import { AdminComponent } from './admin.component';
@@ -10,17 +11,13 @@ import { AdminComponent } from './admin.component';
 // Pages
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { UnauthorizedComponent } from './pages/unauthorized/unauthorized.component';
-import { AdminLoginComponent } from './pages/login/admin-login.component';
 
 const routes: Routes = [
-  // Route de connexion
+  // Route de connexion - redirige vers la page de connexion principale
   {
     path: 'login',
-    component: AdminLoginComponent,
-    data: { 
-      title: 'Connexion Admin',
-      breadcrumb: 'Connexion'
-    }
+    redirectTo: '/login',
+    pathMatch: 'full'
   },
   // Route de test sans authentification
   {
@@ -98,12 +95,11 @@ const routes: Routes = [
       }
     ]
   },
-  // Route normale avec authentification (temporairement désactivée pour test)
+  // Route normale avec authentification
   {
     path: '',
     component: AdminComponent,
-    // canActivate: [AdminAuthGuard],
-    data: { roles: ['admin', 'super_admin', 'manager'] },
+    canActivate: [AdminGuard],
     children: [
       {
         path: '',
@@ -173,23 +169,99 @@ const routes: Routes = [
       },
       {
         path: 'analytics',
-        loadComponent: () => import('./pages/analytics/admin-analytics.component').then(m => m.AdminAnalyticsComponent),
         canActivate: [PermissionGuard],
         data: { 
           title: 'Analytics & Rapports',
           breadcrumb: 'Analytics',
           permission: 'analytics.view'
-        }
+        },
+        children: [
+          {
+            path: '',
+            redirectTo: 'overview',
+            pathMatch: 'full'
+          },
+          {
+            path: 'overview',
+            loadComponent: () => import('./pages/analytics/admin-analytics.component').then(m => m.AdminAnalyticsComponent),
+            data: { 
+              title: 'Vue d\'ensemble',
+              breadcrumb: 'Vue d\'ensemble'
+            }
+          },
+          {
+            path: 'sales',
+            loadComponent: () => import('./pages/analytics/admin-analytics.component').then(m => m.AdminAnalyticsComponent),
+            data: { 
+              title: 'Analytics Ventes',
+              breadcrumb: 'Ventes'
+            }
+          },
+          {
+            path: 'users',
+            loadComponent: () => import('./pages/analytics/admin-analytics.component').then(m => m.AdminAnalyticsComponent),
+            data: { 
+              title: 'Analytics Utilisateurs',
+              breadcrumb: 'Utilisateurs'
+            }
+          },
+          {
+            path: 'products',
+            loadComponent: () => import('./pages/analytics/admin-analytics.component').then(m => m.AdminAnalyticsComponent),
+            data: { 
+              title: 'Analytics Produits',
+              breadcrumb: 'Produits'
+            }
+          }
+        ]
       },
       {
         path: 'marketing',
-        loadComponent: () => import('./pages/marketing/marketing.component').then(m => m.MarketingComponent),
         canActivate: [PermissionGuard],
         data: { 
           title: 'Marketing & Promotions',
           breadcrumb: 'Marketing',
           permission: 'marketing.view'
-        }
+        },
+        children: [
+          {
+            path: '',
+            redirectTo: 'overview',
+            pathMatch: 'full'
+          },
+          {
+            path: 'overview',
+            loadComponent: () => import('./pages/marketing/marketing.component').then(m => m.MarketingComponent),
+            data: { 
+              title: 'Vue d\'ensemble Marketing',
+              breadcrumb: 'Vue d\'ensemble'
+            }
+          },
+          {
+            path: 'coupons',
+            loadComponent: () => import('./pages/coupons/admin-coupons-management.component').then(m => m.AdminCouponsManagementComponent),
+            data: { 
+              title: 'Gestion des Coupons',
+              breadcrumb: 'Coupons'
+            }
+          },
+          {
+            path: 'promotions',
+            loadComponent: () => import('./pages/coupons/admin-coupons-management.component').then(m => m.AdminCouponsManagementComponent),
+            data: { 
+              title: 'Promotions',
+              breadcrumb: 'Promotions'
+            }
+          },
+          {
+            path: 'newsletter',
+            loadComponent: () => import('./pages/coupons/admin-coupons-management.component').then(m => m.AdminCouponsManagementComponent),
+            data: { 
+              title: 'Newsletter',
+              breadcrumb: 'Newsletter'
+            }
+          }
+        ]
       },
       {
         path: 'settings',
@@ -209,6 +281,107 @@ const routes: Routes = [
           title: 'Gestion des Coupons',
           breadcrumb: 'Coupons',
           permission: 'coupons.view'
+        }
+      },
+      {
+        path: 'loyalty',
+        loadComponent: () => import('./pages/loyalty/admin-loyalty.component').then(m => m.AdminLoyaltyComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Programme de Fidélité',
+          breadcrumb: 'Fidélité',
+          permission: 'loyalty.view'
+        }
+      },
+      {
+        path: 'email-marketing',
+        loadComponent: () => import('./pages/email-marketing/admin-email-marketing.component').then(m => m.AdminEmailMarketingComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Marketing par E-mail',
+          breadcrumb: 'Email Marketing',
+          permission: 'marketing.email'
+        }
+      },
+      // 🆕 Nouvelles routes admin
+      {
+        path: 'vendor-requests',
+        loadComponent: () => import('./pages/vendor-requests/admin-vendor-requests.component').then(m => m.AdminVendorRequestsComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Demandes Vendeurs',
+          breadcrumb: 'Demandes Vendeurs',
+          permission: 'vendors.view'
+        }
+      },
+      {
+        path: 'vendors',
+        loadComponent: () => import('./pages/vendors/admin-vendors.component').then(m => m.AdminVendorsComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Modération Vendeurs',
+          breadcrumb: 'Vendeurs',
+          permission: 'vendors.manage'
+        }
+      },
+      {
+        path: 'categories',
+        loadComponent: () => import('./pages/categories/admin-categories.component').then(m => m.AdminCategoriesComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Gestion des Catégories',
+          breadcrumb: 'Catégories',
+          permission: 'categories.manage'
+        }
+      },
+      {
+        path: 'content-moderation',
+        loadComponent: () => import('./pages/content-moderation/admin-content-moderation.component').then(m => m.AdminContentModerationComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Modération Contenu',
+          breadcrumb: 'Modération',
+          permission: 'content.moderate'
+        }
+      },
+      {
+        path: 'transactions',
+        loadComponent: () => import('./pages/transactions/admin-transactions.component').then(m => m.AdminTransactionsComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Gestion des Transactions',
+          breadcrumb: 'Transactions',
+          permission: 'transactions.view'
+        }
+      },
+      {
+        path: 'payment-settings',
+        loadComponent: () => import('./pages/payment-settings/admin-payment-settings.component').then(m => m.AdminPaymentSettingsComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Configuration Paiements',
+          breadcrumb: 'Paiements',
+          permission: 'system.manage'
+        }
+      },
+      {
+        path: 'reports',
+        loadComponent: () => import('./pages/reports/admin-reports.component').then(m => m.AdminReportsComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Rapports & Exports',
+          breadcrumb: 'Rapports',
+          permission: 'reports.view'
+        }
+      },
+      {
+        path: 'editorial',
+        loadComponent: () => import('./pages/editorial/admin-editorial.component').then(m => m.AdminEditorialComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Contenu Éditorial',
+          breadcrumb: 'Éditorial',
+          permission: 'content.manage'
         }
       },
       {

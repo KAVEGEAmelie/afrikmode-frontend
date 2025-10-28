@@ -17,8 +17,13 @@ export * from './wishlist.service';
 export * from './address.service';
 export * from './review.service';
 export * from './notification.service';
+export * from './message.service';
 export * from './ticket.service';
-export * from './websocket.service'; 
+export * from './websocket.service';
+
+// Services Vendor & Admin
+export * from './vendor.service';
+export * from './dashboard.service'; 
 
 // Services Catalogue
 export * from './category.service';
@@ -44,8 +49,11 @@ export const AFRIKMODE_SERVICES = [
   'AddressService',
   'ReviewService',
   'NotificationService',
+  'MessageService',
   'TicketService',
-  'WebsocketService', 
+  'WebsocketService',
+  'VendorService',
+  'DashboardService', 
   'CategoryService',
   'StoreService',
   'UploadService',

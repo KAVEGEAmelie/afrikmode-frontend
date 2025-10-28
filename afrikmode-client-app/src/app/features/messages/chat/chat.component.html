@@ -1,0 +1,159 @@
+<!-- src/app/features/messages/chat/chat.component.html -->
+<div class="chat-container" *ngIf="!loading">
+  <!-- Chat Header -->
+  <div class="chat-header">
+    <button class="btn-back" (click)="goBack()">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <div class="participant-info" *ngIf="conversation">
+      <img [src]="getOtherParticipant().avatar" class="participant-avatar" alt="Avatar">
+      <div class="participant-details">
+        <h2>{{ getOtherParticipant().name }}</h2>
+        <div class="conversation-meta">
+          <span class="status-badge" [class]="conversation.status">
+            <i class="fas fa-circle"></i>
+            {{ conversation.status === 'active' ? 'Active' : conversation.status === 'closed' ? 'Clôturée' : 'Archivée' }}
+          </span>
+          <span class="subject" *ngIf="conversation.subject">
+            <i class="fas fa-tag"></i> {{ conversation.subject }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-info" *ngIf="conversation && conversation.product_name">
+      <img [src]="conversation.product_image" class="product-thumb" alt="Produit">
+      <span>{{ conversation.product_name }}</span>
+    </div>
+
+    <div class="chat-actions">
+      <button class="action-btn" (click)="closeConversationAction()" 
+              *ngIf="conversation && conversation.status === 'active'"
+              title="Clôturer la conversation">
+        <i class="fas fa-check"></i>
+      </button>
+      <button class="action-btn" (click)="archiveConversationAction()" 
+              title="Archiver la conversation">
+        <i class="fas fa-archive"></i>
+      </button>
+      <button class="action-btn danger" (click)="deleteConversation()" 
+              title="Supprimer la conversation">
+        <i class="fas fa-trash"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages Container -->
+  <div class="messages-container" #messagesContainer>
+    <div class="messages-list">
+      <ng-container *ngFor="let message of messages; let i = index">
+        <!-- Date Separator -->
+        <div class="date-separator" *ngIf="shouldShowDateSeparator(i)">
+          <span>{{ formatDate(message.created_at) }}</span>
+        </div>
+
+        <!-- Message Bubble -->
+        <div class="message-wrapper" [class.sent]="isSentByMe(message)" [class.received]="!isSentByMe(message)">
+          <img [src]="isSentByMe(message) ? 'assets/images/default-avatar.png' : getOtherParticipant().avatar" 
+               class="message-avatar"
+               *ngIf="!isSentByMe(message)">
+
+          <div class="message-bubble">
+            <div class="message-content">
+              <p>{{ message.message }}</p>
+
+              <!-- Attachments -->
+              <div class="message-attachments" *ngIf="message.attachments && message.attachments.length > 0">
+                <div class="attachment" *ngFor="let attachment of message.attachments">
+                  <img [src]="attachment" *ngIf="isImage(attachment)" class="attachment-image">
+                  <div class="attachment-file" *ngIf="!isImage(attachment)">
+                    <i class="fas fa-file"></i>
+                    <span>{{ getFileName(attachment) }}</span>
+                    <button (click)="downloadAttachment(attachment)">
+                      <i class="fas fa-download"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="message-meta">
+              <span class="message-time">{{ formatTime(message.created_at) }}</span>
+              <i class="fas fa-check-double" *ngIf="isSentByMe(message) && message.is_read" 
+                 class="read-indicator"></i>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Empty State -->
+      <div class="empty-messages" *ngIf="messages.length === 0 && !loading">
+        <i class="fas fa-comments fa-3x"></i>
+        <p>Aucun message pour le moment</p>
+        <span>Commencez la conversation !</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Input -->
+  <div class="message-input-container" *ngIf="conversation?.status === 'active'">
+    <!-- Error Message -->
+    <div class="error-message" *ngIf="error">
+      <i class="fas fa-exclamation-circle"></i>
+      {{ error }}
+    </div>
+
+    <!-- Attachment Previews -->
+    <div class="attachment-previews" *ngIf="attachments.length > 0">
+      <div class="preview-item" *ngFor="let preview of attachmentPreviews; let i = index">
+        <img [src]="preview" *ngIf="preview" class="preview-image">
+        <div class="preview-file" *ngIf="!preview">
+          <i class="fas fa-file"></i>
+          <span>{{ attachments[i].name }}</span>
+        </div>
+        <button class="remove-preview" (click)="removeAttachment(i)">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <button class="btn-attachment" (click)="openFileDialog()" [disabled]="sending">
+        <i class="fas fa-paperclip"></i>
+      </button>
+      <input type="file" 
+             #fileInput 
+             (change)="onFileSelected($event)" 
+             multiple 
+             accept="image/*,.pdf,.doc,.docx"
+             style="display: none;">
+
+      <textarea [(ngModel)]="newMessage"
+                (keydown.enter)="onEnterPress($any($event))"
+                placeholder="Écrivez votre message..."
+                [disabled]="sending"
+                rows="1"></textarea>
+
+      <button class="btn-send" 
+              (click)="sendMessage()" 
+              [disabled]="(!newMessage.trim() && attachments.length === 0) || sending">
+        <i class="fas fa-paper-plane" *ngIf="!sending"></i>
+        <i class="fas fa-spinner fa-spin" *ngIf="sending"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Closed Conversation Notice -->
+  <div class="closed-notice" *ngIf="conversation && conversation.status === 'closed'">
+    <i class="fas fa-lock"></i>
+    <p>Cette conversation est clôturée. Vous ne pouvez plus envoyer de messages.</p>
+  </div>
+</div>
+
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading">
+  <div class="spinner"></div>
+  <p>Chargement de la conversation...</p>
+</div>

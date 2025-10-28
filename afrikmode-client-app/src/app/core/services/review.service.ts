@@ -38,7 +38,7 @@ export class ReviewService {
   }
 
   getProductReviews(productId: string, params?: any): Observable<PaginatedResponse<Review>> {
-    return this.http.get<PaginatedResponse<Review>>(`${this.baseUrl}/products/${productId}/reviews`, {
+    return this.http.get<PaginatedResponse<Review>>(`${this.baseUrl}/reviews/product/${productId}`, {
       headers: this.getHeaders(),
       params: params ? this.buildParams(params) : undefined
     });
@@ -50,9 +50,16 @@ export class ReviewService {
     });
   }
 
-  createReview(review: Partial<Review>): Observable<Review> {
-    return this.http.post<Review>(`${this.baseUrl}/reviews`, review, {
-      headers: this.getHeaders()
+  createReview(reviewData: FormData | Partial<Review>): Observable<Review> {
+    // Pour FormData, on ne met pas Content-Type (le browser le gère automatiquement)
+    const headers: any = {};
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return this.http.post<Review>(`${this.baseUrl}/reviews`, reviewData, {
+      headers: headers
     });
   }
 
@@ -68,14 +75,14 @@ export class ReviewService {
     });
   }
 
-  getReviewStats(productId: string): Observable<ReviewStats> {
-    return this.http.get<ReviewStats>(`${this.baseUrl}/products/${productId}/reviews/stats`, {
+  getProductStats(productId: string): Observable<ReviewStats> {
+    return this.http.get<ReviewStats>(`${this.baseUrl}/reviews/product/${productId}/stats`, {
       headers: this.getHeaders()
     });
   }
 
-  markReviewHelpful(reviewId: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/reviews/${reviewId}/helpful`, {}, {
+  markReviewHelpful(reviewId: string, helpful: boolean): Observable<any> {
+    return this.http.post(`${this.baseUrl}/reviews/${reviewId}/helpful`, { helpful }, {
       headers: this.getHeaders()
     });
   }

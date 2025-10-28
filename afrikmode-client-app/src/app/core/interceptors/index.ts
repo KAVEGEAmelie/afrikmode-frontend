@@ -1,6 +1,3 @@
-// src/app/core/interceptors/index.ts
-// Export central de tous les interceptors
-
-export * from './auth.interceptor';
-export * from './error.interceptor';
-export * from './loading.interceptor';
+export { authInterceptor } from './auth.interceptor';
+export { errorInterceptor } from './error.interceptor';
+export { headersInterceptor } from './headers.interceptor';

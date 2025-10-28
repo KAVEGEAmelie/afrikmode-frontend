@@ -11,38 +11,299 @@
     </div>
   </div>
 
+  <!-- Messages d'état -->
+  @if (loading) {
+    <div class="loading-message">
+      <i class="fas fa-spinner fa-spin"></i>
+      Chargement des adresses...
+    </div>
+  }
+  
+  @if (errorMessage) {
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ errorMessage }}
+    </div>
+  }
+  
+  @if (successMessage) {
+    <div class="success-message">
+      <i class="fas fa-check-circle"></i>
+      {{ successMessage }}
+    </div>
+  }
+
+  <!-- Formulaire d'édition d'adresse -->
+  @if (showEditForm && editingAddress) {
+    <div class="add-address-form">
+    <div class="form-header">
+      <h2>Modifier l'adresse</h2>
+      <button class="btn btn-secondary" (click)="cancelEditAddress()">
+        <i class="fas fa-times"></i>
+        Annuler
+      </button>
+    </div>
+    
+    <form class="address-form" (ngSubmit)="saveEditedAddress()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="edit_type">Type d'adresse *</label>
+          <select id="edit_type" name="edit_type" [(ngModel)]="editingAddress.type" required>
+            <option value="shipping">Livraison</option>
+            <option value="billing">Facturation</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit_is_default">Adresse par défaut</label>
+          <input type="checkbox" id="edit_is_default" name="edit_is_default" [(ngModel)]="editingAddress.is_default">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="edit_first_name">Prénom *</label>
+          <input type="text" id="edit_first_name" name="edit_first_name" [(ngModel)]="editingAddress.first_name" required>
+        </div>
+        <div class="form-group">
+          <label for="edit_last_name">Nom *</label>
+          <input type="text" id="edit_last_name" name="edit_last_name" [(ngModel)]="editingAddress.last_name" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit_address_line_1">Adresse *</label>
+        <input type="text" id="edit_address_line_1" name="edit_address_line_1" [(ngModel)]="editingAddress.address_line_1" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="edit_address_line_2">Complément d'adresse</label>
+        <input type="text" id="edit_address_line_2" name="edit_address_line_2" [(ngModel)]="editingAddress.address_line_2">
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="edit_city">Ville *</label>
+          <input type="text" id="edit_city" name="edit_city" [(ngModel)]="editingAddress.city" required>
+        </div>
+        <div class="form-group">
+          <label for="edit_postal_code">Code postal *</label>
+          <input type="text" id="edit_postal_code" name="edit_postal_code" [(ngModel)]="editingAddress.postal_code" required>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="edit_country">Pays *</label>
+          <select id="edit_country" name="edit_country" [(ngModel)]="editingAddress.country" required>
+            <option value="CI">Côte d'Ivoire</option>
+            <option value="SN">Sénégal</option>
+            <option value="ML">Mali</option>
+            <option value="BF">Burkina Faso</option>
+            <option value="NE">Niger</option>
+            <option value="TG">Togo</option>
+            <option value="BJ">Bénin</option>
+            <option value="CM">Cameroun</option>
+            <option value="FR">France</option>
+            <option value="US">États-Unis</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit_phone">Téléphone *</label>
+          <input type="tel" id="edit_phone" name="edit_phone" [(ngModel)]="editingAddress.phone" required>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelEditAddress()">
+          <i class="fas fa-times"></i>
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          @if (loading) {
+            <i class="fas fa-spinner fa-spin"></i>
+            Sauvegarde...
+          } @else {
+            <i class="fas fa-save"></i>
+            Enregistrer
+          }
+        </button>
+      </div>
+    </form>
+    </div>
+  }
+
+  <!-- Formulaire d'ajout d'adresse -->
+  @if (showAddForm && !showEditForm) {
+    <div class="add-address-form">
+    <div class="form-header">
+      <h2>Ajouter une nouvelle adresse</h2>
+      <button class="btn btn-secondary" (click)="cancelAddAddress()">
+        <i class="fas fa-times"></i>
+        Annuler
+      </button>
+    </div>
+    
+    <form class="address-form" (ngSubmit)="saveNewAddress()">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="type">Type d'adresse *</label>
+          <select id="type" name="type" [(ngModel)]="newAddress.type" required>
+            <option value="shipping">Livraison</option>
+            <option value="billing">Facturation</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="is_default">Adresse par défaut</label>
+          <input type="checkbox" id="is_default" name="is_default" [(ngModel)]="newAddress.is_default">
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="first_name">Prénom *</label>
+          <input type="text" id="first_name" name="first_name" [(ngModel)]="newAddress.first_name" required>
+        </div>
+        <div class="form-group">
+          <label for="last_name">Nom *</label>
+          <input type="text" id="last_name" name="last_name" [(ngModel)]="newAddress.last_name" required>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="address_line_1">Adresse *</label>
+        <input type="text" id="address_line_1" name="address_line_1" [(ngModel)]="newAddress.address_line_1" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="address_line_2">Complément d'adresse</label>
+        <input type="text" id="address_line_2" name="address_line_2" [(ngModel)]="newAddress.address_line_2">
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="city">Ville *</label>
+          <input type="text" id="city" name="city" [(ngModel)]="newAddress.city" required>
+        </div>
+        <div class="form-group">
+          <label for="postal_code">Code postal *</label>
+          <input type="text" id="postal_code" name="postal_code" [(ngModel)]="newAddress.postal_code" required>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="country">Pays *</label>
+          <select id="country" name="country" [(ngModel)]="newAddress.country" required>
+            <option value="CI">Côte d'Ivoire</option>
+            <option value="SN">Sénégal</option>
+            <option value="ML">Mali</option>
+            <option value="BF">Burkina Faso</option>
+            <option value="NE">Niger</option>
+            <option value="TG">Togo</option>
+            <option value="BJ">Bénin</option>
+            <option value="CM">Cameroun</option>
+            <option value="FR">France</option>
+            <option value="US">États-Unis</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="phone">Téléphone *</label>
+          <input type="tel" id="phone" name="phone" [(ngModel)]="newAddress.phone" required>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelAddAddress()">
+          <i class="fas fa-times"></i>
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading">
+          @if (loading) {
+            <i class="fas fa-spinner fa-spin"></i>
+            Sauvegarde...
+          } @else {
+            <i class="fas fa-save"></i>
+            Sauvegarder
+          }
+        </button>
+      </div>
+    </form>
+    </div>
+  }
+
   <div class="addresses-content">
     <div class="addresses-grid">
-      <div *ngFor="let address of addresses" class="address-card" [class.default]="address.is_default">
+      @for (address of (addresses || []); track address.id) {
+        <div class="address-card" [class.default]="address.is_default">
         
         <div class="address-header">
           <span class="address-type">{{ getTypeLabel(address.type) }}</span>
-          <span *ngIf="address.is_default" class="default-badge">Par défaut</span>
+          @if (address.is_default) {
+            <span class="default-badge">Par défaut</span>
+          }
         </div>
 
         <div class="address-body">
-          <h3>{{ address.first_name }} {{ address.last_name }}</h3>
-          <p>{{ address.address_line_1 }}</p>
-          <p>{{ address.city }}, {{ address.postal_code }}</p>
-          <p>{{ address.country }}</p>
-          <p class="address-phone">
-            <i class="fas fa-phone"></i>
-            {{ address.phone }}
-          </p>
+          <div class="address-name">
+            <h3>{{ address.first_name }} {{ address.last_name }}</h3>
+            @if (address.label) {
+              <span class="address-label">{{ address.label }}</span>
+            }
+          </div>
+          
+          <div class="address-content">
+            <p class="address-line">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ address.address_line_1 }}</span>
+            </p>
+            @if (address.address_line_2) {
+              <p class="address-line-2">
+                <i class="fas fa-building"></i>
+                <span>{{ address.address_line_2 }}</span>
+              </p>
+            }
+            <p class="address-location">
+              <i class="fas fa-city"></i>
+              <span>{{ address.city }}, {{ address.postal_code }}</span>
+            </p>
+            <p class="address-country">
+              <i class="fas fa-globe"></i>
+              <span>{{ getCountryName(address.country) }}</span>
+            </p>
+            <p class="address-phone">
+              <i class="fas fa-phone"></i>
+              <span>{{ address.phone }}</span>
+            </p>
+            @if (address.email) {
+              <p class="address-email">
+                <i class="fas fa-envelope"></i>
+                <span>{{ address.email }}</span>
+              </p>
+            }
+          </div>
+          
+          <button class="btn-view-details" (click)="viewAddressDetails(address)">
+            <i class="fas fa-eye"></i> Voir détails
+          </button>
         </div>
 
         <div class="address-actions">
           <button class="btn btn-primary" (click)="editAddress(address)">
             <i class="fas fa-edit"></i> Modifier
           </button>
-          <button *ngIf="!address.is_default" class="btn btn-outline" (click)="setDefaultAddress(address.id)">
-            <i class="fas fa-star"></i> Défaut
-          </button>
-          <button class="btn btn-danger" (click)="deleteAddress(address.id)">
-            <i class="fas fa-trash"></i>
-          </button>
+          @if (!address.is_default && address.id) {
+            <button class="btn btn-outline" (click)="setDefaultAddress(address.id!, address.type || 'shipping')">
+              <i class="fas fa-star"></i> Défaut
+            </button>
+          }
+          @if (address.id) {
+            <button class="btn btn-danger" (click)="deleteAddress(address.id!)">
+              <i class="fas fa-trash"></i>
+            </button>
+          }
         </div>
-      </div>
+        </div>
+      }
     </div>
   </div>
 </div>

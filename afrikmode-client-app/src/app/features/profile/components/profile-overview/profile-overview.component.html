@@ -1,16 +1,35 @@
 <!-- src/app/features/profile/components/profile-overview/profile-overview.component.html -->
 <div class="profile-overview">
   
-  <h1>Bienvenue, {{ user.name }} !</h1>
+  <!-- Loading state -->
+  @if (loading) {
+    <div class="loading-message">
+      <i class="fas fa-spinner fa-spin"></i>
+      Chargement des données...
+    </div>
+  }
+  
+  <!-- Error state -->
+  @if (errorMessage) {
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ errorMessage }}
+    </div>
+  }
+  
+  <!-- Content -->
+  @if (!loading && !errorMessage) {
+    <div class="content">
+      <h1>Bienvenue, {{ user?.name || 'Utilisateur' }} !</h1>
 
-  <!-- Stats Cards -->
+      <!-- Stats Cards -->
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-icon orders">
         <i class="fas fa-shopping-bag"></i>
       </div>
       <div class="stat-info">
-        <h3>{{ user.totalOrders }}</h3>
+        <h3>{{ user?.totalOrders || 0 }}</h3>
         <p>Commandes totales</p>
       </div>
     </div>
@@ -20,7 +39,7 @@
         <i class="fas fa-coins"></i>
       </div>
       <div class="stat-info">
-        <h3>{{ user.totalSpent | number }} {{ user.currency }}</h3>
+        <h3>{{ (user?.totalSpent || 0) | number }} {{ user?.currency || 'FCFA' }}</h3>
         <p>Total dépensé</p>
       </div>
     </div>
@@ -30,7 +49,7 @@
         <i class="fas fa-calendar"></i>
       </div>
       <div class="stat-info">
-        <h3>{{ user.memberSince }}</h3>
+        <h3>{{ user?.memberSince || 'Date inconnue' }}</h3>
         <p>Membre depuis</p>
       </div>
     </div>
@@ -40,15 +59,16 @@
   <div class="section">
     <h2>Accès rapide</h2>
     <div class="quick-links-grid">
-      <div *ngFor="let link of quickLinks" 
-           class="quick-link-card" 
-           (click)="navigateTo(link.path)">
+      @for (link of quickLinks; track link.title) {
+        <div class="quick-link-card" 
+             (click)="navigateTo(link.path)">
         <div class="link-icon" [style.background-color]="link.color + '20'">
           <i class="fas" [class]="'fas ' + link.icon" [style.color]="link.color"></i>
         </div>
         <h3>{{ link.title }}</h3>
         <p>{{ link.description }}</p>
-      </div>
+        </div>
+      }
     </div>
   </div>
 
@@ -63,7 +83,8 @@
     </div>
 
     <div class="orders-list">
-      <div *ngFor="let order of recentOrders" class="order-card">
+      @for (order of recentOrders; track order.id) {
+        <div class="order-card">
         <div class="order-info">
           <div class="order-number">
             <strong>{{ order.order_number }}</strong>
@@ -81,7 +102,10 @@
         <div class="order-total">
           <strong>{{ order.total | number }} FCFA</strong>
         </div>
-      </div>
+        </div>
+      }
     </div>
   </div>
+    </div> <!-- End content div -->
+  }
 </div>

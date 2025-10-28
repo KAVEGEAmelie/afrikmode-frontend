@@ -113,7 +113,7 @@
       </div>
 
       <div class="products-grid">
-        <div *ngFor="let product of featuredProducts" 
+        <div *ngFor="let product of featuredProducts | slice:0:3" 
              class="product-card"
              [routerLink]="['/products', product.id]">
           
@@ -182,10 +182,13 @@
       <div class="section-header">
         <h2>Nouveautés</h2>
         <p>Les derniers ajouts à notre collection</p>
+        <a routerLink="/shop" class="view-all">
+          Voir tout <i class="fas fa-arrow-right"></i>
+        </a>
       </div>
 
       <div class="products-grid">
-        <div *ngFor="let product of newArrivals" 
+        <div *ngFor="let product of newArrivals | slice:0:3" 
              class="product-card"
              [routerLink]="['/products', product.id]">
           

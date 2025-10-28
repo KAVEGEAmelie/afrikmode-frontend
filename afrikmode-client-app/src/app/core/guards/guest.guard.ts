@@ -1,44 +1,22 @@
-// src/app/core/guards/guest.guard.ts
-import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { Injectable } from '@angular/core';
+import { CanActivate, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { map, take } from 'rxjs/operators';
 
-/**
- * Guard pour les pages accessibles uniquement aux invités (non-connectés)
- * Exemple: pages de login, register, forgot-password
- * Redirige vers la page d'accueil si l'utilisateur est déjà connecté
- */
-export const guestGuard: CanActivateFn = () => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
+@Injectable({
+  providedIn: 'root'
+})
+export class GuestGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
-  return authService.isAuthenticated$.pipe(
-    take(1),
-    map(isAuthenticated => {
-      if (isAuthenticated) {
-        // L'utilisateur est déjà connecté, rediriger vers l'accueil
-        router.navigate(['/']);
-        return false;
-      }
-
-      // L'utilisateur n'est pas connecté, autoriser l'accès
+  canActivate(): boolean {
+    if (!this.authService.isAuthenticated()) {
       return true;
-    })
-  );
-};
-
-/**
- * Guard alternatif plus rapide utilisant directement le token
- */
-export const quickGuestGuard: CanActivateFn = () => {
-  const router = inject(Router);
-  const token = localStorage.getItem('auth_token');
-
-  if (token) {
-    router.navigate(['/']);
-    return false;
+    } else {
+      this.router.navigate(['/']);
+      return false;
+    }
   }
-
-  return true;
-};
+}

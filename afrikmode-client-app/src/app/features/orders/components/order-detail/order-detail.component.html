@@ -116,7 +116,8 @@
   
             <div class="address-info" *ngIf="order.shipping_address">
               <p><strong>{{ order.shipping_address.first_name || '' }} {{ order.shipping_address.last_name || '' }}</strong></p>
-              <p>{{ order.shipping_address.street || 'Non renseigné' }}</p>
+              <p>{{ order.shipping_address.address_line_1 || 'Non renseigné' }}</p>
+              <p *ngIf="order.shipping_address.address_line_2">{{ order.shipping_address.address_line_2 }}</p>
               <p>{{ order.shipping_address.city || 'Non renseigné' }}, {{ order.shipping_address.postal_code || 'Non renseigné' }}</p>
               <p>{{ order.shipping_address.country || 'Non renseigné' }}</p>
               <p class="contact-info" *ngIf="order.shipping_address?.phone">

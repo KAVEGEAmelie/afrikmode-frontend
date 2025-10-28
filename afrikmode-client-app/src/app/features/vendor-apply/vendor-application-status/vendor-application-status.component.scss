@@ -1,0 +1,717 @@
+// Vendor Application Status Styles
+// Couleurs AfrikMode
+$color-primary: #8B2E2E;
+$color-secondary: #D9744F;
+$color-background: #FFF9F6;
+
+.status-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FFF9F6 0%, #FDEEE9 100%);
+  padding: 2rem 0;
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  // Loading State
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 1.5rem;
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(#8B2E2E, 0.1);
+      border-top-color: #8B2E2E;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    p {
+      color: #666;
+      font-size: 1.1rem;
+    }
+  }
+
+  // Error State
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 1.5rem;
+    text-align: center;
+    padding: 2rem;
+
+    svg {
+      width: 80px;
+      height: 80px;
+      color: #DC2626;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      color: #1F2937;
+      margin: 0;
+    }
+
+    p {
+      color: #6B7280;
+      font-size: 1.1rem;
+      max-width: 500px;
+    }
+
+    .btn {
+      margin-top: 1rem;
+    }
+  }
+
+  // Header Section
+  .status-header {
+    background: white;
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #8B2E2E, #D9744F);
+    }
+
+    .status-icon {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+      svg {
+        width: 40px;
+        height: 40px;
+        color: white;
+      }
+    }
+
+    .status-info {
+      flex: 1;
+
+      .status-title {
+        font-size: 2rem;
+        color: #1F2937;
+        margin: 0 0 0.5rem 0;
+        font-weight: 700;
+      }
+
+      .status-description {
+        color: #6B7280;
+        font-size: 1.1rem;
+        margin: 0 0 1rem 0;
+        line-height: 1.6;
+      }
+
+      .status-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+
+        .meta-item {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: #4B5563;
+          font-size: 0.95rem;
+
+          svg {
+            width: 20px;
+            height: 20px;
+            color: #8B2E2E;
+          }
+        }
+      }
+    }
+
+    .refresh-btn {
+      background: #F3F4F6;
+      border: 1px solid #E5E7EB;
+      color: #4B5563;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      &:hover:not(:disabled) {
+        background: #E5E7EB;
+        border-color: #D1D5DB;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // Content Grid
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  // Card Styles
+  .timeline-card,
+  .messages-card,
+  .rejection-card,
+  .info-card,
+  .actions-card,
+  .help-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
+    margin-bottom: 2rem;
+
+    h2, h3 {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #1F2937;
+      margin: 0 0 1.5rem 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+
+      svg {
+        width: 24px;
+        height: 24px;
+        color: #8B2E2E;
+      }
+
+      .unread-badge {
+        background: #DC2626;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        margin-left: auto;
+      }
+    }
+
+    h3 {
+      font-size: 1.2rem;
+    }
+  }
+
+  // Timeline
+  .timeline {
+    position: relative;
+    padding-left: 2.5rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 19px;
+      top: 30px;
+      bottom: 30px;
+      width: 2px;
+      background: #E5E7EB;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 2rem;
+
+      &:last-child {
+        padding-bottom: 0;
+      }
+
+      .timeline-marker {
+        position: absolute;
+        left: -2.5rem;
+        top: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+
+        svg {
+          width: 20px;
+          height: 20px;
+          color: white;
+        }
+
+        .timeline-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          background: white;
+        }
+      }
+
+      .timeline-content {
+        h3 {
+          font-size: 1.1rem;
+          color: #1F2937;
+          margin: 0 0 0.5rem 0;
+          font-weight: 600;
+        }
+
+        p {
+          color: #6B7280;
+          margin: 0 0 0.5rem 0;
+          line-height: 1.6;
+          font-size: 0.95rem;
+        }
+
+        .timeline-date {
+          color: #9CA3AF;
+          font-size: 0.85rem;
+        }
+      }
+
+      &.completed {
+        .timeline-marker {
+          background: linear-gradient(135deg, #10B981, #059669);
+        }
+      }
+
+      &.current {
+        .timeline-marker {
+          background: linear-gradient(135deg, #8B2E2E, #D9744F);
+          animation: pulse 2s ease-in-out infinite;
+        }
+
+        .timeline-content h3 {
+          color: #8B2E2E;
+        }
+      }
+    }
+  }
+
+  // Messages
+  .messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .message-item {
+      display: flex;
+      gap: 1rem;
+      padding: 1.25rem;
+      border-radius: 12px;
+      background: #F9FAFB;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #F3F4F6;
+      }
+
+      &.unread {
+        background: #FEF3C7;
+        border-color: #FCD34D;
+
+        &:hover {
+          background: #FEF08A;
+        }
+      }
+
+      &[data-type="success"] .message-icon {
+        background: #D1FAE5;
+        color: #059669;
+      }
+
+      &[data-type="info"] .message-icon {
+        background: #DBEAFE;
+        color: #2563EB;
+      }
+
+      &[data-type="warning"] .message-icon {
+        background: #FEF3C7;
+        color: #D97706;
+      }
+
+      &[data-type="error"] .message-icon {
+        background: #FEE2E2;
+        color: #DC2626;
+      }
+
+      .message-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        svg {
+          width: 22px;
+          height: 22px;
+        }
+      }
+
+      .message-content {
+        flex: 1;
+
+        p {
+          color: #1F2937;
+          margin: 0 0 0.5rem 0;
+          line-height: 1.6;
+          font-size: 0.95rem;
+        }
+
+        .message-date {
+          color: #9CA3AF;
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+
+  // Rejection Card
+  .rejection-card {
+    background: linear-gradient(135deg, #FEF2F2, #FEE2E2);
+    border: 2px solid #FCA5A5;
+
+    h2 svg {
+      color: #DC2626;
+    }
+
+    .rejection-reason {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      border-left: 4px solid #DC2626;
+      color: #1F2937;
+      line-height: 1.8;
+      margin-bottom: 1.5rem;
+      font-size: 1rem;
+    }
+
+    .rejection-actions {
+      p {
+        color: #6B7280;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  // Sidebar Cards
+  .info-card {
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
+        .info-label {
+          color: #9CA3AF;
+          font-size: 0.85rem;
+          font-weight: 500;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .info-value {
+          color: #1F2937;
+          font-size: 1rem;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  .actions-card {
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  .help-card {
+    background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+    border: 2px solid #93C5FD;
+
+    h3 {
+      color: #1E40AF;
+    }
+
+    p {
+      color: #1E3A8A;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      font-size: 0.95rem;
+    }
+
+    .help-link {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #1E40AF;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 1rem;
+      background: white;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      &:hover {
+        background: #F0F9FF;
+        transform: translateX(4px);
+      }
+    }
+  }
+
+  // Buttons
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1.75rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    text-decoration: none;
+    white-space: nowrap;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &.btn-primary {
+      background: linear-gradient(135deg, #8B2E2E, #D9744F);
+      color: white;
+      box-shadow: 0 4px 12px rgba(139, 46, 46, 0.3);
+
+      &:hover:not(:disabled) {
+        box-shadow: 0 6px 20px rgba(139, 46, 46, 0.4);
+        transform: translateY(-2px);
+      }
+    }
+
+    &.btn-secondary {
+      background: white;
+      color: #8B2E2E;
+      border-color: #8B2E2E;
+
+      &:hover:not(:disabled) {
+        background: #8B2E2E;
+        color: white;
+        transform: translateY(-2px);
+      }
+    }
+
+    &.btn-outline {
+      background: transparent;
+      color: #4B5563;
+      border-color: #D1D5DB;
+
+      &:hover:not(:disabled) {
+        background: #F9FAFB;
+        border-color: #9CA3AF;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+  }
+
+  // Animations
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(139, 46, 46, 0.4);
+    }
+    50% {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15), 0 0 0 10px rgba(139, 46, 46, 0);
+    }
+  }
+
+  // Responsive
+  @media (max-width: 992px) {
+    .content-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar-column {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+
+      .info-card,
+      .actions-card,
+      .help-card {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem 0;
+
+    .container {
+      padding: 0 1rem;
+    }
+
+    .status-header {
+      flex-direction: column;
+      padding: 1.5rem;
+      gap: 1.5rem;
+
+      .status-icon {
+        width: 60px;
+        height: 60px;
+
+        svg {
+          width: 30px;
+          height: 30px;
+        }
+      }
+
+      .status-info {
+        .status-title {
+          font-size: 1.5rem;
+        }
+
+        .status-description {
+          font-size: 1rem;
+        }
+
+        .status-meta {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+      }
+
+      .refresh-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .timeline-card,
+    .messages-card,
+    .rejection-card,
+    .info-card,
+    .actions-card,
+    .help-card {
+      padding: 1.5rem;
+
+      h2, h3 {
+        font-size: 1.2rem;
+      }
+    }
+
+    .timeline {
+      padding-left: 2rem;
+
+      &::before {
+        left: 14px;
+      }
+
+      .timeline-item {
+        .timeline-marker {
+          left: -2rem;
+          width: 30px;
+          height: 30px;
+
+          svg {
+            width: 16px;
+            height: 16px;
+          }
+
+          .timeline-dot {
+            width: 10px;
+            height: 10px;
+          }
+        }
+      }
+    }
+
+    .sidebar-column {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .messages-list .message-item {
+      flex-direction: column;
+      gap: 0.75rem;
+
+      .message-icon {
+        width: 35px;
+        height: 35px;
+
+        svg {
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+  }
+}

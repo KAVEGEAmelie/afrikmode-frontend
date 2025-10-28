@@ -1,0 +1,347 @@
+<div class="vendor-settings">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>
+      <mat-icon>settings</mat-icon>
+      Paramètres de la Boutique
+    </h1>
+    <p class="subtitle">Configurez les paramètres de votre boutique AfrikMode</p>
+  </div>
+
+  <!-- Settings Tabs -->
+  <mat-tab-group [(selectedIndex)]="selectedTabIndex" class="settings-tabs">
+    
+    <!-- 1. INFORMATIONS GÉNÉRALES -->
+    <mat-tab label="Informations Générales">
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Informations de la Boutique</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <form class="settings-form">
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Nom de la boutique</mat-label>
+                  <input matInput [(ngModel)]="storeSettings.name" name="storeName" required>
+                  <mat-icon matPrefix>storefront</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Slug (URL)</mat-label>
+                  <input matInput [(ngModel)]="storeSettings.slug" name="storeSlug" required>
+                  <mat-hint>afrikmode.com/boutique/{{storeSettings.slug}}</mat-hint>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Description</mat-label>
+                  <textarea matInput [(ngModel)]="storeSettings.description" name="description" rows="4"></textarea>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Email de contact</mat-label>
+                  <input matInput type="email" [(ngModel)]="storeSettings.email" name="email">
+                  <mat-icon matPrefix>email</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Téléphone</mat-label>
+                  <input matInput [(ngModel)]="storeSettings.phone" name="phone">
+                  <mat-icon matPrefix>phone</mat-icon>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Site web</mat-label>
+                  <input matInput [(ngModel)]="storeSettings.website" name="website">
+                  <mat-icon matPrefix>language</mat-icon>
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" mat-raised-button color="primary" (click)="saveGeneralSettings()">
+                  <mat-icon>save</mat-icon>
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <!-- Store Address -->
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Adresse</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <form class="settings-form">
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Pays</mat-label>
+                  <mat-select [(ngModel)]="storeSettings.address.country" name="country">
+                    <mat-option value="CI">Côte d'Ivoire</mat-option>
+                    <mat-option value="SN">Sénégal</mat-option>
+                    <mat-option value="BJ">Bénin</mat-option>
+                    <mat-option value="TG">Togo</mat-option>
+                    <mat-option value="GH">Ghana</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Ville</mat-label>
+                  <input matInput [(ngModel)]="storeSettings.address.city" name="city">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Adresse complète</mat-label>
+                  <textarea matInput [(ngModel)]="storeSettings.address.address_line_1" name="address_line_1" rows="2"></textarea>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Code postal</mat-label>
+                  <input matInput [(ngModel)]="storeSettings.address.postal_code" name="postalCode">
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" mat-raised-button color="primary" (click)="saveAddressSettings()">
+                  <mat-icon>save</mat-icon>
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- 2. PAIEMENTS -->
+    <mat-tab label="Paiements">
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Informations Bancaires</mat-card-title>
+            <mat-card-subtitle>Configurez vos informations de paiement pour recevoir vos revenus</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <form class="settings-form">
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Nom complet (titulaire du compte)</mat-label>
+                  <input matInput [(ngModel)]="paymentSettings.account_holder" name="accountHolder">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Numéro de compte</mat-label>
+                  <input matInput [(ngModel)]="paymentSettings.account_number" name="accountNumber">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Nom de la banque</mat-label>
+                  <input matInput [(ngModel)]="paymentSettings.bank_name" name="bankName">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Code SWIFT/BIC</mat-label>
+                  <input matInput [(ngModel)]="paymentSettings.swift_code" name="swiftCode">
+                </mat-form-field>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <h3 style="margin-top: 24px">Mobile Money</h3>
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Opérateur</mat-label>
+                  <mat-select [(ngModel)]="paymentSettings.mobile_money.operator" name="operator">
+                    <mat-option value="orange">Orange Money</mat-option>
+                    <mat-option value="mtn">MTN Mobile Money</mat-option>
+                    <mat-option value="moov">Moov Money</mat-option>
+                    <mat-option value="wave">Wave</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Numéro de téléphone</mat-label>
+                  <input matInput [(ngModel)]="paymentSettings.mobile_money.phone" name="mobilePhone">
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" mat-raised-button color="primary" (click)="savePaymentSettings()">
+                  <mat-icon>save</mat-icon>
+                  Enregistrer
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- 3. NOTIFICATIONS -->
+    <mat-tab label="Notifications">
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Préférences de Notification</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="notification-settings">
+              <h3>Notifications Email</h3>
+              <mat-slide-toggle [(ngModel)]="notificationSettings.email.new_order">
+                Nouvelle commande
+              </mat-slide-toggle>
+              <mat-slide-toggle [(ngModel)]="notificationSettings.email.order_cancelled">
+                Commande annulée
+              </mat-slide-toggle>
+              <mat-slide-toggle [(ngModel)]="notificationSettings.email.low_stock">
+                Stock faible
+              </mat-slide-toggle>
+              <mat-slide-toggle [(ngModel)]="notificationSettings.email.new_review">
+                Nouvel avis client
+              </mat-slide-toggle>
+              <mat-slide-toggle [(ngModel)]="notificationSettings.email.payout_completed">
+                Retrait effectué
+              </mat-slide-toggle>
+
+              <mat-divider style="margin: 24px 0"></mat-divider>
+
+              <h3>Notifications Push</h3>
+              <mat-slide-toggle [(ngModel)]="notificationSettings.push.new_order">
+                Nouvelle commande
+              </mat-slide-toggle>
+              <mat-slide-toggle [(ngModel)]="notificationSettings.push.new_message">
+                Nouveau message client
+              </mat-slide-toggle>
+              <mat-slide-toggle [(ngModel)]="notificationSettings.push.order_update">
+                Mise à jour de commande
+              </mat-slide-toggle>
+
+              <div class="form-actions">
+                <button mat-raised-button color="primary" (click)="saveNotificationSettings()">
+                  <mat-icon>save</mat-icon>
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- 4. SÉCURITÉ -->
+    <mat-tab label="Sécurité">
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Changer le Mot de Passe</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <form class="settings-form">
+              <div class="form-grid">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Mot de passe actuel</mat-label>
+                  <input matInput type="password" [(ngModel)]="securitySettings.current_password" name="currentPassword">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Nouveau mot de passe</mat-label>
+                  <input matInput type="password" [(ngModel)]="securitySettings.new_password" name="newPassword">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline">
+                  <mat-label>Confirmer le mot de passe</mat-label>
+                  <input matInput type="password" [(ngModel)]="securitySettings.confirm_password" name="confirmPassword">
+                </mat-form-field>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" mat-raised-button color="primary" (click)="changePassword()">
+                  <mat-icon>lock</mat-icon>
+                  Changer le mot de passe
+                </button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Authentification à Deux Facteurs (2FA)</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="two-factor-section">
+              <p>Renforcez la sécurité de votre compte en activant l'authentification à deux facteurs.</p>
+              <mat-slide-toggle [(ngModel)]="securitySettings.two_factor_enabled">
+                Activer 2FA
+              </mat-slide-toggle>
+
+              @if (securitySettings.two_factor_enabled) {
+                <div class="qr-code-section">
+                  <p>Scannez ce code QR avec votre application d'authentification :</p>
+                  <div class="qr-placeholder">
+                    <mat-icon>qr_code_2</mat-icon>
+                    <p>Code QR 2FA</p>
+                  </div>
+                </div>
+              }
+
+              <div class="form-actions">
+                <button mat-raised-button color="primary" (click)="save2FASettings()">
+                  <mat-icon>save</mat-icon>
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- 5. ABONNEMENT -->
+    <mat-tab label="Abonnement">
+      <div class="tab-content">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>Votre Abonnement Actuel</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="subscription-info">
+              <div class="current-plan">
+                <h2>{{ subscriptionSettings.plan_name }}</h2>
+                <p class="plan-price">{{ subscriptionSettings.price.toLocaleString('fr-FR') }} FCFA / mois</p>
+                <p class="plan-status">
+                  <mat-chip [class.active]="subscriptionSettings.status === 'active'" [class.expired]="subscriptionSettings.status === 'expired'">
+                    {{ subscriptionSettings.status === 'active' ? 'Actif' : 'Expiré' }}
+                  </mat-chip>
+                </p>
+                <p class="renewal-date">Renouvellement: {{ subscriptionSettings.renewal_date | date:'dd/MM/yyyy' }}</p>
+              </div>
+
+              <div class="plan-features">
+                <h3>Fonctionnalités incluses:</h3>
+                <ul>
+                  <li *ngFor="let feature of subscriptionSettings.features">
+                    <mat-icon>check_circle</mat-icon>
+                    {{ feature }}
+                  </li>
+                </ul>
+              </div>
+
+              <div class="plan-actions">
+                <button mat-raised-button color="accent" (click)="upgradePlan()">
+                  <mat-icon>upgrade</mat-icon>
+                  Passer au Premium
+                </button>
+                <button mat-button (click)="cancelSubscription()">
+                  Annuler l'abonnement
+                </button>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>

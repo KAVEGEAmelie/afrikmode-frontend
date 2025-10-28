@@ -104,6 +104,14 @@ export class OrderHistoryComponent implements OnInit {
     return this.orders.filter(order => order.status === this.selectedStatus);
   }
 
+  get deliveredOrdersCount(): number {
+    return this.orders.filter(order => order.status === 'delivered').length;
+  }
+
+  get pendingOrdersCount(): number {
+    return this.orders.filter(order => order.status === 'pending' || order.status === 'processing').length;
+  }
+
   getStatusLabel(status: string): string {
     const option = this.statusOptions.find(opt => opt.value === status);
     return option ? option.label : status;

@@ -1,5 +1,6 @@
 // src/app/features/profile/components/delete-account/delete-account.component.scss
-@import '../../styles/profile-shared';
+@use 'sass:color';
+@use '../../styles/profile-shared' as *;
 
 .delete-account-page {
   @include fade-in;
@@ -24,7 +25,7 @@
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(135deg, $danger-color 0%, darken($danger-color, 10%) 100%);
+      background: linear-gradient(135deg, $danger-color 0%, color.adjust($danger-color, $lightness: -10%) 100%);
       border-radius: $radius-lg $radius-lg 0 0;
     }
 
@@ -32,7 +33,7 @@
       width: 80px;
       height: 80px;
       margin: 0 auto $spacing-lg;
-      background: linear-gradient(135deg, $danger-color 0%, darken($danger-color, 10%) 100%);
+      background: linear-gradient(135deg, $danger-color 0%, color.adjust($danger-color, $lightness: -10%) 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -95,7 +96,7 @@
         content: '';
         width: 4px;
         height: 24px;
-        background: linear-gradient(135deg, $warning-color 0%, darken($warning-color, 10%) 100%);
+        background: linear-gradient(135deg, $warning-color 0%, color.adjust($warning-color, $lightness: -10%) 100%);
         border-radius: 2px;
       }
     }
@@ -238,7 +239,7 @@
         }
 
         &.btn-danger {
-          background: linear-gradient(135deg, $danger-color 0%, darken($danger-color, 10%) 100%);
+          background: linear-gradient(135deg, $danger-color 0%, color.adjust($danger-color, $lightness: -10%) 100%);
           color: white;
           border: none;
           box-shadow: $shadow-md;
@@ -246,7 +247,7 @@
           &:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: $shadow-hover;
-            background: linear-gradient(135deg, darken($danger-color, 5%) 0%, darken($danger-color, 15%) 100%);
+            background: linear-gradient(135deg, color.adjust($danger-color, $lightness: -5%) 0%, color.adjust($danger-color, $lightness: -15%) 100%);
           }
 
           &:active {

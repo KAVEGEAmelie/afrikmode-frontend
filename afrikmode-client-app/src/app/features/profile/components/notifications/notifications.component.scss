@@ -1,5 +1,5 @@
 // src/app/features/profile/components/notifications/notifications.component.scss
-@import '../../styles/profile-shared';
+@use '../../styles/profile-shared' as *;
 
 .notifications-page {
   @include fade-in;
@@ -8,11 +8,11 @@
   padding: $spacing-2xl 0;
 
   h1 {
-    @include page-header;
     margin-bottom: $spacing-2xl;
     background: linear-gradient(135deg, $secondary-color 0%, $primary-dark 100%);
     position: relative;
     overflow: hidden;
+    @include page-header;
 
     &::before {
       content: '';

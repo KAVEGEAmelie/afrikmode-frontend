@@ -16,52 +16,52 @@ export class PermissionService {
   // Définition des permissions par ressource et action
   private permissions: Permission[] = [
     // Dashboard
-    { resource: 'dashboard', action: 'view', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'dashboard', action: 'edit', roles: ['admin', 'super_admin'] },
+    { resource: 'dashboard', action: 'view', roles: ['admin'] },
+    { resource: 'dashboard', action: 'edit', roles: ['admin'] },
     
     // Gestion des utilisateurs
-    { resource: 'users', action: 'view', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'users', action: 'create', roles: ['admin', 'super_admin'] },
-    { resource: 'users', action: 'edit', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'users', action: 'delete', roles: ['super_admin'] },
-    { resource: 'users', action: 'suspend', roles: ['admin', 'super_admin'] },
-    { resource: 'users', action: 'change_role', roles: ['super_admin'] },
+    { resource: 'users', action: 'view', roles: ['admin'] },
+    { resource: 'users', action: 'create', roles: ['admin'] },
+    { resource: 'users', action: 'edit', roles: ['admin'] },
+    { resource: 'users', action: 'delete', roles: ['admin'] },
+    { resource: 'users', action: 'suspend', roles: ['admin'] },
+    { resource: 'users', action: 'change_role', roles: ['admin'] },
     
     // Gestion des boutiques
-    { resource: 'stores', action: 'view', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'stores', action: 'create', roles: ['admin', 'super_admin'] },
-    { resource: 'stores', action: 'edit', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'stores', action: 'delete', roles: ['super_admin'] },
-    { resource: 'stores', action: 'verify', roles: ['admin', 'super_admin'] },
-    { resource: 'stores', action: 'suspend', roles: ['admin', 'super_admin'] },
+    { resource: 'stores', action: 'view', roles: ['admin', 'vendor'] },
+    { resource: 'stores', action: 'create', roles: ['admin', 'vendor'] },
+    { resource: 'stores', action: 'edit', roles: ['admin', 'vendor'] },
+    { resource: 'stores', action: 'delete', roles: ['admin'] },
+    { resource: 'stores', action: 'verify', roles: ['admin'] },
+    { resource: 'stores', action: 'suspend', roles: ['admin'] },
     
     // Gestion des produits
-    { resource: 'products', action: 'view', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'products', action: 'create', roles: ['admin', 'super_admin'] },
-    { resource: 'products', action: 'edit', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'products', action: 'delete', roles: ['admin', 'super_admin'] },
-    { resource: 'products', action: 'moderate', roles: ['admin', 'super_admin', 'manager'] },
+    { resource: 'products', action: 'view', roles: ['admin', 'vendor', 'customer'] },
+    { resource: 'products', action: 'create', roles: ['admin', 'vendor'] },
+    { resource: 'products', action: 'edit', roles: ['admin', 'vendor'] },
+    { resource: 'products', action: 'delete', roles: ['admin', 'vendor'] },
+    { resource: 'products', action: 'moderate', roles: ['admin'] },
     
     // Gestion des commandes
-    { resource: 'orders', action: 'view', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'orders', action: 'edit', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'orders', action: 'cancel', roles: ['admin', 'super_admin'] },
-    { resource: 'orders', action: 'refund', roles: ['admin', 'super_admin'] },
+    { resource: 'orders', action: 'view', roles: ['admin', 'vendor', 'customer'] },
+    { resource: 'orders', action: 'edit', roles: ['admin', 'vendor'] },
+    { resource: 'orders', action: 'cancel', roles: ['admin', 'vendor'] },
+    { resource: 'orders', action: 'refund', roles: ['admin', 'vendor'] },
     
     // Rapports et statistiques
-    { resource: 'reports', action: 'view', roles: ['admin', 'super_admin'] },
-    { resource: 'reports', action: 'export', roles: ['admin', 'super_admin'] },
-    { resource: 'analytics', action: 'view', roles: ['admin', 'super_admin'] },
+    { resource: 'reports', action: 'view', roles: ['admin'] },
+    { resource: 'reports', action: 'export', roles: ['admin'] },
+    { resource: 'analytics', action: 'view', roles: ['admin', 'vendor'] },
     
     // Configuration système
-    { resource: 'system', action: 'view', roles: ['super_admin'] },
-    { resource: 'system', action: 'edit', roles: ['super_admin'] },
-    { resource: 'admins', action: 'manage', roles: ['super_admin'] },
+    { resource: 'system', action: 'view', roles: ['admin'] },
+    { resource: 'system', action: 'edit', roles: ['admin'] },
+    { resource: 'admins', action: 'manage', roles: ['admin'] },
     
     // Support client
-    { resource: 'support', action: 'view', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'support', action: 'respond', roles: ['admin', 'super_admin', 'manager'] },
-    { resource: 'tickets', action: 'manage', roles: ['admin', 'super_admin', 'manager'] }
+    { resource: 'support', action: 'view', roles: ['admin', 'vendor', 'customer'] },
+    { resource: 'support', action: 'respond', roles: ['admin', 'vendor'] },
+    { resource: 'tickets', action: 'manage', roles: ['admin'] }
   ];
 
   constructor(private authService: AuthService) {}
@@ -104,45 +104,45 @@ export class PermissionService {
   }
 
   /**
-   * Vérifier si l'utilisateur est un administrateur (admin ou super_admin)
+   * Vérifier si l'utilisateur est un administrateur
    */
   isAdmin(): Observable<boolean> {
-    return this.hasAnyRole(['admin', 'super_admin']);
+    return this.hasRole('admin');
   }
 
   /**
-   * Vérifier si l'utilisateur est un super administrateur
+   * Vérifier si l'utilisateur est un vendeur
    */
-  isSuperAdmin(): Observable<boolean> {
-    return this.hasRole('super_admin');
+  isVendor(): Observable<boolean> {
+    return this.hasRole('vendor');
   }
 
   /**
-   * Vérifier si l'utilisateur est un manager
+   * Vérifier si l'utilisateur est un client
    */
-  isManager(): Observable<boolean> {
-    return this.hasRole('manager');
+  isCustomer(): Observable<boolean> {
+    return this.hasRole('customer');
   }
 
   /**
    * Vérifier si l'utilisateur peut gérer les autres administrateurs
    */
   canManageAdmins(): Observable<boolean> {
-    return this.hasRole('super_admin');
+    return this.hasRole('admin');
   }
 
   /**
    * Vérifier si l'utilisateur peut accéder aux données financières
    */
   canAccessFinancialData(): Observable<boolean> {
-    return this.hasAnyRole(['admin', 'super_admin']);
+    return this.hasAnyRole(['admin', 'vendor']);
   }
 
   /**
    * Vérifier si l'utilisateur peut modifier la configuration système
    */
   canModifySystemConfig(): Observable<boolean> {
-    return this.hasRole('super_admin');
+    return this.hasRole('admin');
   }
 
   /**
@@ -182,6 +182,22 @@ export class PermissionService {
     return this.hasPermission(permission.resource, permission.action);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

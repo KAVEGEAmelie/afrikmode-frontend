@@ -24,9 +24,9 @@ import { AuthService } from '../../../core/services/auth.service';
           <div *ngIf="!isLoading && isSuccess" class="success-state">
             <div class="success-icon">✅</div>
             <h2>Email vérifié avec succès !</h2>
-            <p>Votre compte a été activé. Vous pouvez maintenant vous connecter.</p>
+            <p>Votre compte a été activé. Vous serez redirigé vers la page de connexion dans quelques instants...</p>
             <button (click)="goToLogin()" class="btn btn-primary">
-              Se connecter
+              Se connecter maintenant
             </button>
           </div>
           
@@ -181,12 +181,19 @@ export class VerifyEmailComponent implements OnInit {
       next: (response) => {
         this.isLoading = false;
         this.isSuccess = true;
-        console.log('Email vérifié avec succès:', response);
+        console.log('✅ Email vérifié avec succès:', response);
+        
+        // Rediriger automatiquement vers la page de connexion après 3 secondes
+        setTimeout(() => {
+          this.router.navigate(['/login'], {
+            queryParams: { verified: 'true' }
+          });
+        }, 3000);
       },
       error: (error) => {
         this.isLoading = false;
         this.showError(this.getErrorMessage(error));
-        console.error('Erreur de vérification:', error);
+        console.error('❌ Erreur de vérification:', error);
       }
     });
   }
@@ -209,6 +216,8 @@ export class VerifyEmailComponent implements OnInit {
   }
 
   goToLogin(): void {
-    this.router.navigate(['/login']);
+    this.router.navigate(['/login'], {
+      queryParams: { verified: 'true' }
+    });
   }
 }

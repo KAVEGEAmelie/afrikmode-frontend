@@ -10,13 +10,29 @@
     </p>
   </div>
 
+  <!-- Messages d'état -->
+  <div *ngIf="isLoading" class="loading-message">
+    <i class="fas fa-spinner fa-spin"></i>
+    Chargement des données...
+  </div>
+  
+  <div *ngIf="errorMessage" class="error-message">
+    <i class="fas fa-exclamation-triangle"></i>
+    {{ errorMessage }}
+  </div>
+  
+  <div *ngIf="successMessage" class="success-message">
+    <i class="fas fa-check-circle"></i>
+    {{ successMessage }}
+  </div>
+
   <form [formGroup]="personalInfoForm" (ngSubmit)="onSubmit()" class="personal-info-form">
     
     <!-- Photo de profil -->
     <div class="profile-photo-section">
       <div class="photo-container">
-        <div class="avatar-circle">
-          <img src="assets/images/avatar-placeholder.png" alt="Photo de profil" class="avatar-img">
+        <div class="avatar-circle" (click)="triggerFileInput()">
+          <img [src]="avatarPreview || 'assets/images/avatar-placeholder.png'" alt="Photo de profil" class="avatar-img">
           <div class="photo-overlay">
             <i class="fas fa-camera"></i>
           </div>
@@ -24,7 +40,20 @@
         <div class="photo-info">
           <h3>Photo de profil</h3>
           <p>Ajoutez une photo pour personnaliser votre compte</p>
-          <button type="button" class="btn btn-outline">Changer la photo</button>
+          <div class="photo-actions">
+            <input type="file" id="avatar-upload" accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+            <button type="button" class="btn btn-outline" (click)="triggerFileInput()">
+              <i class="fas fa-upload"></i> Changer la photo
+            </button>
+            <button *ngIf="selectedFile" type="button" class="btn btn-primary" (click)="uploadAvatar()" [disabled]="isUploadingAvatar">
+              <i class="fas fa-spinner fa-spin" *ngIf="isUploadingAvatar"></i>
+              <i class="fas fa-check" *ngIf="!isUploadingAvatar"></i>
+              {{ isUploadingAvatar ? 'Upload en cours...' : 'Confirmer' }}
+            </button>
+            <button *ngIf="avatarPreview" type="button" class="btn btn-danger" (click)="removeAvatar()">
+              <i class="fas fa-trash"></i> Supprimer
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -39,7 +68,7 @@
           <input 
             type="text" 
             id="firstName"
-            formControlName="firstName"
+            formControlName="first_name"
             class="form-control"
             placeholder="Votre prénom"
           >
@@ -53,7 +82,7 @@
           <input 
             type="text" 
             id="lastName"
-            formControlName="lastName"
+            formControlName="last_name"
             class="form-control"
             placeholder="Votre nom"
           >
@@ -100,7 +129,7 @@
           <input 
             type="date" 
             id="dateOfBirth"
-            formControlName="dateOfBirth"
+            formControlName="date_of_birth"
             class="form-control"
           >
         </div>

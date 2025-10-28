@@ -23,7 +23,7 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'customer' | 'vendor' | 'manager' | 'admin' | 'super_admin';
+  role: 'customer' | 'vendor' | 'admin';
   status: 'active' | 'pending' | 'suspended' | 'banned';
   phone?: string;
   country?: string;
@@ -39,7 +39,6 @@ export interface UserStats {
   total: number;
   customers: number;
   vendors: number;
-  managers: number;
   admins: number;
   active: number;
   pending: number;
@@ -114,13 +113,7 @@ export interface UserStats {
 
         <mat-card class="stat-card">
           <div class="stat-content">
-            <div class="stat-icon managers">
-              <mat-icon>admin_panel_settings</mat-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ userStats.managers }}</div>
-              <div class="stat-label">Managers</div>
-            </div>
+            
           </div>
         </mat-card>
 
@@ -153,9 +146,7 @@ export interface UserStats {
                 <mat-option value="">Tous les rôles</mat-option>
                 <mat-option value="customer">Client</mat-option>
                 <mat-option value="vendor">Vendeur</mat-option>
-                <mat-option value="manager">Manager</mat-option>
                 <mat-option value="admin">Admin</mat-option>
-                <mat-option value="super_admin">Super Admin</mat-option>
               </mat-select>
             </mat-form-field>
 
@@ -306,7 +297,6 @@ export class AdminUsersManagementComponent implements OnInit {
     total: 0,
     customers: 0,
     vendors: 0,
-    managers: 0,
     admins: 0,
     active: 0,
     pending: 0,
@@ -348,7 +338,7 @@ export class AdminUsersManagementComponent implements OnInit {
 
   private generateMockUsers(): User[] {
     const users: User[] = [];
-    const roles: User['role'][] = ['customer', 'vendor', 'manager', 'admin', 'super_admin'];
+    const roles: User['role'][] = ['customer', 'vendor', 'admin'];
     const statuses: User['status'][] = ['active', 'pending', 'suspended', 'banned'];
     
     for (let i = 1; i <= 100; i++) {
@@ -381,8 +371,7 @@ export class AdminUsersManagementComponent implements OnInit {
       total: this.users.length,
       customers: this.users.filter(u => u.role === 'customer').length,
       vendors: this.users.filter(u => u.role === 'vendor').length,
-      managers: this.users.filter(u => u.role === 'manager').length,
-      admins: this.users.filter(u => u.role === 'admin' || u.role === 'super_admin').length,
+      admins: this.users.filter(u => u.role === 'admin').length,
       active: this.users.filter(u => u.status === 'active').length,
       pending: this.users.filter(u => u.status === 'pending').length,
       suspended: this.users.filter(u => u.status === 'suspended').length
@@ -451,9 +440,7 @@ export class AdminUsersManagementComponent implements OnInit {
     const labels: { [key: string]: string } = {
       'customer': 'Client',
       'vendor': 'Vendeur',
-      'manager': 'Manager',
-      'admin': 'Admin',
-      'super_admin': 'Super Admin'
+      'admin': 'Admin'
     };
     return labels[role] || role;
   }

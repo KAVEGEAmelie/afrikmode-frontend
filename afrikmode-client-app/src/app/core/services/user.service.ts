@@ -17,8 +17,8 @@ import {
 })
 export class UserService extends BaseService {
 
-  getProfile(): Observable<User> {
-    return this.get<User>('/users/profile');
+  getProfile(): Observable<any> {
+    return this.get<any>('/users/profile');
   }
 
   updateProfile(data: UpdateProfileRequest): Observable<User> {

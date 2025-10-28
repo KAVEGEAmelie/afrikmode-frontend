@@ -144,6 +144,10 @@
             <button class="btn btn-outline" (click)="addToWishlist()">
               <i class="far fa-heart"></i>
             </button>
+            <button class="btn btn-secondary" (click)="contactVendor()">
+              <i class="fas fa-comment"></i>
+              Contacter le vendeur
+            </button>
           </div>
   
           <!-- Garanties -->
@@ -256,6 +260,9 @@
                 <p class="review-comment">{{ review.comment }}</p>
               </div>
             </div>
+
+            <!-- Composant réutilisable connecté à la DB -->
+            <app-product-reviews-display [productId]="product.id.toString()"></app-product-reviews-display>
           </div>
         </div>
       </div>

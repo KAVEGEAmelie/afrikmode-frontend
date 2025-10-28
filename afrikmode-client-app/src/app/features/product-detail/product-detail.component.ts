@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, ActivatedRoute } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CartService } from '../../core/services/cart.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { AuthService } from '../../core/services/auth.service';
+import { MessageService } from '../../core/services/message.service';
+import { ProductReviewsDisplayComponent } from '../../shared/components/product-reviews-display/product-reviews-display.component';
 
 interface Product {
   id: number;
@@ -37,7 +39,7 @@ interface Review {
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, ProductReviewsDisplayComponent],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.scss']
 })
@@ -122,9 +124,11 @@ export class ProductDetailComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private cartService: CartService,
     private wishlistService: WishlistService,
-    private authService: AuthService
+    private authService: AuthService,
+    private messageService: MessageService
   ) {}
 
   ngOnInit(): void {
@@ -244,52 +248,48 @@ export class ProductDetailComponent implements OnInit {
     }
 
     // Vérifier si l'utilisateur est authentifié
-    this.authService.isAuthenticated$.subscribe(isAuth => {
-      if (!isAuth) {
-        alert('Veuillez vous connecter pour ajouter des articles au panier');
-        return;
+    if (!this.authService.isAuthenticated()) {
+      alert('Veuillez vous connecter pour ajouter des articles au panier');
+      return;
+    }
+
+    if (!this.product) return;
+
+    // Ajouter au panier via le service
+    this.cartService.addToCart({
+      product_id: this.product.id.toString(),
+      quantity: this.quantity
+    }).subscribe({
+      next: (cartItem) => {
+        console.log('✅ Produit ajouté au panier:', cartItem);
+        alert('Produit ajouté au panier avec succès!');
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors de l\'ajout au panier:', error);
+        alert('Erreur lors de l\'ajout au panier. Veuillez réessayer.');
       }
-
-      if (!this.product) return;
-
-      // Ajouter au panier via le service
-      this.cartService.addToCart({
-        product_id: this.product.id.toString(),
-        quantity: this.quantity
-      }).subscribe({
-        next: (cartItem) => {
-          console.log('✅ Produit ajouté au panier:', cartItem);
-          alert('Produit ajouté au panier avec succès!');
-        },
-        error: (error) => {
-          console.error('❌ Erreur lors de l\'ajout au panier:', error);
-          alert('Erreur lors de l\'ajout au panier. Veuillez réessayer.');
-        }
-      });
     });
   }
 
   addToWishlist(): void {
     // Vérifier si l'utilisateur est authentifié
-    this.authService.isAuthenticated$.subscribe(isAuth => {
-      if (!isAuth) {
-        alert('Veuillez vous connecter pour ajouter des articles aux favoris');
-        return;
+    if (!this.authService.isAuthenticated()) {
+      alert('Veuillez vous connecter pour ajouter des articles aux favoris');
+      return;
+    }
+
+    if (!this.product) return;
+
+    // Ajouter aux favoris via le service
+    this.wishlistService.addToWishlist(this.product.id.toString()).subscribe({
+      next: (response) => {
+        console.log('✅ Produit ajouté aux favoris:', response);
+        alert('Produit ajouté aux favoris avec succès!');
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors de l\'ajout aux favoris:', error);
+        alert('Erreur lors de l\'ajout aux favoris. Veuillez réessayer.');
       }
-
-      if (!this.product) return;
-
-      // Ajouter aux favoris via le service
-      this.wishlistService.addToWishlist(this.product.id.toString()).subscribe({
-        next: (response) => {
-          console.log('✅ Produit ajouté aux favoris:', response);
-          alert('Produit ajouté aux favoris avec succès!');
-        },
-        error: (error) => {
-          console.error('❌ Erreur lors de l\'ajout aux favoris:', error);
-          alert('Erreur lors de l\'ajout aux favoris. Veuillez réessayer.');
-        }
-      });
     });
   }
 
@@ -316,5 +316,36 @@ export class ProductDetailComponent implements OnInit {
       return Math.round(((this.product.oldPrice - this.product.price) / this.product.oldPrice) * 100);
     }
     return 0;
+  }
+
+  contactVendor(): void {
+    // Vérifier si l'utilisateur est authentifié
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      if (!isAuth) {
+        alert('Veuillez vous connecter pour contacter le vendeur');
+        this.router.navigate(['/auth/login']);
+        return;
+      }
+
+      if (!this.product) return;
+
+      // Créer une nouvelle conversation avec le vendeur
+      this.messageService.createConversation({
+        seller_id: this.product.id, // À remplacer par vendor_id quand disponible
+        product_id: this.product.id,
+        subject: `Question sur ${this.product.name}`,
+        initial_message: `Bonjour, j'ai une question concernant ce produit : ${this.product.name}`
+      }).subscribe({
+        next: (conversation: any) => {
+          console.log('✅ Conversation créée:', conversation);
+          // Naviguer vers la conversation
+          this.router.navigate(['/messages', conversation.id || conversation.data?.id]);
+        },
+        error: (error: any) => {
+          console.error('❌ Erreur lors de la création de la conversation:', error);
+          alert('Erreur lors de la création de la conversation. Veuillez réessayer.');
+        }
+      });
+    });
   }
 }

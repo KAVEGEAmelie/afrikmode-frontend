@@ -1,70 +1,199 @@
 <!-- src/app/features/profile/components/security/security.component.html -->
 <div class="security-page">
-  
-  <h1>Sécurité</h1>
-
-  <!-- Change Password -->
-  <div class="security-card">
-    <h2>Changer le mot de passe</h2>
-    <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
-      <div class="form-group">
-        <label for="currentPassword">Mot de passe actuel</label>
-        <input type="password" id="currentPassword" formControlName="currentPassword">
-      </div>
-      <div class="form-group">
-        <label for="newPassword">Nouveau mot de passe</label>
-        <input type="password" id="newPassword" formControlName="newPassword">
-        <small>Minimum 8 caractères</small>
-      </div>
-      <div class="form-group">
-        <label for="confirmPassword">Confirmer le mot de passe</label>
-        <input type="password" id="confirmPassword" formControlName="confirmPassword">
-      </div>
-      <button type="submit" class="btn btn-primary" [disabled]="!passwordForm.valid || isChangingPassword">
-        <span *ngIf="!isChangingPassword">Changer le mot de passe</span>
-        <span *ngIf="isChangingPassword"><i class="fas fa-spinner fa-spin"></i> Modification...</span>
-      </button>
-    </form>
-  </div>
-
-  <!-- Two-Factor Authentication -->
-  <div class="security-card">
-    <div class="card-header">
-      <div>
-        <h2>Authentification à deux facteurs</h2>
-        <p>Ajoutez une couche de sécurité supplémentaire</p>
-      </div>
-      <label class="toggle-switch" for="two-factor-toggle">
-        <input 
-          type="checkbox" 
-          id="two-factor-toggle"
-          [(ngModel)]="twoFactorEnabled" 
-          (change)="toggleTwoFactor()"
-          title="Activer/désactiver l'authentification à deux facteurs"
-          aria-label="Authentification à deux facteurs">
-        <span class="slider"></span>
-      </label>
+  <!-- Header avec gradient -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-shield-alt"></i>
+        Sécurité
+      </h1>
+      <p>Protégez votre compte avec des paramètres de sécurité avancés</p>
     </div>
   </div>
 
-  <!-- Login History -->
-  <div class="security-card">
-    <div class="card-header">
-      <h2>Historique de connexion</h2>
-      <button class="btn btn-outline-sm" (click)="logoutAllDevices()">
-        Déconnecter tous les appareils
-      </button>
-    </div>
-    <div class="login-history">
-      <div *ngFor="let session of loginHistory" class="session-item">
-        <div class="session-icon">
-          <i class="fas fa-desktop"></i>
+  <!-- Contenu principal -->
+  <div class="security-content">
+    <div class="security-sections">
+      
+      <!-- Changement de mot de passe -->
+      <div class="security-section">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="fas fa-key"></i>
+          </div>
+          <div class="section-info">
+            <h2>Changer le mot de passe</h2>
+            <p>Mettez à jour votre mot de passe pour maintenir la sécurité de votre compte</p>
+          </div>
         </div>
-        <div class="session-info">
-          <h4>{{ session.device }}</h4>
-          <p>{{ session.location }} • {{ session.date }}</p>
+        
+        <div class="section-content">
+          <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+            <div class="form-group">
+              <label for="currentPassword">Mot de passe actuel</label>
+              <input 
+                type="password" 
+                id="currentPassword" 
+                formControlName="currentPassword"
+                class="form-control"
+                placeholder="Entrez votre mot de passe actuel">
+              <div *ngIf="passwordForm.get('currentPassword')?.invalid && passwordForm.get('currentPassword')?.touched" 
+                   class="form-error">
+                Le mot de passe actuel est requis
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="newPassword">Nouveau mot de passe</label>
+              <input 
+                type="password" 
+                id="newPassword" 
+                formControlName="newPassword"
+                class="form-control"
+                placeholder="Entrez votre nouveau mot de passe">
+              <div class="form-help">Minimum 8 caractères avec des lettres, chiffres et symboles</div>
+              <div *ngIf="passwordForm.get('newPassword')?.invalid && passwordForm.get('newPassword')?.touched" 
+                   class="form-error">
+                Le mot de passe doit contenir au moins 8 caractères
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="confirmPassword">Confirmer le mot de passe</label>
+              <input 
+                type="password" 
+                id="confirmPassword" 
+                formControlName="confirmPassword"
+                class="form-control"
+                placeholder="Confirmez votre nouveau mot de passe">
+              <div *ngIf="passwordForm.get('confirmPassword')?.errors?.['passwordMismatch'] && passwordForm.get('confirmPassword')?.touched" 
+                   class="form-error">
+                Les mots de passe ne correspondent pas
+              </div>
+              <div *ngIf="passwordForm.get('confirmPassword')?.errors?.['required'] && passwordForm.get('confirmPassword')?.touched" 
+                   class="form-error">
+                La confirmation du mot de passe est requise
+              </div>
+            </div>
+            
+            <div class="section-actions">
+              <button type="submit" class="btn btn-primary" [disabled]="!passwordForm.valid || isChangingPassword">
+                <i *ngIf="!isChangingPassword" class="fas fa-save"></i>
+                <i *ngIf="isChangingPassword" class="fas fa-spinner fa-spin"></i>
+                {{ isChangingPassword ? 'Modification...' : 'Changer le mot de passe' }}
+              </button>
+            </div>
+          </form>
         </div>
-        <span *ngIf="session.current" class="current-badge">Actuelle</span>
+      </div>
+
+      <!-- Authentification à deux facteurs -->
+      <div class="security-section">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <div class="section-info">
+            <h2>Authentification à deux facteurs</h2>
+            <p>Ajoutez une couche de sécurité supplémentaire à votre compte</p>
+          </div>
+        </div>
+        
+        <div class="section-content">
+          <div class="two-factor-section">
+            <div class="two-factor-status">
+              <div class="status-info">
+                <div class="status-icon" [class.enabled]="twoFactorEnabled" [class.disabled]="!twoFactorEnabled">
+                  <i class="fas" [ngClass]="twoFactorEnabled ? 'fa-check' : 'fa-times'"></i>
+                </div>
+                <div class="status-text">
+                  <h4>{{ twoFactorEnabled ? 'Activée' : 'Désactivée' }}</h4>
+                  <p>{{ twoFactorEnabled ? 'Votre compte est protégé par 2FA' : 'Activez la 2FA pour plus de sécurité' }}</p>
+                </div>
+              </div>
+              <div class="status-badge" [class.enabled]="twoFactorEnabled" [class.disabled]="!twoFactorEnabled">
+                {{ twoFactorEnabled ? 'Activée' : 'Désactivée' }}
+              </div>
+            </div>
+            
+            <div class="two-factor-setup" *ngIf="!twoFactorEnabled">
+              <h5>Comment activer l'authentification à deux facteurs :</h5>
+              <div class="setup-steps">
+                <div class="step">
+                  <div class="step-number">1</div>
+                  <div class="step-content">
+                    <h5>Téléchargez une application d'authentification</h5>
+                    <p>Google Authenticator, Authy ou Microsoft Authenticator</p>
+                  </div>
+                </div>
+                <div class="step">
+                  <div class="step-number">2</div>
+                  <div class="step-content">
+                    <h5>Scannez le code QR</h5>
+                    <p>Utilisez votre application pour scanner le code QR qui apparaîtra</p>
+                  </div>
+                </div>
+                <div class="step">
+                  <div class="step-number">3</div>
+                  <div class="step-content">
+                    <h5>Entrez le code de vérification</h5>
+                    <p>Confirmez l'activation avec le code généré par l'application</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="section-actions">
+            <button class="btn btn-outline" (click)="toggleTwoFactor()">
+              <i class="fas" [ngClass]="twoFactorEnabled ? 'fa-times' : 'fa-plus'"></i>
+              {{ twoFactorEnabled ? 'Désactiver 2FA' : 'Activer 2FA' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historique de connexion -->
+      <div class="security-section">
+        <div class="section-header">
+          <div class="section-icon">
+            <i class="fas fa-history"></i>
+          </div>
+          <div class="section-info">
+            <h2>Historique de connexion</h2>
+            <p>Surveillez les connexions à votre compte et gérez les sessions actives</p>
+          </div>
+        </div>
+        
+        <div class="section-content">
+          <div class="sessions-list">
+            <div *ngFor="let session of loginHistory" class="session-item">
+              <div class="session-info">
+                <div class="session-icon">
+                  <i class="fas fa-desktop"></i>
+                </div>
+                <div class="session-details">
+                  <h5>{{ session.device }}</h5>
+                  <p>{{ session.location }} • {{ session.date }}</p>
+                </div>
+              </div>
+              <div class="session-actions">
+                <span *ngIf="session.current" class="current-badge">Session actuelle</span>
+                <button *ngIf="!session.current" class="btn btn-danger" (click)="logoutSession(session)">
+                  <i class="fas fa-sign-out-alt"></i>
+                  Déconnecter
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="section-actions">
+            <button class="btn btn-outline" (click)="logoutAllDevices()">
+              <i class="fas fa-sign-out-alt"></i>
+              Déconnecter tous les appareils
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

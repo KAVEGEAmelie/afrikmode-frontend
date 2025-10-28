@@ -1,7 +1,7 @@
 // src/app/app.routes.ts
 // Configuration des routes avec guards
 import { Routes } from '@angular/router';
-import { authGuard, roleGuard, guestGuard } from './core/guards';
+import { AuthGuard, RoleGuard, GuestGuard, VendorEligibilityGuard } from './core/guards';
 
 export const routes: Routes = [
   // Routes publiques
@@ -9,16 +9,39 @@ export const routes: Routes = [
     path: '',
     loadComponent: () => import('./features/home/home.component').then(m => m.HomeComponent)
   },
+  // Devenir vendeur (protégé, nécessite compte + éligibilité)
+  {
+    path: 'vendor/apply',
+    loadComponent: () => import('./features/vendor-apply/vendor-apply.component').then(m => m.VendorApplyComponent),
+    canActivate: [VendorEligibilityGuard]
+  },
+  // Confirmation de candidature vendeur
+  {
+    path: 'vendor-application-success',
+    loadComponent: () => import('./features/vendor-apply/vendor-application-success/vendor-application-success.component').then(m => m.VendorApplicationSuccessComponent),
+    canActivate: [AuthGuard]
+  },
+  // Suivi de candidature vendeur
+  {
+    path: 'vendor/application-status',
+    loadComponent: () => import('./features/vendor-apply/vendor-application-status/vendor-application-status.component').then(m => m.VendorApplicationStatusComponent),
+    canActivate: [AuthGuard]
+  },
 
   // Route de test API (développement)
   {
     path: 'api-test',
     loadComponent: () => import('./pages/api-test/api-test.component').then(m => m.ApiTestComponent)
   },
-  // Route de test panier et favoris
+  // Route de debug auth
   {
-    path: 'test-cart-wishlist',
-    loadComponent: () => import('./features/test-cart-wishlist/test-cart-wishlist.component').then(m => m.TestCartWishlistComponent)
+    path: 'debug-auth',
+    loadComponent: () => import('./pages/debug-auth/debug-auth.component').then(m => m.DebugAuthComponent)
+  },
+  // Route de test des rôles
+  {
+    path: 'test-roles',
+    loadComponent: () => import('./pages/test-roles/test-roles.component').then(m => m.TestRolesComponent)
   },
 
   {
@@ -30,17 +53,21 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent),
-    canActivate: [guestGuard]
+    canActivate: [GuestGuard]
   },
   {
     path: 'register',
     loadComponent: () => import('./features/auth/register/register.component').then(m => m.RegisterComponent),
-    canActivate: [guestGuard]
+    canActivate: [GuestGuard]
+  },
+  {
+    path: 'register-success',
+    loadComponent: () => import('./features/auth/register-success/register-success.component').then(m => m.RegisterSuccessComponent)
   },
   {
     path: 'forgot-password',
     loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
-    canActivate: [guestGuard]
+    canActivate: [GuestGuard]
   },
   {
     path: 'verify-email',
@@ -49,7 +76,7 @@ export const routes: Routes = [
   {
     path: 'reset-password',
     loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
-    canActivate: [guestGuard]
+    canActivate: [GuestGuard]
   },
   
   // Routes produits (publiques)
@@ -108,12 +135,12 @@ export const routes: Routes = [
   {
     path: 'cart',
     loadComponent: () => import('./features/cart/cart.component').then(m => m.CartComponent),
-    canActivate: [authGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'checkout',
     loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent),
-    canActivate: [authGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'payment-demo',
@@ -122,7 +149,7 @@ export const routes: Routes = [
   {
     path: 'profile',
     loadComponent: () => import('./features/profile/components/profile-layout/profile-layout.component').then(m => m.ProfileLayoutComponent),
-    canActivate: [authGuard],
+    canActivate: [AuthGuard],
     children: [
       {
         path: '',
@@ -165,28 +192,44 @@ export const routes: Routes = [
   {
     path: 'orders',
     loadComponent: () => import('./features/orders/components/orders-list/orders-list.component').then(m => m.OrdersListComponent),
-    canActivate: [authGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'orders/:id',
     loadComponent: () => import('./features/orders/components/order-detail/order-detail.component').then(m => m.OrderDetailComponent),
-    canActivate: [authGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'orders/:id/tracking',
     loadComponent: () => import('./features/orders/components/order-tracking/order-tracking.component').then(m => m.OrderTrackingComponent),
-    canActivate: [authGuard]
+    canActivate: [AuthGuard]
   },
   {
     path: 'wishlist',
     loadComponent: () => import('./features/profile/components/wishlist/wishlist.component').then(m => m.WishlistComponent),
-    canActivate: [authGuard]
+    canActivate: [AuthGuard]
+  },
+  
+  // Routes de messagerie (protégées)
+  {
+    path: 'messages',
+    loadComponent: () => import('./features/messages/conversations-list/conversations-list.component').then(m => m.ConversationsListComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'messages/:id',
+    loadComponent: () => import('./features/messages/chat/chat.component').then(m => m.ChatComponent),
+    canActivate: [AuthGuard]
   },
   
   // Routes avec contrôle de rôle
   {
     path: 'admin',
     loadChildren: () => import('./features/admin/admin-routing.module').then(m => m.adminRoutes)
+  },
+  {
+    path: 'vendor',
+    loadChildren: () => import('./features/vendor/vendor-routing.module').then(m => m.VendorRoutingModule)
   },
   // Route de test admin sans authentification
   {
@@ -200,10 +243,10 @@ export const routes: Routes = [
   // },
   
   // Page non autorisé
-//   {
-//     path: 'unauthorized',
-//     loadComponent: () => import('./features/error/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
-//   },
+  {
+    path: 'unauthorized',
+    loadComponent: () => import('./pages/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
+  },
   
   // Pages du Footer - Entreprise
   {

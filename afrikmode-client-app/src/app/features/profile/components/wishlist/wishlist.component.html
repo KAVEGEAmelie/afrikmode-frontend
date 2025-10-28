@@ -1,30 +1,31 @@
 <div class="wishlist-page">
-  
-    <!-- Page Header -->
-    <div class="page-header">
-      <div class="container">
-        <h1>Mes Favoris</h1>
-        <p>{{ wishlistItems.length }} article(s) en liste</p>
-      </div>
+  <!-- Header avec gradient -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-heart"></i>
+        Mes Favoris
+      </h1>
+      <p>{{ wishlistItems.length }} article(s) sauvegardé(s) dans votre liste de souhaits</p>
     </div>
+  </div>
   
-    <div class="container">
-      
-      <!-- Empty Wishlist State -->
-      <div *ngIf="wishlistItems.length === 0" class="empty-wishlist">
-        <div class="empty-icon">
-          <i class="far fa-heart"></i>
-        </div>
-        <h2>Votre liste de favoris est vide</h2>
-        <p>Parcourez nos collections et ajoutez vos articles préférés</p>
-        <a routerLink="/shop" class="btn btn-primary">
-          <i class="fas fa-shopping-bag"></i>
-          Découvrir la boutique
-        </a>
+  <div class="container">
+    <!-- État vide -->
+    <div *ngIf="wishlistItems.length === 0" class="empty-wishlist">
+      <div class="empty-icon">
+        <i class="fas fa-heart"></i>
       </div>
-  
-      <!-- Wishlist Content -->
-      <div *ngIf="wishlistItems.length > 0" class="wishlist-content">
+      <h2>Votre liste de favoris est vide</h2>
+      <p>Parcourez nos collections et ajoutez vos articles préférés pour les retrouver facilement plus tard</p>
+      <a routerLink="/shop" class="btn">
+        <i class="fas fa-shopping-bag"></i>
+        Découvrir la boutique
+      </a>
+    </div>
+
+    <!-- Contenu de la wishlist -->
+    <div *ngIf="wishlistItems.length > 0" class="wishlist-content">
         
         <!-- Toolbar -->
         <div class="wishlist-toolbar">
@@ -64,93 +65,95 @@
           </div>
         </div>
   
-        <!-- Wishlist Items -->
-        <div class="wishlist-items" [class.list-view]="viewMode === 'list'">
-          <div 
-            *ngFor="let item of wishlistItems" 
-            class="wishlist-card"
-            [routerLink]="['/products', item.id]">
+      <!-- Grille des articles -->
+      <div class="wishlist-items" [class.list-view]="viewMode === 'list'">
+        <div 
+          *ngFor="let item of wishlistItems" 
+          class="wishlist-card"
+          [routerLink]="['/products', item.id]">
+          
+          <!-- Badges -->
+          <div class="card-badges">
+            <span *ngIf="getDiscount(item) > 0" class="badge badge-sale">
+              -{{ getDiscount(item) }}%
+            </span>
+            <span *ngIf="item.status === 'out_of_stock'" class="badge badge-outofstock">
+              Rupture
+            </span>
+          </div>
+
+          <!-- Bouton de suppression -->
+          <button 
+            class="remove-btn" 
+            (click)="removeFromWishlist(item.id); $event.stopPropagation()"
+            title="Supprimer de la liste de souhaits"
+            aria-label="Supprimer {{ item.name }} de la liste de souhaits">
+            <i class="fas fa-times"></i>
+          </button>
+
+          <!-- Image du produit -->
+          <div class="card-image">
+            <img 
+              [src]="item.image_url || (item.images && item.images.length > 0 ? item.images[0].url : '/assets/images/products/default.jpg')" 
+              [alt]="item.name"
+              title="Produit de la liste de souhaits"
+              [title]="'Image du produit : ' + item.name"
+              aria-label="Produit de la liste de souhaits"
+              class="product-img">
+          </div>
+
+          <!-- Informations du produit -->
+          <div class="card-info">
+            <span class="card-category">{{ item.category?.name || 'Catégorie' }}</span>
+            <h3 class="card-name">{{ item.name }}</h3>
             
-            <!-- Badges -->
-            <div class="card-badges">
-              <span *ngIf="getDiscount(item) > 0" class="badge badge-sale">
-                -{{ getDiscount(item) }}%
-              </span>
-              <span *ngIf="item.status === 'out_of_stock'" class="badge badge-outofstock">
-                Rupture
+            <!-- Note -->
+            <div class="card-rating">
+              <i *ngFor="let star of getStarArray(item.average_rating)" 
+                 class="fas fa-star"
+                 [class.half]="star === 'half'"
+                 [class.empty]="star === 'empty'">
+              </i>
+              <span>({{ item.average_rating }})</span>
+            </div>
+
+            <!-- Prix -->
+            <div class="card-price">
+              <span class="current-price">{{ item.price | number:'1.0-0' }} FCFA</span>
+              <span *ngIf="item.compare_price" class="old-price">
+                {{ item.compare_price | number:'1.0-0' }} FCFA
               </span>
             </div>
-  
-            <!-- Remove Button -->
-            <button 
-              class="remove-btn" 
-              (click)="removeFromWishlist(item.id); $event.stopPropagation()"
-              title="Supprimer de la liste de souhaits"
-              aria-label="Supprimer {{ item.name }} de la liste de souhaits">
-              <i class="fas fa-times"></i>
-            </button>
-  
-            <!-- Product Image -->
-            <div class="card-image">
-              <img 
-                [src]="item.image_url || (item.images && item.images.length > 0 ? item.images[0].url : '/assets/images/products/default.jpg')" 
-                [alt]="item.name"
-                title="Produit de la liste de souhaits"
-                [title]="'Image du produit : ' + item.name"
-                aria-label="Produit de la liste de souhaits"
-                class="product-img">
-            </div>
-  
-            <!-- Product Info -->
-            <div class="card-info">
-              <span class="card-category">{{ item.category?.name || 'Catégorie' }}</span>
-              <h3 class="card-name">{{ item.name }}</h3>
-              
-              <!-- Rating -->
-              <div class="card-rating">
-                <i *ngFor="let star of getStarArray(item.average_rating)" 
-                   class="fas fa-star"
-                   [class.half]="star === 'half'"
-                   [class.empty]="star === 'empty'">
-                </i>
-                <span>({{ item.average_rating }})</span>
-              </div>
-  
-              <!-- Price -->
-              <div class="card-price">
-                <span class="current-price">{{ item.price | number }} FCFA</span>
-                <span *ngIf="item.compare_price" class="old-price">
-                  {{ item.compare_price | number }} FCFA
-                </span>
-              </div>
-  
-              <!-- Stock Status -->
-              <div class="stock-status" [class.out-of-stock]="item.status === 'out_of_stock'">
-                <i [class]="item.status !== 'out_of_stock' ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
-                {{ item.status !== 'out_of_stock' ? 'En stock' : 'Rupture de stock' }}
-              </div>
-  
-              <!-- Add to Cart Button -->
-              <button 
-                class="btn btn-add-cart"
-                [disabled]="item.status === 'out_of_stock'"
-                (click)="addToCart(item, $event)">
-                <i class="fas fa-shopping-cart"></i>
-                {{ item.status !== 'out_of_stock' ? 'Ajouter au panier' : 'Indisponible' }}
-              </button>
+
+            <!-- Statut du stock -->
+            <div class="stock-status" [class.out-of-stock]="item.status === 'out_of_stock'">
+              <i [class]="item.status !== 'out_of_stock' ? 'fas fa-check-circle' : 'fas fa-times-circle'"></i>
+              {{ item.status !== 'out_of_stock' ? 'En stock' : 'Rupture de stock' }}
             </div>
           </div>
+
+          <!-- Actions -->
+          <div class="card-actions">
+            <button 
+              class="btn btn-add-cart"
+              [disabled]="item.status === 'out_of_stock'"
+              (click)="addToCart(item, $event)">
+              <i class="fas fa-shopping-cart"></i>
+              {{ item.status !== 'out_of_stock' ? 'Ajouter au panier' : 'Indisponible' }}
+            </button>
+          </div>
         </div>
+      </div>
   
-        <!-- Recommendations Section -->
-        <div class="recommendations-section">
-          <h2>Vous pourriez aussi aimer</h2>
-          <p>Basé sur vos favoris</p>
-          <a routerLink="/shop" class="btn btn-outline">
-            Voir plus de produits
-            <i class="fas fa-arrow-right"></i>
-          </a>
-        </div>
+      <!-- Section recommandations -->
+      <div class="recommendations-section">
+        <h2>Vous pourriez aussi aimer</h2>
+        <p>Découvrez d'autres produits qui pourraient vous intéresser</p>
+        <a routerLink="/shop" class="btn">
+          <i class="fas fa-arrow-right"></i>
+          Voir plus de produits
+        </a>
       </div>
     </div>
   </div>
+</div>

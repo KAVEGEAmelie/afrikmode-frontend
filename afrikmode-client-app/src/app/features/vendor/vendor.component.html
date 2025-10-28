@@ -1,0 +1,42 @@
+<!-- Interface Vendor - Plein écran sans header/footer du site principal -->
+<div class="vendor-fullscreen">
+  <!-- Topbar Vendor -->
+  <app-vendor-topbar 
+    (toggleSidebar)="toggleCollapsed()"
+    (openSidebar)="drawer.open()"
+    [isMobile]="isMobile$ | async"
+    [collapsed]="collapsed"
+    class="vendor-topbar">
+  </app-vendor-topbar>
+
+  <!-- Container Principal -->
+  <mat-sidenav-container class="vendor-sidenav-container">
+    
+    <!-- Sidebar Vendor -->
+    <mat-sidenav 
+      #drawer
+      mode="side"
+      [opened]="!(isMobile$ | async) && !collapsed"
+      [mode]="(isMobile$ | async) ? 'over' : 'side'"
+      [fixedInViewport]="(isMobile$ | async)"
+      [fixedTopGap]="(isMobile$ | async) ? 56 : 0"
+      [class.collapsed]="collapsed && !(isMobile$ | async)"
+      class="vendor-sidenav">
+      <app-vendor-sidebar 
+        [collapsed]="collapsed" 
+        [isMobile]="(isMobile$ | async) || false"
+        (toggleCollapse)="toggleCollapsed()"
+        (itemClicked)="closeSidebar()">
+      </app-vendor-sidebar>
+    </mat-sidenav>
+
+    <!-- Contenu Principal -->
+    <mat-sidenav-content class="vendor-main-content">
+      <div class="content-area">
+        <!-- Router Outlet pour les pages vendor -->
+        <router-outlet></router-outlet>
+      </div>
+    </mat-sidenav-content>
+
+  </mat-sidenav-container>
+</div>

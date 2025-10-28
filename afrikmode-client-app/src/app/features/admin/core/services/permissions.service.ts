@@ -150,16 +150,11 @@ export class PermissionsService {
     if (!role) return 'none';
 
     switch (role) {
-      case 'super_admin':
-        return 'full';
       case 'admin':
-      case 'manager':
+        return 'full';
+      case 'vendor':
         return 'limited';
-      case 'support':
-      case 'analyst':
-      case 'content_manager':
-      case 'moderator':
-      case 'vendor_admin':
+      case 'customer':
         return 'read_only';
       default:
         return 'none';
@@ -180,14 +175,9 @@ export class PermissionsService {
    */
   getRoleDisplayName(role: AdminRoleType): string {
     const roleNames: Record<AdminRoleType, string> = {
-      super_admin: 'Super Administrateur',
       admin: 'Administrateur',
-      manager: 'Gestionnaire',
-      vendor_admin: 'Administrateur Vendeur',
-      support: 'Support Client',
-      analyst: 'Analyste',
-      content_manager: 'Gestionnaire de Contenu',
-      moderator: 'Modérateur'
+      vendor: 'Vendeur',
+      customer: 'Client'
     };
 
     return roleNames[role] || role;
@@ -198,14 +188,9 @@ export class PermissionsService {
    */
   getRoleColor(role: AdminRoleType): string {
     const roleColors: Record<AdminRoleType, string> = {
-      super_admin: '#dc3545',      // Rouge
-      admin: '#fd7e14',            // Orange
-      manager: '#0d6efd',          // Bleu
-      vendor_admin: '#198754',     // Vert
-      support: '#6610f2',          // Violet
-      analyst: '#0dcaf0',          // Cyan
-      content_manager: '#ffc107',  // Jaune
-      moderator: '#6c757d'         // Gris
+      admin: '#dc3545',       // Rouge
+      vendor: '#198754',      // Vert
+      customer: '#0d6efd'     // Bleu
     };
 
     return roleColors[role] || '#6c757d';
@@ -218,20 +203,11 @@ export class PermissionsService {
     const currentRole = this.getCurrentRole();
     if (!currentRole) return false;
 
-    // Super admin peut tout gérer
-    if (currentRole === 'super_admin') return true;
+    // Admin peut tout gérer
+    if (currentRole === 'admin') return true;
 
-    // Admin peut gérer tous sauf super admin
-    if (currentRole === 'admin') {
-      return targetUserRole !== 'super_admin';
-    }
-
-    // Manager peut gérer les rôles inférieurs
-    if (currentRole === 'manager') {
-      return ['vendor_admin', 'support', 'analyst', 'content_manager', 'moderator'].includes(targetUserRole);
-    }
-
-    // Autres rôles ne peuvent pas gérer d'autres utilisateurs
+    // Vendor ne peut gérer personne
+    // Customer ne peut gérer personne
     return false;
   }
 }

@@ -1,5 +1,6 @@
 // src/app/features/profile/components/profile-layout/profile-layout.component.scss
-@import '../../styles/profile-shared';
+@use 'sass:color';
+@use '../../styles/profile-shared' as *;
 
 .profile-page {
   min-height: 100vh;
@@ -142,7 +143,7 @@
       .user-info {
         padding: $spacing-2xl;
         text-align: center;
-        background: linear-gradient(135deg, $afrik-burgundy 0%, darken($afrik-burgundy, 12%) 100%);
+        background: linear-gradient(135deg, $afrik-burgundy 0%, color.adjust($afrik-burgundy, $lightness: -12%) 100%);
         color: white;
         position: relative;
         overflow: hidden;
@@ -199,7 +200,7 @@
             right: 0;
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, $afrik-terracotta 0%, darken($afrik-terracotta, 10%) 100%);
+            background: linear-gradient(135deg, $afrik-terracotta 0%, color.adjust($afrik-terracotta, $lightness: -10%) 100%);
             border: 4px solid white;
             border-radius: 50%;
             display: flex;
@@ -215,7 +216,7 @@
             }
 
             &:hover {
-              background: linear-gradient(135deg, darken($afrik-terracotta, 5%) 0%, darken($afrik-terracotta, 15%) 100%);
+              background: linear-gradient(135deg, color.adjust($afrik-terracotta, $lightness: -5%) 0%, color.adjust($afrik-terracotta, $lightness: -15%) 100%);
               transform: scale(1.15) rotate(10deg);
               box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
             }
@@ -365,7 +366,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, $afrik-terracotta 0%, darken($afrik-terracotta, 10%) 100%);
+            background: linear-gradient(135deg, $afrik-terracotta 0%, color.adjust($afrik-terracotta, $lightness: -10%) 100%);
             color: white;
             border-radius: $radius-full;
             font-size: 0.75rem;
@@ -456,7 +457,7 @@
           &:hover {
             background: rgba($danger-color, 0.1);
             border-color: $danger-color;
-            color: darken($danger-color, 10%);
+            color: color.adjust($danger-color, $lightness: -10%);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba($danger-color, 0.2);
 

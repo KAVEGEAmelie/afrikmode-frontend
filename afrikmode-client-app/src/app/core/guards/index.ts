@@ -1,6 +1,6 @@
-// src/app/core/guards/index.ts
-// Export central de tous les guards
-
-export * from './auth.guard';
-export * from './role.guard';
-export * from './guest.guard';
+export { AuthGuard } from './auth.guard';
+export { VendorGuard } from './vendor.guard';
+export { AdminGuard } from './admin.guard';
+export { GuestGuard } from './guest.guard';
+export { RoleGuard } from './role.guard';
+export { VendorEligibilityGuard } from './vendor-eligibility.guard';

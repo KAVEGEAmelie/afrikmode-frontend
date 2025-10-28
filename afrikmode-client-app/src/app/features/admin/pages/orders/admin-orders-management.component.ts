@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -98,6 +98,8 @@ export interface OrderStats {
   standalone: true,
   imports: [
     CommonModule,
+    NgIf,
+    NgFor,
     MatIconModule,
     MatCardModule,
     MatTableModule,
@@ -745,6 +747,29 @@ export class AdminOrdersManagementComponent implements OnInit {
     console.log('Annuler commande:', order);
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -21,7 +21,7 @@ export interface User {
     stats?: UserStats;
   }
   
-  export type UserRole = 'customer' | 'vendor' | 'admin' | 'super_admin' | 'manager';
+  export type UserRole = 'customer' | 'vendor' | 'admin';
   
   export type UserStatus = 'active' | 'inactive' | 'suspended' | 'banned' | 'pending_verification';
   
@@ -245,9 +245,7 @@ export interface User {
   export const USER_ROLES = {
     CUSTOMER: 'customer',
     VENDOR: 'vendor', 
-    MANAGER: 'manager',
-    ADMIN: 'admin',
-    SUPER_ADMIN: 'super_admin'
+    ADMIN: 'admin'
   } as const;
   
   export const USER_PERMISSIONS = {
@@ -261,18 +259,14 @@ export interface User {
     MANAGE_PRODUCTS: 'manage_products',
     VIEW_ORDERS: 'view_orders',
     
-    // Permissions manager
-    MODERATE_CONTENT: 'moderate_content',
-    HANDLE_TICKETS: 'handle_tickets',
-    VIEW_REPORTS: 'view_reports',
-    
     // Permissions admin
     MANAGE_USERS: 'manage_users',
     MANAGE_STORES: 'manage_stores',
     VIEW_ANALYTICS: 'view_analytics',
     SYSTEM_CONFIG: 'system_config',
-    
-    // Permissions super admin
+    MODERATE_CONTENT: 'moderate_content',
+    HANDLE_TICKETS: 'handle_tickets',
+    VIEW_REPORTS: 'view_reports',
     MANAGE_ADMINS: 'manage_admins',
     SYSTEM_MAINTENANCE: 'system_maintenance'
   } as const;
@@ -287,7 +281,7 @@ export interface User {
   }
   
   export function isAdmin(user: User): boolean {
-    return hasAnyRole(user, ['admin', 'super_admin']);
+    return hasAnyRole(user, ['admin']);
   }
   
   export function isVendor(user: User): boolean {

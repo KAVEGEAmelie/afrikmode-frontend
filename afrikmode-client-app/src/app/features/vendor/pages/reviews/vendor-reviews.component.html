@@ -1,0 +1,191 @@
+<div class="vendor-reviews">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <mat-icon>star</mat-icon>
+        Avis Clients
+      </h1>
+      <p class="subtitle">Gérez les avis et évaluations de vos produits</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-item">
+        <span class="stat-value">{{ averageRating }}</span>
+        <div class="rating-stars">
+          @for (star of [1,2,3,4,5]; track star) {
+            <mat-icon [class.filled]="star <= averageRating">star</mat-icon>
+          }
+        </div>
+        <span class="stat-label">{{ totalReviews }} avis</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rating Breakdown -->
+  <mat-card class="breakdown-card">
+    <mat-card-header>
+      <mat-card-title>Répartition des Notes</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="rating-breakdown">
+        @for (item of ratingBreakdown; track item.stars) {
+          <div class="breakdown-row">
+            <span class="stars-label">{{ item.stars }} <mat-icon>star</mat-icon></span>
+            <mat-progress-bar mode="determinate" [value]="item.percentage" class="rating-bar"></mat-progress-bar>
+            <span class="count">{{ item.count }}</span>
+          </div>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-container">
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Rechercher</mat-label>
+          <input matInput [(ngModel)]="searchTerm" (input)="filterReviews()" placeholder="Produit, client...">
+          <mat-icon matPrefix>search</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Note</mat-label>
+          <mat-select [(value)]="ratingFilter" (selectionChange)="filterReviews()">
+            <mat-option value="">Toutes</mat-option>
+            <mat-option value="5">5 étoiles</mat-option>
+            <mat-option value="4">4 étoiles</mat-option>
+            <mat-option value="3">3 étoiles</mat-option>
+            <mat-option value="2">2 étoiles</mat-option>
+            <mat-option value="1">1 étoile</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Statut</mat-label>
+          <mat-select [(value)]="statusFilter" (selectionChange)="filterReviews()">
+            <mat-option value="">Tous</mat-option>
+            <mat-option value="pending">En attente</mat-option>
+            <mat-option value="approved">Approuvés</mat-option>
+            <mat-option value="rejected">Rejetés</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Reviews List -->
+  <mat-card class="reviews-list-card">
+    <mat-card-header>
+      <mat-card-title>
+        Avis ({{ filteredReviews.length }})
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="reviews-list">
+        @for (review of filteredReviews; track review.id) {
+          <div class="review-item" [class]="'status-' + review.status">
+            <div class="review-header">
+              <div class="customer-info">
+                <div class="avatar">
+                  <mat-icon>person</mat-icon>
+                </div>
+                <div class="info">
+                  <h4>{{ review.customer_name }}</h4>
+                  <span class="date">{{ review.created_at | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+              <div class="review-rating">
+                @for (star of [1,2,3,4,5]; track star) {
+                  <mat-icon [class.filled]="star <= review.rating">star</mat-icon>
+                }
+              </div>
+              <mat-chip [class]="'status-chip ' + review.status">
+                {{ getStatusLabel(review.status) }}
+              </mat-chip>
+            </div>
+
+            <div class="product-ref">
+              <mat-icon>inventory_2</mat-icon>
+              <span>{{ review.product_name }}</span>
+            </div>
+
+            <div class="review-content">
+              <h5>{{ review.title }}</h5>
+              <p>{{ review.comment }}</p>
+
+              @if (review.images && review.images.length > 0) {
+                <div class="review-images">
+                  @for (image of review.images; track image) {
+                    <img [src]="image" [alt]="'Photo avis ' + review.id">
+                  }
+                </div>
+              }
+            </div>
+
+            @if (review.vendor_response) {
+              <div class="vendor-response">
+                <div class="response-header">
+                  <mat-icon>reply</mat-icon>
+                  <span>Votre réponse</span>
+                </div>
+                <p>{{ review.vendor_response }}</p>
+              </div>
+            }
+
+            <div class="review-actions">
+              @if (!review.vendor_response) {
+                <button mat-raised-button color="primary" (click)="respondToReview(review)">
+                  <mat-icon>reply</mat-icon>
+                  Répondre
+                </button>
+              } @else {
+                <button mat-button (click)="editResponse(review)">
+                  <mat-icon>edit</mat-icon>
+                  Modifier la réponse
+                </button>
+              }
+
+              @if (review.status === 'pending') {
+                <button mat-raised-button color="accent" (click)="approveReview(review)">
+                  <mat-icon>check</mat-icon>
+                  Approuver
+                </button>
+                <button mat-raised-button color="warn" (click)="rejectReview(review)">
+                  <mat-icon>close</mat-icon>
+                  Rejeter
+                </button>
+              }
+
+              <button mat-icon-button [matMenuTriggerFor]="reviewMenu">
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #reviewMenu="matMenu">
+                <button mat-menu-item (click)="reportReview(review)">
+                  <mat-icon>flag</mat-icon>
+                  <span>Signaler</span>
+                </button>
+                <button mat-menu-item (click)="deleteReview(review)" class="danger">
+                  <mat-icon>delete</mat-icon>
+                  <span>Supprimer</span>
+                </button>
+              </mat-menu>
+            </div>
+
+            <mat-divider></mat-divider>
+          </div>
+        }
+
+        @if (filteredReviews.length === 0) {
+          <div class="empty-state">
+            <mat-icon>rate_review</mat-icon>
+            <h3>Aucun avis trouvé</h3>
+            <p>Vous n'avez pas encore reçu d'avis ou aucun ne correspond à vos critères</p>
+          </div>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- Response Dialog (à implémenter avec MatDialog) -->

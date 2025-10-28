@@ -309,7 +309,7 @@ $breakpoint-xxl: 1400px;
     color: $success-color;
   } @else if $color == 'warning' {
     background: rgba($warning-color, 0.1);
-    color: darken($warning-color, 20%);
+    color: color.adjust($warning-color, $lightness: -20%);
   } @else if $color == 'danger' {
     background: rgba($danger-color, 0.1);
     color: $danger-color;

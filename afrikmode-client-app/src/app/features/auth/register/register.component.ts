@@ -106,22 +106,37 @@ export class RegisterComponent {
     }).subscribe({
       next: (response) => {
         this.isLoading = false;
-        console.log('Inscription réussie:', response);
-        // Redirection vers la page de connexion ou confirmation
-        this.router.navigate(['/login'], { 
-          queryParams: { message: 'Inscription réussie. Vous pouvez maintenant vous connecter.' }
+        console.log('✅ Inscription réussie:', response);
+        
+        // Redirection vers une page de confirmation avec message
+        this.router.navigate(['/register-success'], { 
+          queryParams: { 
+            email: this.email,
+            message: 'Un email de vérification a été envoyé à votre adresse' 
+          }
         });
       },
       error: (error) => {
         this.isLoading = false;
-        console.error('Erreur d\'inscription:', error);
+        console.error('❌ Erreur d\'inscription:', error);
+        
+        // Gérer les différents types d'erreurs
         if (error.status === 422) {
           // Erreurs de validation
-          this.errorMessage = error.error.message || 'Données invalides';
-        } else if (error.status === 409) {
+          const errors = error.error?.errors || error.error?.data;
+          if (errors && typeof errors === 'object') {
+            // Récupérer le premier message d'erreur
+            const firstError = Object.values(errors)[0];
+            this.errorMessage = Array.isArray(firstError) ? firstError[0] : error.error.message || 'Données invalides';
+          } else {
+            this.errorMessage = error.error.message || 'Données invalides';
+          }
+        } else if (error.status === 409 || error.error?.message?.includes('already')) {
           this.errorMessage = 'Cette adresse email est déjà utilisée';
+        } else if (error.status === 500) {
+          this.errorMessage = 'Erreur serveur. Veuillez réessayer plus tard';
         } else {
-          this.errorMessage = 'Une erreur est survenue. Veuillez réessayer';
+          this.errorMessage = error.error?.message || 'Une erreur est survenue. Veuillez réessayer';
         }
       }
     });

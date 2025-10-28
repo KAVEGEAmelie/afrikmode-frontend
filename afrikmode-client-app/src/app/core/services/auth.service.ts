@@ -1,5 +1,5 @@
 // src/app/core/services/auth.service.ts
-import { Injectable, Inject, forwardRef } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, tap } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -65,14 +65,37 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/login`, credentials, {
+    // Adapter la charge utile pour correspondre au backend (rememberMe au lieu de remember_me)
+    const payload: any = { ...credentials } as any;
+    if ((payload as any).remember_me !== undefined) {
+      payload.rememberMe = (payload as any).remember_me;
+      delete (payload as any).remember_me;
+    }
+
+    return this.http.post<any>(`${this.baseUrl}/auth/login`, payload, {
       headers: this.getHeaders()
     }).pipe(
-      tap((response: any) => {
-        if (response.success && response.data && response.data.token) {
-          this.setAuthData(response.data);
+      // Normaliser la réponse backend -> AuthResponse frontend
+      tap((raw) => {
+        const normalized = this.normalizeAuthResponse(raw);
+        if (normalized.token) {
+          this.setAuthData(normalized);
         }
-      })
+      }),
+      // Exposer une réponse normalisée au consommateur
+      // Nota: on refait l'appel pour retourner l'objet normalisé
+      // sans modifier la signature publique
+      // (utilisateurs existants de ce service n'ont pas à changer)
+      // eslint-disable-next-line rxjs/no-ignored-observable
+      (source => new Observable<AuthResponse>(subscriber => {
+        source.subscribe({
+          next: (raw) => {
+            subscriber.next(this.normalizeAuthResponse(raw));
+            subscriber.complete();
+          },
+          error: (err) => subscriber.error(err)
+        });
+      }))
     );
   }
 
@@ -80,9 +103,9 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, userData, {
       headers: this.getHeaders()
     }).pipe(
-      tap((response: any) => {
-        if (response.success && response.data && response.data.token) {
-          this.setAuthData(response.data);
+      tap((response: AuthResponse) => {
+        if (response.token) {
+          this.setAuthData(response);
         }
       })
     );
@@ -92,9 +115,18 @@ export class AuthService {
     return this.http.post(`${this.baseUrl}/auth/logout`, {}, {
       headers: this.getHeaders()
     }).pipe(
-      tap(() => {
-        this.clearAuthData();
-        this.router.navigate(['/']);
+      tap({
+        next: () => {
+          console.log('✅ Logout réussi côté serveur');
+          this.clearAuthData();
+          this.router.navigate(['/']);
+        },
+        error: (error) => {
+          console.log('⚠️ Erreur logout serveur, déconnexion côté client');
+          // Même en cas d'erreur serveur, on nettoie côté client
+          this.clearAuthData();
+          this.router.navigate(['/']);
+        }
       })
     );
   }
@@ -149,29 +181,76 @@ export class AuthService {
   }
 
   refreshToken(): Observable<AuthResponse> {
-    const refreshToken = localStorage.getItem('refresh_token');
-    return this.http.post<AuthResponse>(`${this.baseUrl}/auth/refresh`, 
-      { refresh_token: refreshToken }, {
+    const storedRefreshToken = localStorage.getItem('refresh_token');
+    return this.http.post<any>(`${this.baseUrl}/auth/refresh`, 
+      { refreshToken: storedRefreshToken }, {
       headers: this.getHeaders()
     }).pipe(
-      tap((response: any) => {
-        if (response.success && response.data && response.data.token) {
-          this.setAuthData(response.data);
+      tap((raw) => {
+        const normalized = this.normalizeAuthResponse(raw);
+        if (normalized.token) {
+          localStorage.setItem('auth_token', normalized.token);
         }
-      })
+      }),
+      (source => new Observable<AuthResponse>(subscriber => {
+        source.subscribe({
+          next: (raw) => {
+            subscriber.next(this.normalizeAuthResponse(raw));
+            subscriber.complete();
+          },
+          error: (err) => subscriber.error(err)
+        });
+      }))
     );
   }
 
-  private setAuthData(response: any): void {
+  // Normalise la réponse du backend en AuthResponse conforme au frontend
+  private normalizeAuthResponse(raw: any): AuthResponse {
+    // Backend typique: { success, message, data: { user, token, refreshToken, expiresIn } }
+    const data = raw?.data || raw;
+    const user = data?.user || raw?.user || null;
+    const token = data?.token || raw?.token || null;
+    const refreshToken = data?.refreshToken || raw?.refresh_token || null;
+    const expiresIn = data?.expiresIn || raw?.expires_in || null;
+
+    // Adapter la structure user -> interface User (snake_case attendu côté front)
+    const adaptedUser = user ? {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name ?? user.firstName ?? '',
+      last_name: user.last_name ?? user.lastName ?? '',
+      phone: user.phone,
+      role: user.role,
+      status: user.status ?? (user.active ? 'active' : 'inactive'),
+      is_verified: user.emailVerified ?? user.email_verified ?? false,
+      two_factor_enabled: user.twoFactorEnabled ?? user.two_factor_enabled ?? false,
+      avatar: user.avatar ?? user.avatarUrl ?? user.avatar_url,
+      date_of_birth: user.birth_date ?? user.date_of_birth,
+      gender: user.gender,
+      created_at: user.created_at ?? user.createdAt ?? '',
+      updated_at: user.updated_at ?? user.updatedAt ?? '',
+      last_login_at: user.last_login ?? user.last_login_at
+    } : null;
+
+    return {
+      user: adaptedUser as any,
+      token: token as any,
+      refresh_token: (refreshToken as any) ?? localStorage.getItem('refresh_token') ?? '',
+      expires_in: (typeof expiresIn === 'string') ? undefined as any : (expiresIn as any)
+    } as AuthResponse;
+  }
+
+  private setAuthData(response: AuthResponse): void {
     localStorage.setItem('auth_token', response.token);
-    localStorage.setItem('refresh_token', response.refreshToken);
+    localStorage.setItem('refresh_token', response.refresh_token);
     localStorage.setItem('user', JSON.stringify(response.user));
     
     this.currentUserSubject.next(response.user);
     this.isAuthenticatedSubject.next(true);
   }
 
-  private clearAuthData(): void {
+  clearAuthData(): void {
+    console.log('🧹 Nettoyage des données d\'authentification');
     localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
@@ -199,7 +278,7 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
-    return this.hasAnyRole(['admin', 'super_admin']);
+    return this.hasAnyRole(['admin']);
   }
 
   isVendor(): boolean {
@@ -208,5 +287,10 @@ export class AuthService {
 
   isCustomer(): boolean {
     return this.hasRole('customer');
+  }
+
+  updateUser(user: User): void {
+    this.currentUserSubject.next(user);
+    localStorage.setItem('user', JSON.stringify(user));
   }
 }

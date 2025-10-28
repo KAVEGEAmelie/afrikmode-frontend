@@ -31,11 +31,8 @@ export class AdminGuard implements CanActivate {
           return false;
         }
 
-        // Vérifier si l'utilisateur a un rôle admin
-        const adminRoles: AdminRoleType[] = [
-          'super_admin', 'admin', 'manager', 'vendor_admin', 
-          'support', 'analyst', 'content_manager', 'moderator'
-        ];
+        // Vérifier si l'utilisateur a le rôle admin
+        const adminRoles: AdminRoleType[] = ['admin'];
 
         if (!adminRoles.includes(user.role as AdminRoleType)) {
           this.router.navigate(['/']);

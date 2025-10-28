@@ -126,9 +126,7 @@ export class UserDetailComponent implements OnInit {
 
   getRoleColor(role: string): string {
     const colors: {[key: string]: string} = {
-      'super_admin': '#f44336',
       'admin': '#ff9800',
-      'manager': '#4caf50',
       'vendor': '#2196f3',
       'customer': '#607d8b'
     };

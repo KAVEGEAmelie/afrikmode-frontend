@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgFor } from '@angular/common';
 import { Router } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -23,6 +23,7 @@ import { TopProductsComponent, TopProduct } from './components/top-products/top-
 import { DashboardDataService } from '../../core/services/dashboard-data.service';
 import { AdminStateService } from '../../core/services/admin-state.service';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
+import { AdminService } from '../../../../core/services/admin.service';
 
 export interface AdminMenuItem {
   id: string;
@@ -48,6 +49,7 @@ export interface QuickAction {
   standalone: true,
   imports: [
     CommonModule,
+    NgFor,
     MatIconModule,
     MatCardModule,
     MatChipsModule,
@@ -445,6 +447,125 @@ export class AdminDashboardCompleteComponent implements OnInit {
       currency: 'EUR',
       minimumFractionDigits: 0
     }).format(value);
+  }
+
+  // Méthodes utilitaires
+  refreshDashboard(): void {
+    this.loadDashboardData();
+  }
+
+  exportDashboard(): void {
+    console.log('📊 Export du dashboard');
+    // Logique d'export des données
+  }
+
+  configureAlerts(): void {
+    console.log('🔔 Configuration des alertes');
+    // Logique de configuration des alertes
+  }
+
+  viewDetailedAnalytics(): void {
+    this.router.navigate(['/admin/analytics']);
+  }
+
+  manageUsers(): void {
+    this.router.navigate(['/admin/users']);
+  }
+
+  manageStores(): void {
+    this.router.navigate(['/admin/stores']);
+  }
+
+  manageProducts(): void {
+    this.router.navigate(['/admin/products']);
+  }
+
+  viewOrders(): void {
+    this.router.navigate(['/admin/orders']);
+  }
+
+  viewSupport(): void {
+    this.router.navigate(['/admin/support']);
+  }
+
+  viewReports(): void {
+    this.router.navigate(['/admin/reports']);
+  }
+
+  getTrendIcon(trend: string): string {
+    switch (trend) {
+      case 'up': return 'trending_up';
+      case 'down': return 'trending_down';
+      case 'stable': return 'trending_flat';
+      default: return 'help';
+    }
+  }
+
+  getTrendColor(trend: string): string {
+    switch (trend) {
+      case 'up': return '#10B981';
+      case 'down': return '#EF4444';
+      case 'stable': return '#6B7280';
+      default: return '#6B7280';
+    }
+  }
+
+  formatNumber(value: number): string {
+    return new Intl.NumberFormat('fr-FR').format(value);
+  }
+
+  formatPercentage(value: number): string {
+    return `${value.toFixed(1)}%`;
+  }
+
+  getRelativeTime(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor(diff / (1000 * 60));
+
+    if (days > 0) return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
+    if (hours > 0) return `Il y a ${hours} heure${hours > 1 ? 's' : ''}`;
+    if (minutes > 0) return `Il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
+    return 'À l\'instant';
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case 'success': return '#10B981';
+      case 'warning': return '#F59E0B';
+      case 'error': return '#EF4444';
+      case 'info': return '#3B82F6';
+      default: return '#6B7280';
+    }
+  }
+
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'success': return 'Opérationnel';
+      case 'warning': return 'Attention';
+      case 'error': return 'Erreur';
+      case 'info': return 'Information';
+      default: return 'Inconnu';
+    }
+  }
+
+  calculateGrowthRate(current: number, previous: number): number {
+    if (previous === 0) return 0;
+    return ((current - previous) / previous) * 100;
+  }
+
+  getGrowthDirection(current: number, previous: number): string {
+    const growth = this.calculateGrowthRate(current, previous);
+    if (growth > 0) return 'up';
+    if (growth < 0) return 'down';
+    return 'stable';
+  }
+
+  formatGrowthRate(rate: number): string {
+    const sign = rate >= 0 ? '+' : '';
+    return `${sign}${rate.toFixed(1)}%`;
   }
 }
 
