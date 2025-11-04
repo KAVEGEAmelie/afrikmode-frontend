@@ -287,12 +287,75 @@ export class VendorApplyComponent implements OnInit {
       // Prepare form data with documents
       const formData = new FormData();
       
-      // Add all form fields
-      Object.entries(this.form).forEach(([key, value]) => {
-        if (value) {
-          formData.append(key, value.toString());
-        }
-      });
+      // Validation côté client avant envoi
+      if (!this.form.name || !this.form.name.trim()) {
+        this.toastService.error('Le nom de la boutique est obligatoire');
+        this.isLoading = false;
+        return;
+      }
+      if (!this.form.description || !this.form.description.trim()) {
+        this.toastService.error('La description est obligatoire');
+        this.isLoading = false;
+        return;
+      }
+      if (!this.form.city || !this.form.city.trim()) {
+        this.toastService.error('La ville est obligatoire');
+        this.isLoading = false;
+        return;
+      }
+      if (!this.form.address || !this.form.address.trim()) {
+        this.toastService.error('L\'adresse est obligatoire');
+        this.isLoading = false;
+        return;
+      }
+      
+      // Add all form fields (toujours ajouter les champs requis, même si vides)
+      // Multer parse automatiquement les champs texte du FormData
+      formData.append('name', this.form.name.trim());
+      formData.append('description', this.form.description.trim());
+      formData.append('city', this.form.city.trim());
+      formData.append('address', this.form.address.trim());
+      
+      // Ajouter les champs optionnels seulement s'ils ont une valeur
+      if (this.form.shortDescription) {
+        formData.append('shortDescription', this.form.shortDescription.trim());
+      }
+      if (this.form.email) {
+        formData.append('email', this.form.email.trim());
+      }
+      if (this.form.phone) {
+        formData.append('phone', this.form.phone.trim());
+      }
+      if (this.form.whatsapp) {
+        formData.append('whatsapp', this.form.whatsapp.trim());
+      }
+      if (this.form.website) {
+        formData.append('website', this.form.website.trim());
+      }
+      if (this.form.country) {
+        formData.append('country', this.form.country);
+      }
+      if (this.form.region) {
+        formData.append('region', this.form.region.trim());
+      }
+      if (this.form.postalCode) {
+        formData.append('postalCode', this.form.postalCode.trim());
+      }
+      if (this.form.businessType) {
+        formData.append('businessType', this.form.businessType);
+      }
+      if (this.form.returnPolicy) {
+        formData.append('returnPolicy', this.form.returnPolicy.trim());
+      }
+      if (this.form.shippingPolicy) {
+        formData.append('shippingPolicy', this.form.shippingPolicy.trim());
+      }
+      if (this.form.defaultLanguage) {
+        formData.append('defaultLanguage', this.form.defaultLanguage);
+      }
+      if (this.form.defaultCurrency) {
+        formData.append('defaultCurrency', this.form.defaultCurrency);
+      }
 
       // Add documents
       if (this.documents.idCard) {
@@ -341,24 +404,33 @@ export class VendorApplyComponent implements OnInit {
             });
           }, 2000);
         },
-        error: (error) => {
+        error: (error: any) => {
           this.isLoading = false;
-          console.error('Error submitting vendor application:', error);
+          console.error('❌ Error submitting vendor application:', error);
+          console.error('❌ Error status:', error.status);
+          console.error('❌ Error response:', error.error);
           
           // Gestion d'erreurs améliorée
           let errorMsg = 'Erreur lors de la soumission. Veuillez réessayer';
           
           if (error.status === 409) {
-            errorMsg = error.error?.message || 'Une boutique avec ce nom existe déjà';
+            errorMsg = error.error?.error?.message || error.error?.message || 'Une boutique avec ce nom existe déjà';
           } else if (error.status === 422) {
-            const errors = error.error?.errors || error.error?.data?.errors;
-            if (errors && Array.isArray(errors)) {
-              errorMsg = errors.join(', ');
+            // Erreur de validation
+            const validationErrors = error.error?.error?.details || error.error?.error?.errors || error.error?.details || {};
+            if (typeof validationErrors === 'object' && !Array.isArray(validationErrors)) {
+              const errorMessages = Object.entries(validationErrors)
+                .filter(([key, msg]: [string, any]) => msg !== null && msg !== undefined)
+                .map(([key, msg]: [string, any]) => `${msg}`)
+                .join(', ');
+              errorMsg = errorMessages || 'Erreurs de validation. Veuillez vérifier tous les champs';
+            } else if (Array.isArray(validationErrors)) {
+              errorMsg = validationErrors.join(', ');
             } else {
-              errorMsg = error.error?.message || 'Données invalides. Veuillez vérifier tous les champs';
+              errorMsg = error.error?.error?.message || error.error?.message || 'Données invalides. Veuillez vérifier tous les champs';
             }
           } else if (error.status === 400) {
-            errorMsg = error.error?.message || 'Données invalides';
+            errorMsg = error.error?.error?.message || error.error?.message || 'Données invalides';
           } else if (error.status === 403) {
             errorMsg = error.error?.message || 'Vous n\'êtes pas autorisé à soumettre une candidature';
           } else if (error.status === 401) {
