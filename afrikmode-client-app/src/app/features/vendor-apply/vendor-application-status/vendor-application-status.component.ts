@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { interval, Subscription } from 'rxjs';
+import { interval, Subscription, Observable } from 'rxjs';
 import { StoreService } from '../../../core/services/store.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { VendorApplicationService, VendorApplication } from '../../../core/services/vendor-application.service';
 
 interface ApplicationStatus {
   id: string;
@@ -94,6 +95,8 @@ export class VendorApplicationStatusComponent implements OnInit, OnDestroy {
     }
   };
 
+  private applicationService = inject(VendorApplicationService);
+
   constructor(
     private storeService: StoreService,
     private authService: AuthService,
@@ -117,33 +120,88 @@ export class VendorApplicationStatusComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.error = '';
 
-    // Simuler la récupération du statut (à remplacer par un vrai appel API)
-    // Dans un vrai scénario, appeler: this.storeService.getApplicationStatus()
-    
-    // Pour l'instant, simulons avec des données mockées
-    setTimeout(() => {
-      const mockApplication: ApplicationStatus = {
-        id: '123',
-        applicationNumber: this.route.snapshot.queryParams['applicationNumber'] || 'VA-20251021-0001',
-        shopName: 'Ma Boutique Africaine',
-        status: 'under_review',
-        submittedAt: new Date().toISOString(),
-        lastUpdatedAt: new Date().toISOString(),
-        adminMessages: [
-          {
-            id: '1',
-            message: 'Votre candidature a été reçue avec succès. Notre équipe l\'examine actuellement.',
-            createdAt: new Date().toISOString(),
-            isRead: true,
-            type: 'success'
-          }
-        ]
-      };
+    const applicationId = this.route.snapshot.queryParams['id'];
+    const applicationNumber = this.route.snapshot.queryParams['applicationNumber'];
 
-      this.application = mockApplication;
-      this.buildTimeline();
-      this.isLoading = false;
-    }, 1000);
+    let request: Observable<VendorApplication>;
+    
+    if (applicationId) {
+      request = this.applicationService.getApplicationStatus(applicationId);
+    } else if (applicationNumber) {
+      request = this.applicationService.getApplicationByNumber(applicationNumber);
+    } else {
+      // Récupérer la candidature actuelle de l'utilisateur
+      request = this.applicationService.getApplicationStatus();
+    }
+
+    request.subscribe({
+      next: (application: VendorApplication) => {
+        // Adapter le format de l'API au format du composant
+        this.application = {
+          id: application.id,
+          applicationNumber: application.applicationNumber,
+          shopName: application.shopName,
+          status: application.status,
+          submittedAt: application.submittedAt,
+          lastUpdatedAt: application.lastUpdatedAt,
+          reviewedBy: application.reviewedBy,
+          reviewedAt: application.reviewedAt,
+          rejectionReason: application.rejectionReason,
+          adminMessages: application.adminMessages || [],
+          storeId: application.storeId
+        };
+        
+        this.buildTimeline();
+        this.isLoading = false;
+        this.error = '';
+
+        // Redémarrer l'auto-refresh si nécessaire
+        if (['pending', 'under_review', 'info_required'].includes(this.application.status)) {
+          this.startAutoRefresh();
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur lors du chargement du statut:', error);
+        this.isLoading = false;
+        
+        if (error.status === 404) {
+          this.error = 'Candidature non trouvée. Vérifiez le numéro de candidature.';
+        } else if (error.status === 403) {
+          this.error = 'Vous n\'avez pas accès à cette candidature.';
+        } else {
+          this.error = error.message || 'Erreur lors du chargement du statut. Veuillez réessayer.';
+        }
+
+        // En cas d'erreur, on peut quand même afficher une version mockée pour le dev
+        // Décommenter la ligne suivante pour le développement
+        // this.loadMockApplication();
+      }
+    });
+  }
+
+  // Méthode de fallback avec données mockées (pour développement uniquement)
+  private loadMockApplication(): void {
+    const mockApplication: ApplicationStatus = {
+      id: '123',
+      applicationNumber: this.route.snapshot.queryParams['applicationNumber'] || 'VA-20251021-0001',
+      shopName: 'Ma Boutique Africaine',
+      status: 'under_review',
+      submittedAt: new Date().toISOString(),
+      lastUpdatedAt: new Date().toISOString(),
+      adminMessages: [
+        {
+          id: '1',
+          message: 'Votre candidature a été reçue avec succès. Notre équipe l\'examine actuellement.',
+          createdAt: new Date().toISOString(),
+          isRead: true,
+          type: 'success'
+        }
+      ]
+    };
+
+    this.application = mockApplication;
+    this.buildTimeline();
+    this.isLoading = false;
   }
 
   buildTimeline(): void {
@@ -242,13 +300,20 @@ export class VendorApplicationStatusComponent implements OnInit, OnDestroy {
   }
 
   markMessageAsRead(messageId: string): void {
-    if (!this.application?.adminMessages) return;
+    if (!this.application?.adminMessages || !this.application.id) return;
     
     const message = this.application.adminMessages.find(m => m.id === messageId);
     if (message) {
-      message.isRead = true;
-      // Ici, appeler l'API pour marquer comme lu
-      // this.storeService.markMessageAsRead(messageId).subscribe();
+      this.applicationService.markMessageAsRead(this.application.id, messageId).subscribe({
+        next: () => {
+          message.isRead = true;
+        },
+        error: (error) => {
+          console.error('Erreur lors du marquage du message:', error);
+          // Marquer quand même visuellement en cas d'erreur
+          message.isRead = true;
+        }
+      });
     }
   }
 

@@ -1,0 +1,194 @@
+<div class="admin-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <mat-icon>people</mat-icon>
+        Gestion des Clients
+      </h1>
+      <p class="page-subtitle">Gérez tous les clients de la plateforme</p>
+    </div>
+    <div class="header-actions">
+      <button mat-raised-button color="primary" (click)="exportClients()">
+        <mat-icon>file_download</mat-icon>
+        Exporter
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <mat-card class="stat-card">
+      <div class="stat-icon total">
+        <mat-icon>people</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stats.total }}</h3>
+        <p>Total Clients</p>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-icon active">
+        <mat-icon>check_circle</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stats.active }}</h3>
+        <p>Clients Actifs</p>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-icon inactive">
+        <mat-icon>pause_circle</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stats.inactive }}</h3>
+        <p>Clients Inactifs</p>
+      </div>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <div class="stat-icon suspended">
+        <mat-icon>block</mat-icon>
+      </div>
+      <div class="stat-content">
+        <h3>{{ stats.suspended }}</h3>
+        <p>Clients Suspendus</p>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Rechercher un client</mat-label>
+        <input matInput 
+               [(ngModel)]="searchQuery" 
+               (input)="applyFilters()"
+               placeholder="Nom, email...">
+        <mat-icon matPrefix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Statut</mat-label>
+        <mat-select [(ngModel)]="filterStatus" (selectionChange)="applyFilters()">
+          <mat-option value="all">Tous les statuts</mat-option>
+          <mat-option value="active">Actif</mat-option>
+          <mat-option value="inactive">Inactif</mat-option>
+          <mat-option value="suspended">Suspendu</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </mat-card>
+
+  <!-- Table -->
+  <mat-card class="table-card">
+    <table mat-table [dataSource]="filteredClients" class="clients-table">
+      
+      <!-- Avatar Column -->
+      <ng-container matColumnDef="avatar">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let client">
+          <div class="client-avatar">
+            <img *ngIf="client.avatar" [src]="client.avatar" [alt]="client.name">
+            <div *ngIf="!client.avatar" class="avatar-placeholder">
+              {{ client.name.charAt(0) }}
+            </div>
+          </div>
+        </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Nom</th>
+        <td mat-cell *matCellDef="let client">
+          <strong>{{ client.name }}</strong>
+        </td>
+      </ng-container>
+
+      <!-- Email Column -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>Email</th>
+        <td mat-cell *matCellDef="let client">{{ client.email }}</td>
+      </ng-container>
+
+      <!-- Phone Column -->
+      <ng-container matColumnDef="phone">
+        <th mat-header-cell *matHeaderCellDef>Téléphone</th>
+        <td mat-cell *matCellDef="let client">{{ client.phone }}</td>
+      </ng-container>
+
+      <!-- Orders Column -->
+      <ng-container matColumnDef="orders">
+        <th mat-header-cell *matHeaderCellDef>Commandes</th>
+        <td mat-cell *matCellDef="let client">
+          <mat-chip class="orders-chip">{{ client.orders }}</mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Total Spent Column -->
+      <ng-container matColumnDef="totalSpent">
+        <th mat-header-cell *matHeaderCellDef>Dépenses Total</th>
+        <td mat-cell *matCellDef="let client">
+          <strong>{{ client.totalSpent | currency:'EUR' }}</strong>
+        </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Statut</th>
+        <td mat-cell *matCellDef="let client">
+          <mat-chip [color]="getStatusColor(client.status)" selected>
+            {{ getStatusLabel(client.status) }}
+          </mat-chip>
+        </td>
+      </ng-container>
+
+      <!-- Registered At Column -->
+      <ng-container matColumnDef="registeredAt">
+        <th mat-header-cell *matHeaderCellDef>Inscrit le</th>
+        <td mat-cell *matCellDef="let client">
+          {{ client.registeredAt | date:'dd/MM/yyyy' }}
+        </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef>Actions</th>
+        <td mat-cell *matCellDef="let client">
+          <button mat-icon-button [matMenuTriggerFor]="menu">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item (click)="viewClient(client)">
+              <mat-icon>visibility</mat-icon>
+              <span>Voir le profil</span>
+            </button>
+            <button mat-menu-item (click)="editClient(client)">
+              <mat-icon>edit</mat-icon>
+              <span>Modifier</span>
+            </button>
+            <mat-divider></mat-divider>
+            <button mat-menu-item (click)="suspendClient(client)">
+              <mat-icon>block</mat-icon>
+              <span>Suspendre</span>
+            </button>
+            <button mat-menu-item (click)="deleteClient(client)" class="danger">
+              <mat-icon>delete</mat-icon>
+              <span>Supprimer</span>
+            </button>
+          </mat-menu>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50, 100]" 
+                   showFirstLastButtons>
+    </mat-paginator>
+  </mat-card>
+</div>

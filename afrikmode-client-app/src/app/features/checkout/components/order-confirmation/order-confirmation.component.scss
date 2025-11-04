@@ -13,6 +13,64 @@ $danger-red: #dc3545;
 $info-blue: #17a2b8;
 
 .order-confirmation {
+  // Loading State
+  .loading-state {
+    text-align: center;
+    padding: 4rem 2rem;
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid $primary-red;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    p {
+      color: #666;
+      font-size: 1.1rem;
+    }
+  }
+
+  // Error State
+  .error-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 15px;
+    margin: 2rem 0;
+
+    i {
+      font-size: 3rem;
+      color: $danger-red;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      color: $dark-text;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      padding: 0.75rem 2rem;
+      background: $primary-red;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: color.adjust($primary-red, $lightness: -10%);
+        transform: translateY(-2px);
+      }
+    }
+  }
+
   max-width: 1000px;
   margin: 0 auto;
   padding: 2rem;
@@ -523,6 +581,11 @@ $info-blue: #17a2b8;
 }
 
 // Animations
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 @keyframes successPulse {
   0% {
     transform: scale(0);

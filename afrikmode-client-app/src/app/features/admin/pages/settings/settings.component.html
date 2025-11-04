@@ -2,31 +2,617 @@
 
 <div class="settings-page">
   <div class="page-header">
-    <h1>Paramètres Système</h1>
+    <div class="header-content">
+      <h1 class="page-title">
+        <mat-icon>settings</mat-icon>
+        Paramètres Système
+      </h1>
+      <p class="page-subtitle">Configuration et gestion de la plateforme</p>
+    </div>
+    <button mat-raised-button color="primary" class="save-button">
+      <mat-icon>save</mat-icon>
+      Enregistrer tout
+    </button>
   </div>
 
   <div class="page-content">
-    <mat-tab-group>
-      <mat-tab label="Général">
+    <mat-tab-group class="settings-tabs" animationDuration="300ms">
+      
+      <!-- Général -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>business</mat-icon>
+          Général
+        </ng-template>
         <div class="tab-content">
-          <p>Paramètres généraux du système...</p>
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>info</mat-icon>
+              Informations de la plateforme
+            </h3>
+            
+            <div class="form-grid">
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Nom de la plateforme</mat-label>
+                <input matInput value="AfrikMode">
+                <mat-icon matPrefix>storefront</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Slogan</mat-label>
+                <input matInput value="La mode africaine réinventée">
+                <mat-icon matPrefix>format_quote</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Description</mat-label>
+                <textarea matInput rows="3" placeholder="Description de votre plateforme..."></textarea>
+                <mat-icon matPrefix>description</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Email de contact</mat-label>
+                <input matInput type="email" value="contact@afrikmode.com">
+                <mat-icon matPrefix>email</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Téléphone</mat-label>
+                <input matInput value="+33 1 23 45 67 89">
+                <mat-icon matPrefix>phone</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Adresse</mat-label>
+                <input matInput value="123 Avenue des Champs-Élysées, Paris">
+                <mat-icon matPrefix>location_on</mat-icon>
+              </mat-form-field>
+            </div>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>language</mat-icon>
+              Langues et régionalisation
+            </h3>
+            
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Langue par défaut</mat-label>
+                <mat-select value="fr">
+                  <mat-option value="fr">Français</mat-option>
+                  <mat-option value="en">English</mat-option>
+                  <mat-option value="es">Español</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>translate</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Devise</mat-label>
+                <mat-select value="eur">
+                  <mat-option value="eur">Euro (€)</mat-option>
+                  <mat-option value="usd">Dollar ($)</mat-option>
+                  <mat-option value="xof">CFA (XOF)</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>euro_symbol</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Fuseau horaire</mat-label>
+                <mat-select value="paris">
+                  <mat-option value="paris">Paris (GMT+1)</mat-option>
+                  <mat-option value="abidjan">Abidjan (GMT+0)</mat-option>
+                  <mat-option value="dakar">Dakar (GMT+0)</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>schedule</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Format de date</mat-label>
+                <mat-select value="dmy">
+                  <mat-option value="dmy">JJ/MM/AAAA</mat-option>
+                  <mat-option value="mdy">MM/JJ/AAAA</mat-option>
+                  <mat-option value="ymd">AAAA-MM-JJ</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>calendar_today</mat-icon>
+              </mat-form-field>
+            </div>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>storefront</mat-icon>
+              Gestion des boutiques
+            </h3>
+            
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Validation manuelle des boutiques</h4>
+                <p>Les nouvelles boutiques nécessitent une approbation administrative</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Commission plateforme</h4>
+                <p>Pourcentage prélevé sur chaque vente</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="15" min="0" max="100">
+                <span matSuffix>%</span>
+              </mat-form-field>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Délai de paiement vendeurs</h4>
+                <p>Nombre de jours avant le versement aux vendeurs</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="7" min="1">
+                <span matSuffix>jours</span>
+              </mat-form-field>
+            </div>
+          </mat-card>
         </div>
       </mat-tab>
-      <mat-tab label="Paiements">
+
+      <!-- Paiements -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>payment</mat-icon>
+          Paiements
+        </ng-template>
         <div class="tab-content">
-          <p>Configuration des moyens de paiement...</p>
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>credit_card</mat-icon>
+              Moyens de paiement acceptés
+            </h3>
+            
+            <div class="payment-methods">
+              <div class="payment-method-card active">
+                <mat-icon class="payment-icon">credit_card</mat-icon>
+                <div class="payment-details">
+                  <h4>Carte bancaire</h4>
+                  <p>Visa, Mastercard, American Express</p>
+                </div>
+                <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+              </div>
+
+              <div class="payment-method-card active">
+                <mat-icon class="payment-icon">account_balance</mat-icon>
+                <div class="payment-details">
+                  <h4>Mobile Money</h4>
+                  <p>Orange Money, MTN Mobile Money, Moov Money</p>
+                </div>
+                <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+              </div>
+
+              <div class="payment-method-card">
+                <mat-icon class="payment-icon">account_balance_wallet</mat-icon>
+                <div class="payment-details">
+                  <h4>PayPal</h4>
+                  <p>Paiements via PayPal</p>
+                </div>
+                <mat-slide-toggle color="primary"></mat-slide-toggle>
+              </div>
+
+              <div class="payment-method-card">
+                <mat-icon class="payment-icon">local_atm</mat-icon>
+                <div class="payment-details">
+                  <h4>Paiement à la livraison</h4>
+                  <p>Cash on delivery</p>
+                </div>
+                <mat-slide-toggle color="primary"></mat-slide-toggle>
+              </div>
+            </div>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>vpn_key</mat-icon>
+              Configuration Stripe
+            </h3>
+            
+            <div class="form-grid">
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Clé publique (Publishable Key)</mat-label>
+                <input matInput value="pk_test_...">
+                <mat-icon matPrefix>lock_open</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Clé secrète (Secret Key)</mat-label>
+                <input matInput type="password" value="sk_test_...">
+                <mat-icon matPrefix>lock</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Mode test</h4>
+                <p>Utiliser l'environnement de test Stripe</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>security</mat-icon>
+              Sécurité des paiements
+            </h3>
+            
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>3D Secure obligatoire</h4>
+                <p>Authentification forte pour tous les paiements</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Détection de fraude</h4>
+                <p>Activer le système de détection automatique</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Montant maximum par transaction</h4>
+                <p>Limite de sécurité pour les paiements</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="5000">
+                <span matSuffix>€</span>
+              </mat-form-field>
+            </div>
+          </mat-card>
         </div>
       </mat-tab>
-      <mat-tab label="Email">
+
+      <!-- Email -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>mail</mat-icon>
+          Email
+        </ng-template>
         <div class="tab-content">
-          <p>Configuration des emails système...</p>
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>dns</mat-icon>
+              Configuration SMTP
+            </h3>
+            
+            <div class="form-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Serveur SMTP</mat-label>
+                <input matInput value="smtp.gmail.com">
+                <mat-icon matPrefix>dns</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Port</mat-label>
+                <input matInput type="number" value="587">
+                <mat-icon matPrefix>settings_ethernet</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Nom d'utilisateur</mat-label>
+                <input matInput value="noreply@afrikmode.com">
+                <mat-icon matPrefix>person</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Mot de passe</mat-label>
+                <input matInput type="password" value="********">
+                <mat-icon matPrefix>lock</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Encryption</mat-label>
+                <mat-select value="tls">
+                  <mat-option value="tls">TLS</mat-option>
+                  <mat-option value="ssl">SSL</mat-option>
+                  <mat-option value="none">Aucun</mat-option>
+                </mat-select>
+                <mat-icon matPrefix>security</mat-icon>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Email expéditeur</mat-label>
+                <input matInput value="noreply@afrikmode.com">
+                <mat-icon matPrefix>send</mat-icon>
+              </mat-form-field>
+            </div>
+
+            <button mat-stroked-button color="primary">
+              <mat-icon>send</mat-icon>
+              Tester la configuration
+            </button>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>notifications</mat-icon>
+              Notifications par email
+            </h3>
+            
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Confirmation de commande</h4>
+                <p>Email envoyé au client après chaque commande</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Notification de livraison</h4>
+                <p>Email envoyé lors de l'expédition</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Newsletter hebdomadaire</h4>
+                <p>Envoyer les offres et nouveautés chaque semaine</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Rappel panier abandonné</h4>
+                <p>Email après 24h de panier inactif</p>
+              </div>
+              <mat-slide-toggle color="primary"></mat-slide-toggle>
+            </div>
+          </mat-card>
         </div>
       </mat-tab>
-      <mat-tab label="Sécurité">
+
+      <!-- Sécurité -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>shield</mat-icon>
+          Sécurité
+        </ng-template>
         <div class="tab-content">
-          <p>Paramètres de sécurité...</p>
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>admin_panel_settings</mat-icon>
+              Accès administrateur
+            </h3>
+            
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Authentification à deux facteurs obligatoire</h4>
+                <p>Tous les admins doivent activer la 2FA</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Durée de session admin</h4>
+                <p>Déconnexion automatique après inactivité</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="30">
+                <span matSuffix>min</span>
+              </mat-form-field>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Adresses IP autorisées</h4>
+                <p>Restreindre l'accès admin à certaines IPs</p>
+              </div>
+              <mat-slide-toggle color="primary"></mat-slide-toggle>
+            </div>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>vpn_lock</mat-icon>
+              Politiques de mot de passe
+            </h3>
+            
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Longueur minimale</h4>
+                <p>Nombre de caractères minimum</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="8" min="6" max="32">
+              </mat-form-field>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Complexité requise</h4>
+                <p>Majuscule, minuscule, chiffre et caractère spécial</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Expiration du mot de passe</h4>
+                <p>Forcer le changement tous les X jours</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="90" min="0">
+                <span matSuffix>jours</span>
+              </mat-form-field>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Historique des mots de passe</h4>
+                <p>Empêcher la réutilisation des X derniers mots de passe</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="5" min="0">
+              </mat-form-field>
+            </div>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>block</mat-icon>
+              Protection contre les attaques
+            </h3>
+            
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Limite de tentatives de connexion</h4>
+                <p>Bloquer après X tentatives échouées</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="5" min="3" max="10">
+              </mat-form-field>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Durée du blocage</h4>
+                <p>Temps de blocage après échecs</p>
+              </div>
+              <mat-form-field appearance="outline" class="small-field">
+                <input matInput type="number" value="15" min="5">
+                <span matSuffix>min</span>
+              </mat-form-field>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Protection CSRF</h4>
+                <p>Protection contre les attaques CSRF</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Protection XSS</h4>
+                <p>Filtrage des scripts malveillants</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+          </mat-card>
         </div>
       </mat-tab>
+
+      <!-- Maintenance -->
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>build</mat-icon>
+          Maintenance
+        </ng-template>
+        <div class="tab-content">
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>engineering</mat-icon>
+              Mode maintenance
+            </h3>
+            
+            <div class="maintenance-control">
+              <div class="maintenance-status" [class.active]="false">
+                <mat-icon>{{ false ? 'do_not_disturb' : 'check_circle' }}</mat-icon>
+                <div>
+                  <h4>{{ false ? 'Site en maintenance' : 'Site actif' }}</h4>
+                  <p>{{ false ? 'Le site est actuellement inaccessible au public' : 'Le site est accessible à tous' }}</p>
+                </div>
+              </div>
+              
+              <mat-slide-toggle color="warn" class="large-toggle"></mat-slide-toggle>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Message de maintenance</mat-label>
+              <textarea matInput rows="3" placeholder="Nous effectuons une mise à jour..."></textarea>
+            </mat-form-field>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>storage</mat-icon>
+              Sauvegarde et restauration
+            </h3>
+            
+            <div class="backup-actions">
+              <div class="backup-card">
+                <mat-icon class="backup-icon">backup</mat-icon>
+                <h4>Sauvegarde complète</h4>
+                <p>Base de données et fichiers</p>
+                <button mat-raised-button color="primary">
+                  <mat-icon>cloud_upload</mat-icon>
+                  Créer une sauvegarde
+                </button>
+              </div>
+
+              <div class="backup-card">
+                <mat-icon class="backup-icon">restore</mat-icon>
+                <h4>Restauration</h4>
+                <p>À partir d'une sauvegarde</p>
+                <button mat-raised-button color="accent">
+                  <mat-icon>cloud_download</mat-icon>
+                  Restaurer
+                </button>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <h4>Sauvegarde automatique</h4>
+                <p>Sauvegarde quotidienne à 3h00</p>
+              </div>
+              <mat-slide-toggle color="primary" checked></mat-slide-toggle>
+            </div>
+          </mat-card>
+
+          <mat-card class="settings-card">
+            <h3 class="section-title">
+              <mat-icon>delete_sweep</mat-icon>
+              Nettoyage système
+            </h3>
+            
+            <div class="cleanup-actions">
+              <button mat-stroked-button class="cleanup-button">
+                <mat-icon>delete_outline</mat-icon>
+                <div>
+                  <h4>Vider le cache</h4>
+                  <p>Supprimer les fichiers temporaires</p>
+                </div>
+              </button>
+
+              <button mat-stroked-button class="cleanup-button">
+                <mat-icon>auto_delete</mat-icon>
+                <div>
+                  <h4>Nettoyer les logs</h4>
+                  <p>Supprimer les logs de plus de 30 jours</p>
+                </div>
+              </button>
+
+              <button mat-stroked-button color="warn" class="cleanup-button">
+                <mat-icon>warning</mat-icon>
+                <div>
+                  <h4>Réinitialiser les statistiques</h4>
+                  <p>Action irréversible</p>
+                </div>
+              </button>
+            </div>
+          </mat-card>
+        </div>
+      </mat-tab>
+
     </mat-tab-group>
   </div>
 </div>

@@ -1,6 +1,6 @@
 // src/app/features/profile/components/personal-info/personal-info.component.ts
 import { Component, OnInit } from '@angular/core';
-import { CommonModule, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UserService } from '../../../../core/services/user.service';
@@ -9,7 +9,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 @Component({
   selector: 'app-personal-info',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, NgIf],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './personal-info.component.html',
   styleUrls: ['./personal-info.component.scss']
 })

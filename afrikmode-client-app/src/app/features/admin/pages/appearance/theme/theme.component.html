@@ -1,0 +1,265 @@
+<div class="admin-page theme-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">
+        <mat-icon>palette</mat-icon>
+        Thème & Couleurs
+      </h1>
+      <p class="page-subtitle">Personnalisez l'apparence de votre plateforme</p>
+    </div>
+    <div class="header-actions">
+      <input type="file" 
+             #fileInput 
+             (change)="importTheme($event)" 
+             accept=".json" 
+             style="display: none;">
+      <button mat-stroked-button (click)="fileInput.click()">
+        <mat-icon>file_upload</mat-icon>
+        Importer
+      </button>
+      <button mat-stroked-button (click)="exportTheme()">
+        <mat-icon>file_download</mat-icon>
+        Exporter
+      </button>
+      <button mat-raised-button color="primary" (click)="saveTheme()">
+        <mat-icon>save</mat-icon>
+        Enregistrer
+      </button>
+    </div>
+  </div>
+
+  <div class="theme-content">
+    <!-- Left Panel: Settings -->
+    <div class="settings-panel">
+      
+      <!-- Presets -->
+      <mat-card class="settings-card">
+        <h3>
+          <mat-icon>auto_awesome</mat-icon>
+          Thèmes Prédéfinis
+        </h3>
+        <div class="presets-grid">
+          <div *ngFor="let preset of presetThemes" 
+               class="preset-card"
+               (click)="applyPreset(preset)">
+            <div class="preset-colors">
+              <div class="color-circle" [style.background]="preset.colors.primaryColor"></div>
+              <div class="color-circle" [style.background]="preset.colors.secondaryColor"></div>
+              <div class="color-circle" [style.background]="preset.colors.accentColor"></div>
+            </div>
+            <p>{{ preset.name }}</p>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- Color Settings -->
+      <mat-card class="settings-card">
+        <h3>
+          <mat-icon>color_lens</mat-icon>
+          Couleurs Principales
+        </h3>
+        
+        <div class="color-row">
+          <label>Couleur Primaire</label>
+          <div class="color-input">
+            <input type="color"
+                   [(ngModel)]="theme.primaryColor"
+                   (change)="applyTheme()"
+                   class="color-box">
+            <span>{{ theme.primaryColor }}</span>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <label>Couleur Secondaire</label>
+          <div class="color-input">
+            <input type="color"
+                   [(ngModel)]="theme.secondaryColor"
+                   (change)="applyTheme()"
+                   class="color-box">
+            <span>{{ theme.secondaryColor }}</span>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <label>Couleur Accent</label>
+          <div class="color-input">
+            <input type="color"
+                   [(ngModel)]="theme.accentColor"
+                   (change)="applyTheme()"
+                   class="color-box">
+            <span>{{ theme.accentColor }}</span>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- System Colors -->
+      <mat-card class="settings-card">
+        <h3>
+          <mat-icon>warning</mat-icon>
+          Couleurs Système
+        </h3>
+        
+        <div class="color-row">
+          <label>Succès</label>
+          <div class="color-input">
+            <input type="color"
+                   [(ngModel)]="theme.successColor"
+                   (change)="applyTheme()"
+                   class="color-box">
+            <span>{{ theme.successColor }}</span>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <label>Avertissement</label>
+          <div class="color-input">
+            <input type="color"
+                   [(ngModel)]="theme.warningColor"
+                   (change)="applyTheme()"
+                   class="color-box">
+            <span>{{ theme.warningColor }}</span>
+          </div>
+        </div>
+
+        <div class="color-row">
+          <label>Erreur</label>
+          <div class="color-input">
+            <input type="color"
+                   [(ngModel)]="theme.errorColor"
+                   (change)="applyTheme()"
+                   class="color-box">
+            <span>{{ theme.errorColor }}</span>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- Typography -->
+      <mat-card class="settings-card">
+        <h3>
+          <mat-icon>text_fields</mat-icon>
+          Typographie
+        </h3>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Police de caractères</mat-label>
+          <mat-select [(ngModel)]="theme.fontFamily" (selectionChange)="applyTheme()">
+            <mat-option *ngFor="let font of fontFamilies" [value]="font.value">
+              {{ font.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-card>
+
+      <!-- Style -->
+      <mat-card class="settings-card">
+        <h3>
+          <mat-icon>tune</mat-icon>
+          Style
+        </h3>
+        
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Rayon des bordures</mat-label>
+          <mat-select [(ngModel)]="theme.borderRadius" (selectionChange)="applyTheme()">
+            <mat-option *ngFor="let radius of borderRadiusOptions" [value]="radius.value">
+              {{ radius.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="toggle-row">
+          <label>Mode Sombre</label>
+          <mat-slide-toggle 
+            [(ngModel)]="theme.darkMode" 
+            (change)="toggleDarkMode()">
+          </mat-slide-toggle>
+        </div>
+      </mat-card>
+
+      <!-- Actions -->
+      <div class="actions-row">
+        <button mat-stroked-button (click)="resetTheme()" class="reset-btn">
+          <mat-icon>refresh</mat-icon>
+          Réinitialiser
+        </button>
+        <button mat-raised-button color="primary" (click)="saveTheme()">
+          <mat-icon>save</mat-icon>
+          Enregistrer les modifications
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Panel: Preview -->
+    <div class="preview-panel">
+      <mat-card class="preview-card">
+        <h3>
+          <mat-icon>visibility</mat-icon>
+          Aperçu en temps réel
+        </h3>
+        
+        <div class="preview-content" [style.font-family]="theme.fontFamily">
+          <!-- Header Preview -->
+          <div class="preview-header" [style.background]="theme.primaryColor">
+            <h2 style="color: white;">AfrikMode</h2>
+            <button class="preview-btn" [style.background]="theme.secondaryColor">
+              Explorer
+            </button>
+          </div>
+
+          <!-- Buttons Preview -->
+          <div class="preview-section">
+            <h4>Boutons</h4>
+            <div class="buttons-row">
+              <button class="preview-button primary" [style.background]="theme.primaryColor">
+                Primaire
+              </button>
+              <button class="preview-button secondary" [style.background]="theme.secondaryColor">
+                Secondaire
+              </button>
+              <button class="preview-button accent" [style.background]="theme.accentColor">
+                Accent
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards Preview -->
+          <div class="preview-section">
+            <h4>Cartes</h4>
+            <div class="preview-cards">
+              <div class="preview-product-card" [style.border-radius]="theme.borderRadius">
+                <div class="card-image" [style.background]="theme.primaryColor"></div>
+                <div class="card-content">
+                  <h5>Produit Exemple</h5>
+                  <p class="price" [style.color]="theme.primaryColor">49,99 €</p>
+                  <button class="add-to-cart" [style.background]="theme.accentColor">
+                    Ajouter au panier
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Preview -->
+          <div class="preview-section">
+            <h4>États & Messages</h4>
+            <div class="status-badges">
+              <span class="badge" [style.background]="theme.successColor">Succès</span>
+              <span class="badge" [style.background]="theme.warningColor">Attention</span>
+              <span class="badge" [style.background]="theme.errorColor">Erreur</span>
+            </div>
+          </div>
+
+          <!-- Text Preview -->
+          <div class="preview-section">
+            <h4>Typographie</h4>
+            <h1>Titre H1</h1>
+            <h2>Titre H2</h2>
+            <h3>Titre H3</h3>
+            <p>Texte de paragraphe normal avec la police {{ theme.fontFamily.split(',')[0] }}</p>
+          </div>
+        </div>
+      </mat-card>
+    </div>
+  </div>
+</div>

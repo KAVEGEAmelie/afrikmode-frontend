@@ -2,23 +2,28 @@
 <div class="order-detail-page">
 
     <!-- Loading State -->
-    <div *ngIf="isLoading" class="loading-container">
-      <div class="spinner"></div>
-      <p>Chargement de la commande...</p>
-    </div>
+    @if (isLoading) {
+      <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Chargement de la commande...</p>
+      </div>
+    }
   
     <!-- Error State -->
-    <div *ngIf="error && !isLoading" class="error-container">
-      <i class="fas fa-exclamation-circle"></i>
-      <p>{{ error }}</p>
-      <button class="btn btn-primary" (click)="goBack()">
-        <i class="fas fa-arrow-left"></i>
-        Retour aux commandes
-      </button>
-    </div>
+    @if (error && !isLoading) {
+      <div class="error-container">
+        <i class="fas fa-exclamation-circle"></i>
+        <p>{{ error }}</p>
+        <button class="btn btn-primary" (click)="goBack()">
+          <i class="fas fa-arrow-left"></i>
+          Retour aux commandes
+        </button>
+      </div>
+    }
   
     <!-- Order Detail -->
-    <div *ngIf="order && !isLoading" class="order-detail-content">
+    @if (order && !isLoading) {
+      <div class="order-detail-content">
       
       <!-- Header -->
       <div class="detail-header">
@@ -44,16 +49,18 @@
         </div>
   
         <div class="header-actions">
-          <button *ngIf="canTrack()" class="btn btn-outline" (click)="trackOrder()">
-            <i class="fas fa-map-marker-alt"></i>
-            Suivre la commande
-          </button>
-          <button *ngIf="order.payment_status === 'paid'" 
-                  class="btn btn-outline" 
-                  (click)="downloadInvoice()">
-            <i class="fas fa-file-download"></i>
-            Facture
-          </button>
+          @if (canTrack()) {
+            <button class="btn btn-outline" (click)="trackOrder()">
+              <i class="fas fa-map-marker-alt"></i>
+              Suivre la commande
+            </button>
+          }
+          @if (order.payment_status === 'paid') {
+            <button class="btn btn-outline" (click)="downloadInvoice()">
+              <i class="fas fa-file-download"></i>
+              Facture
+            </button>
+          }
         </div>
       </div>
   
@@ -64,130 +71,160 @@
         <div class="detail-main">
           
           <!-- Order Items -->
-          <div class="detail-card" *ngIf="order?.items">
-            <h2>
-              <i class="fas fa-shopping-bag"></i>
-              Articles commandés ({{ order.items.length }})
-            </h2>
-  
-            <div class="items-list">
-              <div *ngFor="let item of order.items" class="order-item">
+          @if (order.items) {
+            <div class="detail-card">
+              <h2>
+                <i class="fas fa-shopping-bag"></i>
+                Articles commandés ({{ order.items.length }})
+              </h2>
+    
+              <div class="items-list">
+                @for (item of order.items; track item.id || $index) {
+                  <div class="order-item">
                 <img [src]="item.product.image_url || 'assets/images/product-placeholder.jpg'" 
                      [alt]="item.product.name || 'Image du produit'" 
                      [title]="item.product.name || 'Image du produit'"
                      alt="Image du produit">
                 
-                <div class="item-details">
-                  <h3>{{ item.product.name }}</h3>
-                  <div class="item-meta">
-                    <span *ngIf="item.variant">
-                      Variante: {{ item.variant.name }}
-                    </span>
-                    <span>Quantité: {{ item.quantity }}</span>
-                    <span>Prix unitaire: {{ item.unit_price | number }} {{ order.currency }}</span>
+                    <div class="item-details">
+                      <h3>{{ item.product.name }}</h3>
+                      <div class="item-meta">
+                        @if (item.variant) {
+                          <span>Variante: {{ item.variant.name }}</span>
+                        }
+                        <span>Quantité: {{ item.quantity }}</span>
+                        <span>Prix unitaire: {{ item.unit_price | number }} {{ order.currency }}</span>
+                      </div>
+                      <div class="item-status">
+                        Statut: <strong>{{ item.status }}</strong>
+                      </div>
+                    </div>
+      
+                    <div class="item-price">
+                      {{ item.total_price | number }} {{ order.currency }}
+                    </div>
                   </div>
-                  <div class="item-status">
-                    Statut: <strong>{{ item.status }}</strong>
-                  </div>
-                </div>
-  
-                <div class="item-price">
-                  {{ item.total_price | number }} {{ order.currency }}
-                </div>
+                }
+              </div>
+    
+              <div class="items-actions">
+                @if (order.status === 'delivered') {
+                  <button class="btn btn-primary" (click)="reorder()">
+                    <i class="fas fa-redo"></i>
+                    Recommander ces articles
+                  </button>
+                }
               </div>
             </div>
-  
-            <div class="items-actions">
-              <button *ngIf="order.status === 'delivered'" 
-                      class="btn btn-primary" 
-                      (click)="reorder()">
-                <i class="fas fa-redo"></i>
-                Recommander ces articles
-              </button>
-            </div>
-          </div>
+          }
   
           <!-- Shipping Address -->
-          <div class="detail-card" *ngIf="order?.shipping_address">
-            <h2>
-              <i class="fas fa-map-marker-alt"></i>
-              Adresse de livraison
-            </h2>
-  
-            <div class="address-info" *ngIf="order.shipping_address">
-              <p><strong>{{ order.shipping_address.first_name || '' }} {{ order.shipping_address.last_name || '' }}</strong></p>
-              <p>{{ order.shipping_address.address_line_1 || 'Non renseigné' }}</p>
-              <p *ngIf="order.shipping_address.address_line_2">{{ order.shipping_address.address_line_2 }}</p>
-              <p>{{ order.shipping_address.city || 'Non renseigné' }}, {{ order.shipping_address.postal_code || 'Non renseigné' }}</p>
-              <p>{{ order.shipping_address.country || 'Non renseigné' }}</p>
-              <p class="contact-info" *ngIf="order.shipping_address?.phone">
-                <i class="fas fa-phone"></i>
-                {{ order.shipping_address.phone }}
-              </p>
-              <p class="contact-info" *ngIf="order.shipping_address?.email">
-                <i class="fas fa-envelope"></i>
-                {{ order.shipping_address.email }}
-              </p>
+          @if (order.shipping_address) {
+            <div class="detail-card">
+              <h2>
+                <i class="fas fa-map-marker-alt"></i>
+                Adresse de livraison
+              </h2>
+    
+              @if (order.shipping_address) {
+                <div class="address-info">
+                  <p><strong>{{ order.shipping_address.first_name || '' }} {{ order.shipping_address.last_name || '' }}</strong></p>
+                  <p>{{ order.shipping_address.address_line_1 || 'Non renseigné' }}</p>
+                  @if (order.shipping_address.address_line_2) {
+                    <p>{{ order.shipping_address.address_line_2 }}</p>
+                  }
+                  <p>{{ order.shipping_address.city || 'Non renseigné' }}, {{ order.shipping_address.postal_code || 'Non renseigné' }}</p>
+                  <p>{{ order.shipping_address.country || 'Non renseigné' }}</p>
+                  @if (order.shipping_address.phone) {
+                    <p class="contact-info">
+                      <i class="fas fa-phone"></i>
+                      {{ order.shipping_address.phone }}
+                    </p>
+                  }
+                  @if (order.shipping_address.email) {
+                    <p class="contact-info">
+                      <i class="fas fa-envelope"></i>
+                      {{ order.shipping_address.email }}
+                    </p>
+                  }
+                </div>
+              }
             </div>
-          </div>
+          }
   
           <!-- Tracking Info -->
-          <div *ngIf="order?.tracking_info" class="detail-card">
-            <h2>
-              <i class="fas fa-truck"></i>
-              Informations de suivi
-            </h2>
-  
-            <div class="tracking-info">
-              <div class="tracking-row" *ngIf="order.tracking_info?.carrier">
-                <span>Transporteur:</span>
-                <strong>{{ order.tracking_info?.carrier || '' }}</strong>
+          @if (order.tracking_info) {
+            <div class="detail-card">
+              <h2>
+                <i class="fas fa-truck"></i>
+                Informations de suivi
+              </h2>
+    
+              <div class="tracking-info">
+                @if (order.tracking_info.carrier) {
+                  <div class="tracking-row">
+                    <span>Transporteur:</span>
+                    <strong>{{ order.tracking_info.carrier || '' }}</strong>
+                  </div>
+                }
+                @if (order.tracking_info.tracking_number) {
+                  <div class="tracking-row">
+                    <span>Numéro de suivi:</span>
+                    <strong>{{ order.tracking_info.tracking_number || '' }}</strong>
+                  </div>
+                }
+                @if (order.tracking_info.estimated_delivery) {
+                  <div class="tracking-row">
+                    <span>Livraison estimée:</span>
+                    <strong>{{ order.tracking_info.estimated_delivery | date:'dd/MM/yyyy' }}</strong>
+                  </div>
+                }
+                @if (order.tracking_info.tracking_url) {
+                  <a [href]="order.tracking_info.tracking_url || '#'" 
+                     target="_blank"
+                     class="tracking-link">
+                    <i class="fas fa-external-link-alt"></i>
+                    Suivre en ligne
+                  </a>
+                }
               </div>
-              <div class="tracking-row" *ngIf="order.tracking_info?.tracking_number">
-                <span>Numéro de suivi:</span>
-                <strong>{{ order.tracking_info?.tracking_number || '' }}</strong>
-              </div>
-              <div *ngIf="order.tracking_info?.estimated_delivery" class="tracking-row">
-                <span>Livraison estimée:</span>
-                <strong>{{ order.tracking_info?.estimated_delivery | date:'dd/MM/yyyy' }}</strong>
-              </div>
-              <a *ngIf="order.tracking_info?.tracking_url" 
-                 [href]="order.tracking_info?.tracking_url || '#'" 
-                 target="_blank"
-                 class="tracking-link">
-                <i class="fas fa-external-link-alt"></i>
-                Suivre en ligne
-              </a>
-            </div>
 
-            <!-- Tracking Timeline -->
-            <div *ngIf="order.tracking_info?.updates && (order.tracking_info?.updates?.length || 0) > 0" 
-                 class="tracking-timeline">
-              <div *ngFor="let update of order.tracking_info?.updates" class="timeline-item">
-                <div class="timeline-dot"></div>
-                <div class="timeline-content">
-                  <div class="timeline-date">
-                    {{ update?.date | date:'dd/MM/yyyy HH:mm' }}
-                  </div>
-                  <div class="timeline-status">{{ update?.status || '' }}</div>
-                  <div class="timeline-description">{{ update?.description || '' }}</div>
-                  <div *ngIf="update?.location" class="timeline-location">
-                    <i class="fas fa-map-pin"></i>
-                    {{ update?.location }}
-                  </div>
+              <!-- Tracking Timeline -->
+              @if (order.tracking_info.updates && (order.tracking_info.updates.length || 0) > 0) {
+                <div class="tracking-timeline">
+                  @for (update of order.tracking_info.updates; track update?.date || $index) {
+                    <div class="timeline-item">
+                      <div class="timeline-dot"></div>
+                      <div class="timeline-content">
+                        <div class="timeline-date">
+                          {{ update?.date | date:'dd/MM/yyyy HH:mm' }}
+                        </div>
+                        <div class="timeline-status">{{ update?.status || '' }}</div>
+                        <div class="timeline-description">{{ update?.description || '' }}</div>
+                        @if (update?.location) {
+                          <div class="timeline-location">
+                            <i class="fas fa-map-pin"></i>
+                            {{ update?.location }}
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
                 </div>
-              </div>
+              }
             </div>
-          </div>
+          }
   
           <!-- Notes -->
-          <div *ngIf="order?.notes" class="detail-card">
-            <h2>
-              <i class="fas fa-sticky-note"></i>
-              Notes
-            </h2>
-            <p class="notes-content">{{ order.notes }}</p>
-          </div>
+          @if (order.notes) {
+            <div class="detail-card">
+              <h2>
+                <i class="fas fa-sticky-note"></i>
+                Notes
+              </h2>
+              <p class="notes-content">{{ order.notes }}</p>
+            </div>
+          }
         </div>
   
         <!-- Right Column - Summary -->
@@ -210,10 +247,12 @@
                 <span>Taxes</span>
                 <span>{{ order.tax_amount | number }} {{ order.currency }}</span>
               </div>
-              <div *ngIf="order.discount_amount != null && order.discount_amount > 0" class="summary-row discount">
-                <span>Réduction</span>
-                <span>-{{ order.discount_amount | number }} {{ order.currency }}</span>
-              </div>
+              @if (order.discount_amount != null && order.discount_amount > 0) {
+                <div class="summary-row discount">
+                  <span>Réduction</span>
+                  <span>-{{ order.discount_amount | number }} {{ order.currency }}</span>
+                </div>
+              }
               <div class="summary-row total">
                 <span>Total</span>
                 <span>{{ order.total | number }} {{ order.currency }}</span>
@@ -226,23 +265,29 @@
             <h2>Paiement</h2>
             
             <div class="payment-details">
-              <div class="payment-row" *ngIf="order?.payment_method">
-                <span>Méthode:</span>
-                <strong>{{ order.payment_method }}</strong>
-              </div>
-              <div class="payment-row" *ngIf="order?.payment_status">
-                <span>Statut:</span>
-                <span class="payment-status" 
-                      [class.paid]="order.payment_status === 'paid'"
-                      [class.pending]="order.payment_status === 'pending'"
-                      [class.failed]="order.payment_status === 'failed'">
-                  {{ getPaymentStatusLabel(order.payment_status) }}
-                </span>
-              </div>
-              <div *ngIf="order?.payment_provider" class="payment-row">
-                <span>Fournisseur:</span>
-                <strong>{{ order.payment_provider }}</strong>
-              </div>
+              @if (order.payment_method) {
+                <div class="payment-row">
+                  <span>Méthode:</span>
+                  <strong>{{ order.payment_method }}</strong>
+                </div>
+              }
+              @if (order.payment_status) {
+                <div class="payment-row">
+                  <span>Statut:</span>
+                  <span class="payment-status" 
+                        [class.paid]="order.payment_status === 'paid'"
+                        [class.pending]="order.payment_status === 'pending'"
+                        [class.failed]="order.payment_status === 'failed'">
+                    {{ getPaymentStatusLabel(order.payment_status) }}
+                  </span>
+                </div>
+              }
+              @if (order.payment_provider) {
+                <div class="payment-row">
+                  <span>Fournisseur:</span>
+                  <strong>{{ order.payment_provider }}</strong>
+                </div>
+              }
             </div>
           </div>
   
@@ -251,26 +296,26 @@
             <h2>Actions</h2>
   
             <div class="action-buttons">
-              <button *ngIf="canConfirmDelivery()" 
-                      class="btn btn-success-full" 
-                      (click)="confirmDelivery()">
-                <i class="fas fa-check"></i>
-                Confirmer la réception
-              </button>
+              @if (canConfirmDelivery()) {
+                <button class="btn btn-success-full" (click)="confirmDelivery()">
+                  <i class="fas fa-check"></i>
+                  Confirmer la réception
+                </button>
+              }
   
-              <button *ngIf="canReturn()" 
-                      class="btn btn-outline-full" 
-                      (click)="openReturnModal()">
-                <i class="fas fa-undo"></i>
-                Demander un retour
-              </button>
+              @if (canReturn()) {
+                <button class="btn btn-outline-full" (click)="openReturnModal()">
+                  <i class="fas fa-undo"></i>
+                  Demander un retour
+                </button>
+              }
   
-              <button *ngIf="canCancel()" 
-                      class="btn btn-danger-full" 
-                      (click)="openCancelModal()">
-                <i class="fas fa-times"></i>
-                Annuler la commande
-              </button>
+              @if (canCancel()) {
+                <button class="btn btn-danger-full" (click)="openCancelModal()">
+                  <i class="fas fa-times"></i>
+                  Annuler la commande
+                </button>
+              }
   
               <button class="btn btn-outline-full" (click)="reorder()">
                 <i class="fas fa-redo"></i>
@@ -280,45 +325,52 @@
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    }
   
     <!-- Cancel Modal -->
-    <div *ngIf="showCancelModal" class="modal-overlay" (click)="closeCancelModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h3>Annuler la commande</h3>
-          <button class="close-btn" (click)="closeCancelModal()" title="Fermer">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-  
-        <div class="modal-body">
-          <p>Êtes-vous sûr de vouloir annuler cette commande ?</p>
-          
-          <div class="form-group">
-            <label for="cancelReason">Raison de l'annulation *</label>
-            <textarea id="cancelReason" 
-                      [(ngModel)]="cancelReason" 
-                      rows="4"
-                      placeholder="Expliquez pourquoi vous annulez cette commande..."></textarea>
+    @if (showCancelModal) {
+      <div class="modal-overlay" (click)="closeCancelModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Annuler la commande</h3>
+            <button class="close-btn" (click)="closeCancelModal()" title="Fermer">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+    
+          <div class="modal-body">
+            <p>Êtes-vous sûr de vouloir annuler cette commande ?</p>
+            
+            <div class="form-group">
+              <label for="cancelReason">Raison de l'annulation *</label>
+              <textarea id="cancelReason" 
+                        [(ngModel)]="cancelReason" 
+                        rows="4"
+                        placeholder="Expliquez pourquoi vous annulez cette commande..."></textarea>
+            </div>
+          </div>
+    
+          <div class="modal-footer">
+            <button class="btn btn-outline" (click)="closeCancelModal()">
+              Fermer
+            </button>
+            <button class="btn btn-danger" 
+                    [disabled]="isCancelling || !cancelReason.trim()"
+                    (click)="confirmCancel()">
+              @if (!isCancelling) {
+                <span>Confirmer l'annulation</span>
+              }
+              @if (isCancelling) {
+                <span>
+                  <i class="fas fa-spinner fa-spin"></i>
+                  Annulation...
+                </span>
+              }
+            </button>
           </div>
         </div>
-  
-        <div class="modal-footer">
-          <button class="btn btn-outline" (click)="closeCancelModal()">
-            Fermer
-          </button>
-          <button class="btn btn-danger" 
-                  [disabled]="isCancelling || !cancelReason.trim()"
-                  (click)="confirmCancel()">
-            <span *ngIf="!isCancelling">Confirmer l'annulation</span>
-            <span *ngIf="isCancelling">
-              <i class="fas fa-spinner fa-spin"></i>
-              Annulation...
-            </span>
-          </button>
-        </div>
       </div>
-    </div>
+    }
   
   </div>

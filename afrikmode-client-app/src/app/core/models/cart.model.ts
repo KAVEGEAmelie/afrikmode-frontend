@@ -13,6 +13,7 @@ export interface Cart {
     currency: string;
     created_at: string;
     updated_at: string;
+    coupon_code?: string;
   }
 
   // Ajoutez ces interfaces dans votre cart.model.ts
@@ -36,6 +37,7 @@ export interface UpdateCartItemRequest {
     unit_price: number;
     total_price: number;
     added_at: string;
+    customization?: any;
   }
   
   export interface AddToCartRequest {

@@ -823,6 +823,7 @@ export class VendorMessagesComponent implements OnInit, OnDestroy {
   selectedFilter: string = 'all';
   selectedConversation: Conversation | null = null;
   selectedConversationMessages: Message[] = [];
+  errorMessage: string | null = null;
   newMessage: string = '';
   private socket: Socket | null = null;
 
@@ -920,7 +921,6 @@ export class VendorMessagesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.filteredConversations = this.conversations;
-    this.loadMessages();
     this.loadMessagesFromAPI(); // Charger depuis le backend
     this.initializeSocket();
   }
@@ -935,9 +935,9 @@ export class VendorMessagesComponent implements OnInit, OnDestroy {
           console.log('✅ Messages chargés depuis l\'API:', this.conversations.length);
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('❌ Erreur chargement messages:', error);
-        // Garder les données de démonstration en cas d'erreur
+        this.errorMessage = 'Erreur lors du chargement des conversations. Veuillez réessayer.';
       }
     });
   }
@@ -1071,39 +1071,32 @@ export class VendorMessagesComponent implements OnInit, OnDestroy {
   }
 
   loadMessages(): void {
-    if (this.selectedConversation) {
-      // Simulation des messages - en réalité, on ferait un appel API
-      this.selectedConversationMessages = [
-        {
-          id: '1',
-          content: 'Bonjour, j\'aimerais savoir si vous avez cette robe en taille M',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30),
-          isFromCustomer: true,
-          isRead: true
-        },
-        {
-          id: '2',
-          content: 'Bonjour Marie ! Oui, nous avons cette robe en taille M. Elle est actuellement en stock.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 25),
-          isFromCustomer: false,
-          isRead: true
-        },
-        {
-          id: '3',
-          content: 'Parfait ! Et quel est le délai de livraison ?',
-          timestamp: new Date(Date.now() - 1000 * 60 * 20),
-          isFromCustomer: true,
-          isRead: true
-        },
-        {
-          id: '4',
-          content: 'La livraison se fait sous 2-3 jours ouvrés dans toute la région de Lomé.',
-          timestamp: new Date(Date.now() - 1000 * 60 * 15),
-          isFromCustomer: false,
-          isRead: true
+    if (!this.selectedConversation) return;
+
+    // Charger les messages depuis l'API
+    this.vendorService.getMessages(this.selectedConversation.id).subscribe({
+      next: (response: any) => {
+        if (response && response.messages) {
+          this.selectedConversationMessages = response.messages.map((msg: any) => ({
+            id: msg.id,
+            content: msg.content || msg.message,
+            timestamp: new Date(msg.created_at || msg.timestamp),
+            isFromCustomer: msg.sender_role === 'customer' || msg.is_from_customer || false,
+            isRead: msg.read || msg.is_read || false,
+            conversationId: msg.conversation_id || this.selectedConversation?.id,
+            attachments: msg.attachments || []
+          }));
+          this.scrollToBottom();
+        } else {
+          this.selectedConversationMessages = [];
         }
-      ];
-    }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement messages:', error);
+        this.selectedConversationMessages = [];
+        this.errorMessage = 'Erreur lors du chargement des messages. Veuillez réessayer.';
+      }
+    });
   }
 
   onKeyPress(event: Event): void {
@@ -1226,23 +1219,39 @@ export class VendorMessagesComponent implements OnInit, OnDestroy {
   uploadAttachment(file: File): void {
     console.log('📎 Upload du fichier:', file.name);
     
-    // Simulation d'upload - en réalité, on ferait un appel API
-    const attachment = {
-      name: file.name,
-      type: this.getFileType(file.type),
-      url: URL.createObjectURL(file),
-      size: file.size
-    };
-
-    // Ajouter à la liste des pièces jointes du message en cours
-    if (!this.newMessage) {
-      this.newMessage = `[Fichier joint: ${file.name}]`;
-    } else {
-      this.newMessage += `\n[Fichier joint: ${file.name}]`;
+    // Upload réel via l'API
+    const formData = new FormData();
+    formData.append('file', file);
+    if (this.selectedConversation) {
+      formData.append('conversationId', this.selectedConversation.id);
     }
 
-    this.snackBar.open(`Fichier "${file.name}" prêt à être envoyé`, 'Fermer', {
-      duration: 3000
+    this.vendorService.uploadMessageAttachment(formData).subscribe({
+      next: (response: any) => {
+        const attachment = {
+          name: file.name,
+          type: this.getFileType(file.type),
+          url: response.url || response.file_url || URL.createObjectURL(file),
+          size: file.size
+        };
+
+        // Ajouter à la liste des pièces jointes du message en cours
+        if (!this.newMessage) {
+          this.newMessage = `[Fichier joint: ${file.name}]`;
+        } else {
+          this.newMessage += `\n[Fichier joint: ${file.name}]`;
+        }
+
+        this.snackBar.open(`Fichier "${file.name}" prêt à être envoyé`, 'Fermer', {
+          duration: 3000
+        });
+      },
+      error: (error: any) => {
+        console.error('Erreur upload fichier:', error);
+        this.snackBar.open(`Erreur lors de l'upload du fichier "${file.name}"`, 'Fermer', {
+          duration: 5000
+        });
+      }
     });
   }
 

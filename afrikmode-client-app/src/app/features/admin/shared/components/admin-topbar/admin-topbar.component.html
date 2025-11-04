@@ -45,18 +45,32 @@
     </div>
   </button>
 
-  <mat-menu #profileMenu="matMenu">
+  <mat-menu #profileMenu="matMenu" class="profile-menu">
+    <div class="profile-menu-header">
+      <div class="profile-menu-avatar">
+        <mat-icon>person</mat-icon>
+      </div>
+      <div class="profile-menu-info">
+        <div class="profile-menu-name">{{ userName }}</div>
+        <div class="profile-menu-role">Administrateur</div>
+      </div>
+    </div>
+    
+    <mat-divider></mat-divider>
+    
     <button mat-menu-item (click)="onProfileClick()">
-      <mat-icon>person</mat-icon>
+      <mat-icon class="menu-icon">person_outline</mat-icon>
       <span>Mon profil</span>
     </button>
     <button mat-menu-item (click)="onSettingsClick()">
-      <mat-icon>settings</mat-icon>
+      <mat-icon class="menu-icon">settings</mat-icon>
       <span>Paramètres</span>
     </button>
+    
     <mat-divider></mat-divider>
-    <button mat-menu-item (click)="onLogout()">
-      <mat-icon>exit_to_app</mat-icon>
+    
+    <button mat-menu-item (click)="onLogout()" class="logout-item">
+      <mat-icon class="menu-icon">logout</mat-icon>
       <span>Déconnexion</span>
     </button>
   </mat-menu>

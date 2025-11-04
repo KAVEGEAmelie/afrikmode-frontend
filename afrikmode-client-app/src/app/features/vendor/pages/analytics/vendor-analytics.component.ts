@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -12,6 +12,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { VendorService } from '../../../../core/services/vendor.service';
+import { AnalyticsService } from '../../../../core/services/analytics.service';
+import { Subscription } from 'rxjs';
 // import { NgChartsModule } from 'ng2-charts';
 // import { ChartConfiguration, ChartData, ChartEvent, ChartType } from 'chart.js';
 
@@ -79,14 +81,17 @@ interface GeographicData {
           <p>Analysez les performances de votre boutique en détail</p>
         </div>
         <div class="header-filters">
-          <mat-select [(ngModel)]="selectedPeriod" (selectionChange)="updateAnalytics()">
-            <mat-option value="today">Aujourd'hui</mat-option>
-            <mat-option value="7d">7 derniers jours</mat-option>
-            <mat-option value="30d">30 derniers jours</mat-option>
-            <mat-option value="3m">3 derniers mois</mat-option>
-            <mat-option value="1y">1 an</mat-option>
-            <mat-option value="custom">Période personnalisée</mat-option>
-          </mat-select>
+          <div class="period-select-wrapper">
+            <mat-select [(ngModel)]="selectedPeriod" (selectionChange)="updateAnalytics()" 
+                        class="period-select">
+              <mat-option value="today">Aujourd'hui</mat-option>
+              <mat-option value="7d">7 derniers jours</mat-option>
+              <mat-option value="30d">30 derniers jours</mat-option>
+              <mat-option value="3m">3 derniers mois</mat-option>
+              <mat-option value="1y">1 an</mat-option>
+              <mat-option value="custom">Période personnalisée</mat-option>
+            </mat-select>
+          </div>
           <button mat-raised-button color="primary" (click)="exportReport()">
             <mat-icon>download</mat-icon>
             Exporter
@@ -466,10 +471,43 @@ interface GeographicData {
       align-items: center;
     }
 
-    .header-filters mat-select {
-      background: rgba(255, 255, 255, 0.1);
+    .period-select-wrapper {
+      background: rgba(255, 255, 255, 0.2);
       border-radius: 8px;
+      padding: 4px 12px;
       min-width: 200px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .period-select-wrapper ::ng-deep .mat-mdc-select-value {
+      color: white !important;
+      font-weight: 500;
+      font-size: 1rem;
+    }
+
+    .period-select-wrapper ::ng-deep .mat-mdc-select-arrow {
+      color: white !important;
+    }
+
+    .period-select-wrapper ::ng-deep .mat-mdc-select-trigger {
+      color: white !important;
+    }
+
+    .period-select-wrapper ::ng-deep .mat-mdc-select-panel {
+      background: white;
+      color: #1f2937;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .period-select-wrapper ::ng-deep .mat-mdc-option {
+      color: #1f2937;
+    }
+
+    .period-select-wrapper ::ng-deep .mat-mdc-option:hover,
+    .period-select-wrapper ::ng-deep .mat-mdc-option.mdc-list-item--selected {
+      background: rgba(139, 46, 46, 0.1);
     }
 
     .kpi-grid {
@@ -910,7 +948,7 @@ interface GeographicData {
     }
   `]
 })
-export class VendorAnalyticsComponent implements OnInit {
+export class VendorAnalyticsComponent implements OnInit, OnDestroy {
   Math = Math;
   isLoading = false;
   
@@ -923,7 +961,18 @@ export class VendorAnalyticsComponent implements OnInit {
   includeProducts: boolean = true;
   includeGeographic: boolean = false;
 
-  constructor(private vendorService: VendorService) {}
+  errorMessage: string | null = null;
+  kpis: AnalyticsKPI[] = [];
+  private subscriptions: Subscription[] = [];
+
+  constructor(
+    private vendorService: VendorService,
+    private analyticsService: AnalyticsService
+  ) {}
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
 
   // Configuration des graphiques
   revenueChartData: any = {
@@ -1147,20 +1196,199 @@ export class VendorAnalyticsComponent implements OnInit {
   loadAnalytics(): void {
     this.isLoading = true;
     
-    // Charger les analytics depuis l'API
-    this.vendorService.getAnalytics({ period: this.selectedPeriod }).subscribe({
-      next: (data) => {
-        // Mettre à jour les KPIs et graphiques avec les données de l'API
-        console.log('📊 Analytics chargées:', data);
-        this.updateAnalytics();
+    // Convertir la période pour l'API
+    const period = this.convertPeriodToApiFormat(this.selectedPeriod);
+    const filters: any = { period };
+    
+    // Charger toutes les données analytics en parallèle
+    const salesSub = (this.analyticsService as any).getSalesAnalytics(undefined, filters).subscribe({
+      next: (analytics: any) => {
+        this.updateChartDataFromAPI(analytics);
+        this.updateKPIsFromAPI(analytics);
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Erreur lors du chargement des analytics:', error);
-        this.updateAnalytics(); // Utiliser les données mockées
         this.isLoading = false;
+        this.errorMessage = 'Erreur lors du chargement des analytics. Veuillez réessayer.';
       }
     });
+    this.subscriptions.push(salesSub);
+
+    // Charger les analytics produits
+    const productsSub = (this.analyticsService as any).getProductAnalytics(undefined, filters).subscribe({
+      next: (analytics: any) => {
+        this.updateTopProductsFromAPI(analytics);
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement analytics produits:', error);
+      }
+    });
+    this.subscriptions.push(productsSub);
+
+    // Charger les analytics clients
+    const customersSub = (this.analyticsService as any).getCustomerAnalytics(undefined, filters).subscribe({
+      next: (analytics: any) => {
+        this.updateTopCustomersFromAPI(analytics);
+        this.updateGeographicDataFromAPI(analytics);
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement analytics clients:', error);
+      }
+    });
+    this.subscriptions.push(customersSub);
+  }
+
+  private convertPeriodToApiFormat(period: string): string {
+    const mapping: Record<string, string> = {
+      'today': '7d', // Aujourd'hui -> 7 jours pour avoir des données
+      '7d': '7d',
+      '30d': '30d',
+      '3m': '90d',
+      '1y': '1y',
+      'custom': '30d'
+    };
+    return mapping[period] || '30d';
+  }
+
+  private updateChartDataFromAPI(analytics: any): void {
+    // Utiliser dailySales pour les graphiques
+    if (analytics.dailySales && analytics.dailySales.length > 0) {
+      const labels = analytics.dailySales.map((item: any) => {
+        const date = new Date(item.date);
+        if (this.selectedPeriod === 'today') {
+          return `${date.getHours()}h`;
+        } else if (this.selectedPeriod === '7d') {
+          const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+          return days[date.getDay()];
+        } else {
+          return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+        }
+      });
+
+      this.revenueChartData = {
+        labels: labels,
+        datasets: [{
+          data: analytics.dailySales.map((item: any) => item.revenue || 0),
+          label: 'Revenus (FCFA)',
+          borderColor: '#8B2E2E',
+          backgroundColor: 'rgba(139, 46, 46, 0.1)',
+          borderWidth: 3,
+          fill: true,
+          tension: 0.4
+        }]
+      };
+
+      this.ordersChartData = {
+        labels: labels,
+        datasets: [{
+          data: analytics.dailySales.map((item: any) => item.orders || 0),
+          label: 'Commandes',
+          backgroundColor: 'rgba(139, 46, 46, 0.8)',
+          borderColor: '#8B2E2E',
+          borderWidth: 1
+        }]
+      };
+    }
+  }
+
+  private updateKPIsFromAPI(analytics: any): void {
+    // Mettre à jour les KPIs avec les données de l'API
+    this.kpis = [
+      {
+        title: 'Revenus Totaux',
+        value: this.formatCurrency(analytics.totalRevenue || 0),
+        change: analytics.growthRate || 0,
+        changeType: (analytics.growthRate || 0) > 0 ? 'increase' : (analytics.growthRate || 0) < 0 ? 'decrease' : 'stable',
+        icon: 'attach_money',
+        color: '#4caf50',
+        description: 'Revenus sur la période'
+      },
+      {
+        title: 'Commandes',
+        value: (analytics.totalOrders || 0).toString(),
+        change: 0, // À calculer depuis les données précédentes
+        changeType: 'stable',
+        icon: 'shopping_cart',
+        color: '#2196f3',
+        description: 'Total des commandes'
+      },
+      {
+        title: 'Panier Moyen',
+        value: this.formatCurrency(analytics.averageOrderValue || 0),
+        change: 0,
+        changeType: 'stable',
+        icon: 'shopping_bag',
+        color: '#ff9800',
+        description: 'Valeur moyenne par commande'
+      },
+      {
+        title: 'Taux de Conversion',
+        value: `${(analytics.conversionRate || 0).toFixed(1)}%`,
+        change: 0,
+        changeType: 'stable',
+        icon: 'trending_up',
+        color: '#9c27b0',
+        description: 'Taux de conversion'
+      }
+    ];
+  }
+
+  private updateTopProductsFromAPI(analytics: any): void {
+    if (analytics.topPerformingProducts && analytics.topPerformingProducts.length > 0) {
+      this.topProducts = analytics.topPerformingProducts.slice(0, 5).map((product: any) => ({
+        name: product.name,
+        sales: product.sales || 0,
+        revenue: product.revenue || 0,
+        views: product.views || 0,
+        conversion: product.conversion_rate || 0,
+        image: product.image || '/assets/images/placeholder-product.jpg'
+      }));
+    }
+  }
+
+  private updateTopCustomersFromAPI(analytics: any): void {
+    if (analytics.topCustomers && analytics.topCustomers.length > 0) {
+      this.topCustomers = analytics.topCustomers.slice(0, 5).map((customer: any) => {
+        const lastOrderDate = customer.last_order_date ? new Date(customer.last_order_date) : null;
+        const daysAgo = lastOrderDate ? Math.floor((Date.now() - lastOrderDate.getTime()) / (1000 * 60 * 60 * 24)) : null;
+        let lastOrderText = 'Jamais';
+        if (daysAgo !== null) {
+          if (daysAgo === 0) lastOrderText = 'Aujourd\'hui';
+          else if (daysAgo === 1) lastOrderText = 'Hier';
+          else if (daysAgo < 7) lastOrderText = `Il y a ${daysAgo} jours`;
+          else if (daysAgo < 30) lastOrderText = `Il y a ${Math.floor(daysAgo / 7)} semaines`;
+          else lastOrderText = `Il y a ${Math.floor(daysAgo / 30)} mois`;
+        }
+
+        return {
+          name: customer.name,
+          orders: customer.total_orders || 0,
+          totalSpent: customer.total_spent || 0,
+          lastOrder: lastOrderText,
+          avatar: customer.avatar
+        };
+      });
+    }
+  }
+
+  private updateGeographicDataFromAPI(analytics: any): void {
+    if (analytics.geographicDistribution && analytics.geographicDistribution.length > 0) {
+      const totalSales = analytics.geographicDistribution.reduce((sum: number, item: any) => sum + item.revenue, 0);
+      this.geographicData = analytics.geographicDistribution.map((item: any) => ({
+        region: item.country + (item.region ? ` - ${item.region}` : ''),
+        sales: item.revenue || 0,
+        orders: item.customers || 0,
+        percentage: totalSales > 0 ? Math.round((item.revenue / totalSales) * 100) : 0
+      }));
+    }
+  }
+
+  private formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF'
+    }).format(amount);
   }
 
   updateAnalytics(): void {
@@ -1176,37 +1404,15 @@ export class VendorAnalyticsComponent implements OnInit {
     
     this.selectedPeriodLabel = periodLabels[this.selectedPeriod] || '30 derniers jours';
     
-    // Mise à jour des données des graphiques selon la période
-    this.updateChartData();
-    
-    console.log('🔄 Mise à jour des analytics pour la période:', this.selectedPeriod);
-    // Ici on ferait l'appel API pour récupérer les vraies données
+    // Recharger les données depuis l'API avec la nouvelle période
+    this.loadAnalytics();
   }
 
-  updateChartData(): void {
-    // Simulation de données différentes selon la période
-    switch (this.selectedPeriod) {
-      case 'today':
-        this.updateTodayData();
-        break;
-      case '7d':
-        this.updateWeeklyData();
-        break;
-      case '30d':
-        this.updateMonthlyData();
-        break;
-      case '3m':
-        this.updateQuarterlyData();
-        break;
-      case '1y':
-        this.updateYearlyData();
-        break;
-      default:
-        this.updateMonthlyData();
-    }
-  }
+  // Supprimé updateChartData() et toutes les méthodes mockées (updateTodayData, updateWeeklyData, etc.)
+  // Utiliser loadAnalytics() qui charge depuis l'API
 
-  updateTodayData(): void {
+  // Méthodes mockées supprimées - utiliser updateChartDataFromAPI() à la place
+  private _removedMockMethods(): void {
     // Données pour aujourd'hui (par heure)
     this.revenueChartData = {
       labels: ['00h', '02h', '04h', '06h', '08h', '10h', '12h', '14h', '16h', '18h', '20h', '22h'],

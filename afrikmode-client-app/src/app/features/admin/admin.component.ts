@@ -7,7 +7,7 @@ import { map, shareReplay } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { AdminTopbarComponent } from './shared/components/admin-topbar/admin-topbar.component';
-import { AdminSidebarCompleteComponent } from './shared/components/admin-sidebar-complete/admin-sidebar-complete.component';
+import { AdminSidebarComponent } from './shared/components/admin-sidebar/admin-sidebar.component';
 import { AdminAuthService } from './core/services/admin-auth.service';
 import { AdminStateService } from './core/services/admin-state.service';
 
@@ -21,7 +21,7 @@ import { AdminStateService } from './core/services/admin-state.service';
     RouterModule,
     MatSidenavModule,
     AdminTopbarComponent,
-    AdminSidebarCompleteComponent
+    AdminSidebarComponent
   ]
 })
 export class AdminComponent implements OnInit, OnDestroy {

@@ -74,6 +74,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/verify-email/verify-email.component').then(m => m.VerifyEmailComponent)
   },
   {
+    path: 'email-verification-required',
+    loadComponent: () => import('./features/auth/email-verification-required/email-verification-required.component').then(m => m.EmailVerificationRequiredComponent),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'reset-password',
     loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
     canActivate: [GuestGuard]
@@ -140,6 +145,11 @@ export const routes: Routes = [
   {
     path: 'checkout',
     loadComponent: () => import('./features/checkout/checkout.component').then(m => m.CheckoutComponent),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'order-confirmation',
+    loadComponent: () => import('./features/checkout/components/order-confirmation/order-confirmation.component').then(m => m.OrderConfirmationComponent),
     canActivate: [AuthGuard]
   },
   {

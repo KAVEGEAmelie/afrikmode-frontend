@@ -309,10 +309,23 @@ export class VendorApplyComponent implements OnInit {
       formData.append('status', 'pending');
       formData.append('applicationDate', new Date().toISOString());
 
-      // Submit to API
-      this.storeService.createStore(this.form).subscribe({
-        next: (response) => {
+      // Envoyer tout en FormData pour inclure les documents
+      // Le storeService.createStore accepte maintenant FormData
+      this.storeService.createStore(formData).subscribe({
+        next: (response: any) => {
+          // Si l'API retourne un ID de boutique, on peut uploader les documents après
+          const storeId = response?.data?.id || response?.id || response?.storeId;
+          
+          // Les documents sont déjà inclus dans le FormData initial
+          // Si besoin d'un upload séparé, utiliser cette méthode :
+          // if (storeId && (this.documents.idCard || this.documents.proofOfAddress || this.documents.businessCertificate)) {
+          //   this.storeService.uploadStoreDocuments(storeId, this.documents).subscribe();
+          // }
+
           this.isLoading = false;
+          const applicationNumber = response?.data?.applicationNumber || response?.applicationNumber || 
+                                  `VA-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+          
           this.successMessage = 'Candidature soumise avec succès !';
           this.toastService.success('Votre candidature a été soumise avec succès !');
           
@@ -321,7 +334,9 @@ export class VendorApplyComponent implements OnInit {
             this.router.navigate(['/vendor-application-success'], {
               queryParams: {
                 email: this.form.email,
-                shopName: this.form.name
+                shopName: this.form.name,
+                applicationNumber: applicationNumber,
+                id: storeId
               }
             });
           }, 2000);
@@ -330,17 +345,35 @@ export class VendorApplyComponent implements OnInit {
           this.isLoading = false;
           console.error('Error submitting vendor application:', error);
           
+          // Gestion d'erreurs améliorée
+          let errorMsg = 'Erreur lors de la soumission. Veuillez réessayer';
+          
           if (error.status === 409) {
-            this.errorMessage = 'Une boutique avec ce nom existe déjà';
+            errorMsg = error.error?.message || 'Une boutique avec ce nom existe déjà';
           } else if (error.status === 422) {
-            this.errorMessage = 'Données invalides. Veuillez vérifier tous les champs';
+            const errors = error.error?.errors || error.error?.data?.errors;
+            if (errors && Array.isArray(errors)) {
+              errorMsg = errors.join(', ');
+            } else {
+              errorMsg = error.error?.message || 'Données invalides. Veuillez vérifier tous les champs';
+            }
           } else if (error.status === 400) {
-            this.errorMessage = error.error?.message || 'Données invalides';
-          } else {
-            this.errorMessage = 'Erreur lors de la soumission. Veuillez réessayer';
+            errorMsg = error.error?.message || 'Données invalides';
+          } else if (error.status === 403) {
+            errorMsg = error.error?.message || 'Vous n\'êtes pas autorisé à soumettre une candidature';
+          } else if (error.status === 401) {
+            errorMsg = 'Votre session a expiré. Veuillez vous reconnecter';
+            setTimeout(() => {
+              this.router.navigate(['/login'], {
+                queryParams: { returnUrl: '/vendor/apply' }
+              });
+            }, 2000);
+          } else if (error.status === 0 || error.status >= 500) {
+            errorMsg = 'Erreur serveur. Veuillez réessayer plus tard';
           }
           
-          this.toastService.error(this.errorMessage);
+          this.errorMessage = errorMsg;
+          this.toastService.error(errorMsg);
           
           // Scroll to error message
           window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -364,6 +397,7 @@ export class VendorApplyComponent implements OnInit {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
+
 }
 
 

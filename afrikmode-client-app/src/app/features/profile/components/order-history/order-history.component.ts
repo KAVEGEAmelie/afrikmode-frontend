@@ -3,9 +3,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { OrderService } from '../../../../core/services/order.service';
+import { Order } from '../../../../core/models/order.model';
 
-interface Order {
+interface OrderDisplay {
   id: string;
+  orderNumber: string;
   date: Date;
   total: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
@@ -29,9 +32,10 @@ interface OrderItem {
 })
 export class OrderHistoryComponent implements OnInit {
   
-  orders: Order[] = [];
+  orders: OrderDisplay[] = [];
   isLoading = true;
   selectedStatus = 'all';
+  error: string | null = null;
 
   statusOptions = [
     { value: 'all', label: 'Toutes' },
@@ -42,7 +46,7 @@ export class OrderHistoryComponent implements OnInit {
     { value: 'cancelled', label: 'Annulée' }
   ];
 
-  constructor() { }
+  constructor(private orderService: OrderService) { }
 
   ngOnInit(): void {
     this.loadOrders();
@@ -50,58 +54,56 @@ export class OrderHistoryComponent implements OnInit {
 
   loadOrders(): void {
     this.isLoading = true;
+    this.error = null;
     
-    // Simuler le chargement des commandes
-    setTimeout(() => {
-      this.orders = [
-        {
-          id: 'AFR-2025-001',
-          date: new Date('2025-09-28'),
-          total: 85000,
-          status: 'delivered',
-          items: [
-            {
-              id: 1,
-              name: 'Robe Ankara Elegante',
-              image: 'assets/images/products/robe-ankara-1.jpg',
-              quantity: 1,
-              price: 45000
-            },
-            {
-              id: 2,
-              name: 'Sac Kente Premium',
-              image: 'assets/images/products/sac-kente-1.jpg',
-              quantity: 1,
-              price: 40000
-            }
-          ]
-        },
-        {
-          id: 'AFR-2025-002',
-          date: new Date('2025-09-25'),
-          total: 120000,
-          status: 'shipped',
-          items: [
-            {
-              id: 3,
-              name: 'Ensemble Bogolan Moderne',
-              image: 'assets/images/products/ensemble-bogolan-1.jpg',
-              quantity: 1,
-              price: 120000
-            }
-          ]
-        }
-      ];
-      
-      this.isLoading = false;
-    }, 1000);
+    const params: any = {
+      page: 1,
+      per_page: 50
+    };
+
+    if (this.selectedStatus !== 'all') {
+      params.status = this.selectedStatus;
+    }
+
+    this.orderService.getOrders(params).subscribe({
+      next: (response: any) => {
+        const ordersData = Array.isArray(response) ? response : response.data || [];
+        this.orders = ordersData.map((order: Order) => ({
+          id: order.id,
+          orderNumber: order.order_number,
+          date: new Date(order.created_at),
+          total: order.total,
+          status: order.status as any,
+          items: order.items.map(item => ({
+            id: parseInt(item.id),
+            name: item.product.name,
+            image: item.product.image_url || (item.product.images && item.product.images.length > 0 
+              ? item.product.images[0].url 
+              : 'assets/images/products/default.jpg'),
+            quantity: item.quantity,
+            price: item.unit_price
+          }))
+        }));
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement commandes:', error);
+        this.error = 'Erreur lors du chargement de vos commandes';
+        this.isLoading = false;
+      }
+    });
   }
 
-  get filteredOrders(): Order[] {
+  get filteredOrders(): OrderDisplay[] {
     if (this.selectedStatus === 'all') {
       return this.orders;
     }
     return this.orders.filter(order => order.status === this.selectedStatus);
+  }
+
+  onStatusChange(status: string): void {
+    this.selectedStatus = status;
+    this.loadOrders();
   }
 
   get deliveredOrdersCount(): number {
@@ -129,12 +131,22 @@ export class OrderHistoryComponent implements OnInit {
   }
 
   viewOrderDetails(orderId: string): void {
-    console.log('Voir détails commande:', orderId);
     // Navigation vers les détails de commande
+    window.location.href = `/orders/${orderId}`;
   }
 
-  reorderItems(order: Order): void {
-    console.log('Recommander les articles:', order);
-    // Logique pour recommander
+  reorderItems(order: OrderDisplay): void {
+    if (confirm('Voulez-vous vraiment recommander ces articles ?')) {
+      this.orderService.reorder(order.id).subscribe({
+        next: () => {
+          alert('Articles ajoutés au panier !');
+          window.location.href = '/cart';
+        },
+        error: (error) => {
+          console.error('Erreur recommande:', error);
+          alert('Erreur lors de la recommande');
+        }
+      });
+    }
   }
 }

@@ -11,20 +11,26 @@
   </div>
 
   <!-- Messages d'état -->
-  <div *ngIf="isLoading" class="loading-message">
-    <i class="fas fa-spinner fa-spin"></i>
-    Chargement des données...
-  </div>
+  @if (isLoading) {
+    <div class="loading-message">
+      <i class="fas fa-spinner fa-spin"></i>
+      Chargement des données...
+    </div>
+  }
   
-  <div *ngIf="errorMessage" class="error-message">
-    <i class="fas fa-exclamation-triangle"></i>
-    {{ errorMessage }}
-  </div>
+  @if (errorMessage) {
+    <div class="error-message">
+      <i class="fas fa-exclamation-triangle"></i>
+      {{ errorMessage }}
+    </div>
+  }
   
-  <div *ngIf="successMessage" class="success-message">
-    <i class="fas fa-check-circle"></i>
-    {{ successMessage }}
-  </div>
+  @if (successMessage) {
+    <div class="success-message">
+      <i class="fas fa-check-circle"></i>
+      {{ successMessage }}
+    </div>
+  }
 
   <form [formGroup]="personalInfoForm" (ngSubmit)="onSubmit()" class="personal-info-form">
     
@@ -45,14 +51,22 @@
             <button type="button" class="btn btn-outline" (click)="triggerFileInput()">
               <i class="fas fa-upload"></i> Changer la photo
             </button>
-            <button *ngIf="selectedFile" type="button" class="btn btn-primary" (click)="uploadAvatar()" [disabled]="isUploadingAvatar">
-              <i class="fas fa-spinner fa-spin" *ngIf="isUploadingAvatar"></i>
-              <i class="fas fa-check" *ngIf="!isUploadingAvatar"></i>
-              {{ isUploadingAvatar ? 'Upload en cours...' : 'Confirmer' }}
-            </button>
-            <button *ngIf="avatarPreview" type="button" class="btn btn-danger" (click)="removeAvatar()">
-              <i class="fas fa-trash"></i> Supprimer
-            </button>
+            @if (selectedFile) {
+              <button type="button" class="btn btn-primary" (click)="uploadAvatar()" [disabled]="isUploadingAvatar">
+                @if (isUploadingAvatar) {
+                  <i class="fas fa-spinner fa-spin"></i>
+                }
+                @if (!isUploadingAvatar) {
+                  <i class="fas fa-check"></i>
+                }
+                {{ isUploadingAvatar ? 'Upload en cours...' : 'Confirmer' }}
+              </button>
+            }
+            @if (avatarPreview) {
+              <button type="button" class="btn btn-danger" (click)="removeAvatar()">
+                <i class="fas fa-trash"></i> Supprimer
+              </button>
+            }
           </div>
         </div>
       </div>
@@ -72,9 +86,11 @@
             class="form-control"
             placeholder="Votre prénom"
           >
-          <div class="error-message" *ngIf="personalInfoForm.get('firstName')?.invalid && personalInfoForm.get('firstName')?.touched">
-            Le prénom est obligatoire
-          </div>
+          @if (personalInfoForm.get('first_name')?.invalid && personalInfoForm.get('first_name')?.touched) {
+            <div class="error-message">
+              Le prénom est obligatoire
+            </div>
+          }
         </div>
         
         <div class="form-group">
@@ -86,9 +102,11 @@
             class="form-control"
             placeholder="Votre nom"
           >
-          <div class="error-message" *ngIf="personalInfoForm.get('lastName')?.invalid && personalInfoForm.get('lastName')?.touched">
-            Le nom est obligatoire
-          </div>
+          @if (personalInfoForm.get('last_name')?.invalid && personalInfoForm.get('last_name')?.touched) {
+            <div class="error-message">
+              Le nom est obligatoire
+            </div>
+          }
         </div>
       </div>
 
@@ -102,10 +120,16 @@
             class="form-control"
             placeholder="votre.email@example.com"
           >
-          <div class="error-message" *ngIf="personalInfoForm.get('email')?.invalid && personalInfoForm.get('email')?.touched">
-            <span *ngIf="personalInfoForm.get('email')?.errors?.['required']">L'email est obligatoire</span>
-            <span *ngIf="personalInfoForm.get('email')?.errors?.['email']">Format d'email invalide</span>
-          </div>
+          @if (personalInfoForm.get('email')?.invalid && personalInfoForm.get('email')?.touched) {
+            <div class="error-message">
+              @if (personalInfoForm.get('email')?.errors?.['required']) {
+                <span>L'email est obligatoire</span>
+              }
+              @if (personalInfoForm.get('email')?.errors?.['email']) {
+                <span>Format d'email invalide</span>
+              }
+            </div>
+          }
         </div>
       </div>
 
@@ -119,9 +143,11 @@
             class="form-control"
             placeholder="+228 90 12 34 56"
           >
-          <div class="error-message" *ngIf="personalInfoForm.get('phone')?.invalid && personalInfoForm.get('phone')?.touched">
-            Le numéro de téléphone est obligatoire
-          </div>
+          @if (personalInfoForm.get('phone')?.invalid && personalInfoForm.get('phone')?.touched) {
+            <div class="error-message">
+              Le numéro de téléphone est obligatoire
+            </div>
+          }
         </div>
         
         <div class="form-group">
@@ -203,14 +229,18 @@
         class="btn btn-primary"
         [disabled]="!personalInfoForm.valid || isUpdating"
       >
-        <span *ngIf="!isUpdating">
-          <i class="fas fa-save"></i>
-          Enregistrer les modifications
-        </span>
-        <span *ngIf="isUpdating" class="loading">
-          <i class="fas fa-spinner fa-spin"></i>
-          Enregistrement...
-        </span>
+        @if (!isUpdating) {
+          <span>
+            <i class="fas fa-save"></i>
+            Enregistrer les modifications
+          </span>
+        }
+        @if (isUpdating) {
+          <span class="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            Enregistrement...
+          </span>
+        }
       </button>
     </div>
   </form>

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { VendorService, VendorProduct } from '../../../../core/services/vendor.service';
+import { ToastService } from '../../../../core/services/toast.service';
 import { ProductFormComponent } from './product-form/product-form.component';
 
 @Component({
@@ -941,7 +942,8 @@ export class VendorProductsComponent implements OnInit {
 
   constructor(
     private router: Router,
-    private vendorService: VendorService
+    private vendorService: VendorService,
+    private toastService: ToastService
   ) {}
   
   // Modal de formulaire
@@ -961,25 +963,13 @@ export class VendorProductsComponent implements OnInit {
         this.filteredProducts = [...this.products];
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Erreur lors du chargement des produits:', error);
         this.loading = false;
-        // Fallback vers des données de démonstration
-        this.products = [
-          {
-            id: '1',
-            name: 'Robe Ankara Élégante',
-            description: 'Magnifique robe en tissu Ankara avec coupe moderne et couleurs vives',
-            price: 45000,
-            stock: 15,
-            category: 'femmes',
-            images: ['/assets/images/products/robe-1.jpg'],
-            status: 'active',
-            createdAt: '2024-01-15',
-            updatedAt: '2024-01-20'
-          }
-        ];
-        this.filteredProducts = [...this.products];
+        const errorMessage = error.error?.message || 'Erreur lors du chargement des produits. Veuillez réessayer.';
+        this.toastService.error(errorMessage);
+        this.products = [];
+        this.filteredProducts = [];
       }
     });
   }
@@ -1070,10 +1060,12 @@ export class VendorProductsComponent implements OnInit {
         next: () => {
           this.products = this.products.filter(p => p.id !== product.id);
           this.filterProducts();
-          console.log('Produit supprimé:', product);
+          this.toastService.success(`Produit "${product.name}" supprimé avec succès !`);
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Erreur lors de la suppression:', error);
+          const errorMessage = error.error?.message || 'Erreur lors de la suppression du produit. Veuillez réessayer.';
+          this.toastService.error(errorMessage);
         }
       });
     }
@@ -1096,9 +1088,12 @@ export class VendorProductsComponent implements OnInit {
           }
           this.filterProducts();
           this.closeProductForm();
+          this.toastService.success('Produit mis à jour avec succès !');
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Erreur lors de la mise à jour:', error);
+          const errorMessage = error.error?.message || 'Erreur lors de la mise à jour du produit. Veuillez réessayer.';
+          this.toastService.error(errorMessage);
         }
       });
     } else {
@@ -1108,9 +1103,12 @@ export class VendorProductsComponent implements OnInit {
           this.products.unshift(newProduct);
           this.filterProducts();
           this.closeProductForm();
+          this.toastService.success('Produit créé avec succès !');
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Erreur lors de la création:', error);
+          const errorMessage = error.error?.message || 'Erreur lors de la création du produit. Veuillez réessayer.';
+          this.toastService.error(errorMessage);
         }
       });
     }

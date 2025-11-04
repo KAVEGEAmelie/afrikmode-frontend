@@ -14,6 +14,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { VendorService, VendorDashboard } from '../../../../core/services/vendor.service';
+import { AnalyticsService } from '../../../../core/services/analytics.service';
 import { Subscription } from 'rxjs';
 
 interface KPICard {
@@ -109,7 +110,7 @@ interface RecentOrder {
                 <mat-card-title>Évolution des Revenus</mat-card-title>
                 <mat-card-subtitle>Historique des 30 derniers jours</mat-card-subtitle>
               </div>
-              <mat-select [(value)]="revenuePeriod" class="period-select">
+              <mat-select [(value)]="revenuePeriod" (valueChange)="onRevenuePeriodChange()" class="period-select">
                 <mat-option value="7">7 jours</mat-option>
                 <mat-option value="30">30 jours</mat-option>
                 <mat-option value="90">3 mois</mat-option>
@@ -362,10 +363,10 @@ interface RecentOrder {
                 <mat-icon class="metric-icon">shopping_bag</mat-icon>
                 <div class="metric-content">
                   <div class="metric-label">Taux de Conversion</div>
-                  <div class="metric-value">12.5%</div>
+                  <div class="metric-value">{{ performanceMetrics.conversionRate }}%</div>
                   <div class="metric-change positive">
                     <mat-icon>arrow_upward</mat-icon>
-                    +2.3%
+                    <span>--</span>
                   </div>
                 </div>
               </div>
@@ -373,10 +374,10 @@ interface RecentOrder {
                 <mat-icon class="metric-icon">attach_money</mat-icon>
                 <div class="metric-content">
                   <div class="metric-label">Panier Moyen</div>
-                  <div class="metric-value">45,500 FCFA</div>
+                  <div class="metric-value">{{ performanceMetrics.averageCart | currency:'FCFA':'symbol':'1.0-0':'fr' }}</div>
                   <div class="metric-change positive">
                     <mat-icon>arrow_upward</mat-icon>
-                    +5.2%
+                    <span>--</span>
                   </div>
                 </div>
               </div>
@@ -384,10 +385,10 @@ interface RecentOrder {
                 <mat-icon class="metric-icon">local_shipping</mat-icon>
                 <div class="metric-content">
                   <div class="metric-label">Taux de Livraison</div>
-                  <div class="metric-value">98.2%</div>
+                  <div class="metric-value">{{ performanceMetrics.deliveryRate }}%</div>
                   <div class="metric-change positive">
                     <mat-icon>arrow_upward</mat-icon>
-                    +1.1%
+                    <span>--</span>
                   </div>
                 </div>
               </div>
@@ -395,10 +396,10 @@ interface RecentOrder {
                 <mat-icon class="metric-icon">star</mat-icon>
                 <div class="metric-content">
                   <div class="metric-label">Note Moyenne</div>
-                  <div class="metric-value">4.7/5</div>
+                  <div class="metric-value">{{ performanceMetrics.averageRating.toFixed(1) }}/5</div>
                   <div class="metric-change positive">
                     <mat-icon>arrow_upward</mat-icon>
-                    +0.3
+                    <span>--</span>
                   </div>
                 </div>
               </div>
@@ -406,10 +407,10 @@ interface RecentOrder {
                 <mat-icon class="metric-icon">replay</mat-icon>
                 <div class="metric-content">
                   <div class="metric-label">Taux de Retour</div>
-                  <div class="metric-value">2.1%</div>
+                  <div class="metric-value">{{ performanceMetrics.returnRate }}%</div>
                   <div class="metric-change negative">
                     <mat-icon>arrow_downward</mat-icon>
-                    -0.5%
+                    <span>--</span>
                   </div>
                 </div>
               </div>
@@ -417,10 +418,10 @@ interface RecentOrder {
                 <mat-icon class="metric-icon">schedule</mat-icon>
                 <div class="metric-content">
                   <div class="metric-label">Temps de Réponse</div>
-                  <div class="metric-value">2.3h</div>
+                  <div class="metric-value">{{ performanceMetrics.responseTime }}h</div>
                   <div class="metric-change positive">
                     <mat-icon>arrow_downward</mat-icon>
-                    -0.8h
+                    <span>--</span>
                   </div>
                 </div>
               </div>
@@ -481,44 +482,32 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
   topProducts: any[] = [];
   revenuePeriod: string = '30';
   isLoading = false;
+  errorMessage: string | null = null;
 
-  // Données pour les graphiques
-  revenueData = [
-    { day: 'Lun', amount: 45000 },
-    { day: 'Mar', amount: 52000 },
-    { day: 'Mer', amount: 48000 },
-    { day: 'Jeu', amount: 60000 },
-    { day: 'Ven', amount: 55000 },
-    { day: 'Sam', amount: 72000 },
-    { day: 'Dim', amount: 68000 }
-  ];
-
-  categoryData = [
-    { name: 'Mode Africaine', icon: 'checkroom', color: '#4caf50', amount: 350000, percentage: 45 },
-    { name: 'Accessoires', icon: 'watch', color: '#2196f3', amount: 180000, percentage: 23 },
-    { name: 'Chaussures', icon: 'hiking', color: '#ff9800', amount: 150000, percentage: 19 },
-    { name: 'Bijoux', icon: 'diamond', color: '#9c27b0', amount: 100000, percentage: 13 }
-  ];
-
-  ordersStatusData = [
-    { name: 'En attente', icon: 'schedule', count: 15, color: '#ff9800' },
-    { name: 'Confirmées', icon: 'check_circle', count: 42, color: '#2196f3' },
-    { name: 'En préparation', icon: 'inventory', count: 18, color: '#9c27b0' },
-    { name: 'Expédiées', icon: 'local_shipping', count: 28, color: '#00bcd4' },
-    { name: 'Livrées', icon: 'done_all', count: 95, color: '#4caf50' },
-    { name: 'Annulées', icon: 'cancel', count: 3, color: '#f44336' }
-  ];
-
-  topCustomers = [
-    { name: 'Marie Kouassi', orders: 12, total: 450000, vip: true },
-    { name: 'Jean Dupont', orders: 8, total: 320000, vip: false },
-    { name: 'Fatou Diallo', orders: 10, total: 380000, vip: true },
-    { name: 'Koffi Mensah', orders: 7, total: 280000, vip: false },
-    { name: 'Aminata Sy', orders: 9, total: 340000, vip: false }
-  ];
+  // Données pour les graphiques - chargées depuis l'API
+  revenueData: Array<{ day: string; amount: number }> = [];
+  categoryData: Array<{ name: string; icon: string; color: string; amount: number; percentage: number }> = [];
+  ordersStatusData: Array<{ name: string; icon: string; count: number; color: string }> = [];
+  topCustomers: Array<{ name: string; orders: number; total: number; vip: boolean }> = [];
+  performanceMetrics: {
+    conversionRate: number;
+    averageCart: number;
+    deliveryRate: number;
+    averageRating: number;
+    returnRate: number;
+    responseTime: number;
+  } = {
+    conversionRate: 0,
+    averageCart: 0,
+    deliveryRate: 0,
+    averageRating: 0,
+    returnRate: 0,
+    responseTime: 0
+  };
 
   constructor(
     private vendorService: VendorService,
+    private analyticsService: AnalyticsService,
     private router: Router
   ) {}
 
@@ -532,25 +521,239 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
 
   private initializeDashboard(): void {
     this.isLoading = true;
+    this.errorMessage = null;
     
-    // Charger les données du dashboard vendor depuis l'API
+    // Charger toutes les données en parallèle
     const dashboardSub = this.vendorService.getDashboard().subscribe({
       next: (data) => {
         this.dashboardData = data;
         this.topProducts = data.topProducts || [];
         this.updateKPICards(data);
         this.updateRecentOrders(data);
+        
+        // Charger les données de graphiques depuis salesChart
+        this.loadRevenueData(data);
+        
+        // Charger les autres données
+        this.loadCategoryData();
+        this.loadOrdersStatusData();
+        this.loadTopCustomers();
+        this.loadPerformanceMetrics(data);
+        
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Erreur lors du chargement du dashboard:', error);
+        this.errorMessage = 'Erreur lors du chargement des données. Veuillez réessayer.';
         this.isLoading = false;
-        // Charger des données de démonstration
-        this.loadDemoData();
+        // En production, ne pas charger de données mockées
+        // this.loadDemoData();
       }
     });
 
     this.subscriptions.push(dashboardSub);
+  }
+
+  private loadRevenueData(dashboardData: VendorDashboard): void {
+    // Utiliser salesChart du dashboard si disponible
+    const dashboardWithChart = dashboardData as VendorDashboard & { salesChart?: Array<{ date: string; revenue: number; orders?: number }> };
+    if (dashboardWithChart.salesChart && Array.isArray(dashboardWithChart.salesChart) && dashboardWithChart.salesChart.length > 0) {
+      this.revenueData = this.transformSalesChartToRevenueData(dashboardWithChart.salesChart);
+    } else {
+      // Sinon, charger depuis AnalyticsService
+      const period = this.revenuePeriod === '7' ? '7d' : this.revenuePeriod === '90' ? '90d' : '30d';
+      const filters: any = { period: period };
+      const revenueSub = this.analyticsService.getSalesAnalytics(filters).subscribe({
+        next: (analytics: any) => {
+          if (analytics.dailySales && analytics.dailySales.length > 0) {
+            const chartData = analytics.dailySales.map((item: any) => ({
+              date: item.date,
+              revenue: item.revenue || 0,
+              orders: item.orders || 0
+            }));
+            this.revenueData = this.transformSalesChartToRevenueData(chartData);
+          } else {
+            this.revenueData = [];
+          }
+        },
+        error: (error: any) => {
+          console.error('Erreur chargement revenue data:', error);
+          this.revenueData = [];
+        }
+      });
+      this.subscriptions.push(revenueSub);
+    }
+  }
+
+  private transformSalesChartToRevenueData(chartData: Array<{ date: string; revenue: number; orders?: number }>): Array<{ day: string; amount: number }> {
+    return chartData.map(item => {
+      const date = new Date(item.date);
+      const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+      const dayName = dayNames[date.getDay()];
+      return {
+        day: dayName,
+        amount: item.revenue || 0
+      };
+    });
+  }
+
+  private loadCategoryData(): void {
+    const period = this.revenuePeriod === '7' ? '7d' : this.revenuePeriod === '90' ? '90d' : '30d';
+    const filters: any = { period: period };
+    const categorySub = this.analyticsService.getSalesAnalytics(filters).subscribe({
+      next: (analytics: any) => {
+        if (analytics.topCategories && analytics.topCategories.length > 0) {
+          const totalRevenue = analytics.topCategories.reduce((sum: number, cat: any) => sum + cat.revenue, 0);
+          const categoryIcons: Record<string, string> = {
+            'Mode Africaine': 'checkroom',
+            'Accessoires': 'watch',
+            'Chaussures': 'hiking',
+            'Bijoux': 'diamond',
+            'Textiles': 'checkroom',
+            'Autres': 'category'
+          };
+          const categoryColors: Record<string, string> = {
+            'Mode Africaine': '#4caf50',
+            'Accessoires': '#2196f3',
+            'Chaussures': '#ff9800',
+            'Bijoux': '#9c27b0',
+            'Textiles': '#4caf50',
+            'Autres': '#9e9e9e'
+          };
+          
+          this.categoryData = analytics.topCategories.slice(0, 4).map((cat: any, index: number) => ({
+            name: cat.name,
+            icon: categoryIcons[cat.name] || 'category',
+            color: categoryColors[cat.name] || ['#4caf50', '#2196f3', '#ff9800', '#9c27b0'][index % 4],
+            amount: cat.revenue,
+            percentage: totalRevenue > 0 ? Math.round((cat.revenue / totalRevenue) * 100) : 0
+          }));
+        } else {
+          this.categoryData = [];
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement category data:', error);
+        this.categoryData = [];
+      }
+    });
+    this.subscriptions.push(categorySub);
+  }
+
+  private loadOrdersStatusData(): void {
+    const ordersSub = this.vendorService.getOrders({ status: 'all' }).subscribe({
+      next: (response: any) => {
+        const orders = response.orders || response.data || [];
+        
+        // Compter les commandes par statut
+        const statusCounts: Record<string, number> = {
+          'pending': 0,
+          'confirmed': 0,
+          'preparing': 0,
+          'shipped': 0,
+          'delivered': 0,
+          'cancelled': 0
+        };
+        
+        orders.forEach((order: any) => {
+          const status = order.status?.toLowerCase() || 'pending';
+          if (statusCounts[status] !== undefined) {
+            statusCounts[status]++;
+          }
+        });
+        
+        const statusConfig = [
+          { name: 'En attente', key: 'pending', icon: 'schedule', color: '#ff9800' },
+          { name: 'Confirmées', key: 'confirmed', icon: 'check_circle', color: '#2196f3' },
+          { name: 'En préparation', key: 'preparing', icon: 'inventory', color: '#9c27b0' },
+          { name: 'Expédiées', key: 'shipped', icon: 'local_shipping', color: '#00bcd4' },
+          { name: 'Livrées', key: 'delivered', icon: 'done_all', color: '#4caf50' },
+          { name: 'Annulées', key: 'cancelled', icon: 'cancel', color: '#f44336' }
+        ];
+        
+        this.ordersStatusData = statusConfig.map(config => ({
+          name: config.name,
+          icon: config.icon,
+          count: statusCounts[config.key] || 0,
+          color: config.color
+        }));
+      },
+      error: (error) => {
+        console.error('Erreur chargement orders status:', error);
+        this.ordersStatusData = [];
+      }
+    });
+    this.subscriptions.push(ordersSub);
+  }
+
+  private loadTopCustomers(): void {
+    // Utiliser getUserAnalytics qui retourne les données utilisateurs/clients
+    const customersSub = this.analyticsService.getUserAnalytics().subscribe({
+      next: (analytics: any) => {
+        // Adapter selon la structure de la réponse
+        if (analytics.topCustomers && analytics.topCustomers.length > 0) {
+          this.topCustomers = analytics.topCustomers.slice(0, 5).map((customer: any) => ({
+            name: customer.name || customer.first_name + ' ' + customer.last_name,
+            orders: customer.total_orders || 0,
+            total: customer.total_spent || 0,
+            vip: (customer.total_spent || 0) > 300000 // VIP si > 300k FCFA
+          }));
+        } else if (analytics.customers && analytics.customers.length > 0) {
+          // Fallback si la structure est différente
+          this.topCustomers = analytics.customers.slice(0, 5).map((customer: any) => ({
+            name: customer.name || customer.first_name + ' ' + customer.last_name,
+            orders: customer.orders_count || 0,
+            total: customer.total_spent || 0,
+            vip: (customer.total_spent || 0) > 300000
+          }));
+        } else {
+          this.topCustomers = [];
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement top customers:', error);
+        this.topCustomers = [];
+      }
+    });
+    this.subscriptions.push(customersSub);
+  }
+
+  private loadPerformanceMetrics(dashboardData: VendorDashboard): void {
+    const stats = dashboardData.stats;
+    
+    // Calculer les métriques depuis les données disponibles
+    this.performanceMetrics = {
+      conversionRate: stats.totalOrders > 0 && stats.totalProducts > 0 
+        ? Math.round((stats.totalOrders / stats.totalProducts) * 100 * 10) / 10 
+        : 0,
+      averageCart: stats.totalOrders > 0 && stats.totalSales > 0
+        ? Math.round(stats.totalSales / stats.totalOrders)
+        : 0,
+      deliveryRate: stats.totalOrders > 0 && stats.pendingOrders !== undefined
+        ? Math.round(((stats.totalOrders - stats.pendingOrders) / stats.totalOrders) * 100 * 10) / 10
+        : 0,
+      averageRating: stats.averageRating || 0,
+      returnRate: 0, // À calculer depuis les commandes refunded
+      responseTime: 0 // À calculer depuis les messages
+    };
+    
+    // Charger les métriques depuis Analytics si disponibles
+    const period = this.revenuePeriod === '7' ? '7d' : this.revenuePeriod === '90' ? '90d' : '30d';
+    const filters: any = { period: period };
+    const analyticsSub = this.analyticsService.getSalesAnalytics(filters).subscribe({
+      next: (analytics: any) => {
+        if (analytics.conversionRate !== undefined) {
+          this.performanceMetrics.conversionRate = analytics.conversionRate;
+        }
+        if (analytics.averageOrderValue !== undefined) {
+          this.performanceMetrics.averageCart = analytics.averageOrderValue;
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement performance metrics:', error);
+      }
+    });
+    this.subscriptions.push(analyticsSub);
   }
 
   private loadDemoData(): void {
@@ -657,20 +860,35 @@ export class VendorDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Méthodes pour les graphiques
+  onRevenuePeriodChange(): void {
+    // Recharger les données avec la nouvelle période
+    if (this.dashboardData) {
+      this.loadRevenueData(this.dashboardData);
+      this.loadCategoryData();
+      this.loadTopCustomers();
+      this.loadPerformanceMetrics(this.dashboardData);
+    }
+  }
+
   getBarHeight(amount: number): number {
+    if (!this.revenueData || this.revenueData.length === 0) return 0;
     const maxAmount = Math.max(...this.revenueData.map(d => d.amount));
+    if (maxAmount === 0) return 0;
     return (amount / maxAmount) * 100;
   }
 
   getMaxRevenue(): number {
+    if (!this.revenueData || this.revenueData.length === 0) return 0;
     return Math.max(...this.revenueData.map(d => d.amount));
   }
 
   getMinRevenue(): number {
+    if (!this.revenueData || this.revenueData.length === 0) return 0;
     return Math.min(...this.revenueData.map(d => d.amount));
   }
 
   getAvgRevenue(): number {
+    if (!this.revenueData || this.revenueData.length === 0) return 0;
     const sum = this.revenueData.reduce((acc, d) => acc + d.amount, 0);
     return Math.round(sum / this.revenueData.length);
   }

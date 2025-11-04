@@ -28,41 +28,7 @@ interface CartItemDisplay {
 })
 export class CartComponent implements OnInit {
   cart: Cart | null = null;
-  cartItems: CartItemDisplay[] = [
-    {
-      id: 1,
-      productId: 1,
-      name: 'Robe Ankara Élégante',
-      price: 45000,
-      image: '/assets/images/products/robe-1.jpg',
-      color: 'Rouge & Or',
-      size: 'M',
-      quantity: 1,
-      maxStock: 5
-    },
-    {
-      id: 2,
-      productId: 2,
-      name: 'Chemise Wax Premium',
-      price: 35000,
-      image: '/assets/images/products/chemise-1.jpg',
-      color: 'Multicolore',
-      size: 'L',
-      quantity: 2,
-      maxStock: 10
-    },
-    {
-      id: 3,
-      productId: 4,
-      name: 'Sac à Main Artisanal',
-      price: 25000,
-      image: '/assets/images/products/sac-1.jpg',
-      color: 'Marron',
-      size: 'Unique',
-      quantity: 1,
-      maxStock: 3
-    }
-  ];
+  cartItems: CartItemDisplay[] = []; // Initialisé vide, sera rempli depuis l'API
 
   promoCode: string = '';
   promoApplied: boolean = false;
@@ -92,7 +58,7 @@ export class CartComponent implements OnInit {
           color: item.variant?.attributes?.['color'] || 'Non spécifié',
           size: item.variant?.attributes?.['size'] || 'Non spécifié',
           quantity: item.quantity,
-          maxStock: 10 // Valeur par défaut, devrait venir de l'API
+          maxStock: item.product.stock_quantity || item.variant?.stock_quantity || 10 // Récupérer le stock réel depuis l'API
         }));
       } else {
         this.cartItems = [];

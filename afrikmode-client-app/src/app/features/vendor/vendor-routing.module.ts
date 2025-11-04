@@ -102,6 +102,14 @@ const routes: Routes = [
       {
         path: 'settings',
         loadComponent: () => import('./pages/settings/vendor-settings.component').then(m => m.VendorSettingsComponent)
+      },
+      {
+        path: 'profile',
+        loadComponent: () => import('./pages/profile/vendor-profile.component').then(m => m.VendorProfileComponent)
+      },
+      {
+        path: 'store',
+        loadComponent: () => import('./pages/store/vendor-store.component').then(m => m.VendorStoreComponent)
       }
     ]
   }

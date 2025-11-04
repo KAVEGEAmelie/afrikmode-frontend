@@ -25,7 +25,22 @@
   flex: 1;
 }
 
-.menu-btn,
+.menu-btn {
+  color: white;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.05);
+  }
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: white;
+}
+
 .toggle-btn {
   color: white;
   transition: all 0.3s ease;
@@ -114,11 +129,12 @@
 }
 
 // Menu Styles
-.notification-menu,
-.message-menu,
-.profile-menu {
-  min-width: 320px;
-  max-width: 400px;
+::ng-deep {
+  .mat-mdc-menu-panel {
+    min-width: 320px;
+    max-width: 400px;
+    margin-top: 8px;
+  }
 }
 
 .menu-header {

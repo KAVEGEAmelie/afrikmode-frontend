@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { UserService } from '../../../../core/services/user.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { OrderService } from '../../../../core/services/order.service';
+import { WishlistService } from '../../../../core/services/wishlist.service';
 
 @Component({
   selector: 'app-profile-overview',
@@ -18,32 +20,9 @@ export class ProfileOverviewComponent implements OnInit {
   loading = true;
   errorMessage = '';
 
-  recentOrders = [
-    {
-      id: '1',
-      order_number: 'ORD-2025-001',
-      date: '2025-09-25',
-      total: 45000,
-      status: 'delivered',
-      items_count: 2
-    },
-    {
-      id: '2',
-      order_number: 'ORD-2025-002',
-      date: '2025-09-20',
-      total: 75000,
-      status: 'shipped',
-      items_count: 3
-    },
-    {
-      id: '3',
-      order_number: 'ORD-2025-003',
-      date: '2025-09-15',
-      total: 35000,
-      status: 'delivered',
-      items_count: 1
-    }
-  ];
+  recentOrders: any[] = [];
+  wishlistCount = 0;
+  notificationsCount = 0;
 
   quickLinks = [
     {
@@ -51,7 +30,8 @@ export class ProfileOverviewComponent implements OnInit {
       description: 'Voir toutes mes commandes',
       icon: 'fa-shopping-bag',
       path: '/profile/order-history',
-      color: '#e74c3c'
+      color: '#e74c3c',
+      badge: 0
     },
     {
       title: 'Mes Adresses',
@@ -62,10 +42,11 @@ export class ProfileOverviewComponent implements OnInit {
     },
     {
       title: 'Liste de Souhaits',
-      description: '5 articles dans ma liste',
+      description: 'Articles dans ma liste',
       icon: 'fa-heart',
       path: '/profile/wishlist',
-      color: '#e91e63'
+      color: '#e91e63',
+      badge: 0
     },
     {
       title: 'Mes Avis',
@@ -79,11 +60,74 @@ export class ProfileOverviewComponent implements OnInit {
   constructor(
     private router: Router,
     private userService: UserService,
-    private authService: AuthService
+    private authService: AuthService,
+    private orderService: OrderService,
+    private wishlistService: WishlistService
   ) {}
 
   ngOnInit(): void {
     this.loadUserData();
+    this.loadRecentOrders();
+    this.loadWishlistCount();
+    this.loadNotificationsCount();
+  }
+
+  loadRecentOrders(): void {
+    this.orderService.getOrders({ page: 1, per_page: 3 }).subscribe({
+      next: (response: any) => {
+        const ordersData = Array.isArray(response) ? response : response.data || [];
+        this.recentOrders = ordersData.slice(0, 3).map((order: any) => ({
+          id: order.id,
+          order_number: order.order_number,
+          date: new Date(order.created_at).toLocaleDateString('fr-FR'),
+          total: order.total,
+          status: order.status,
+          items_count: order.items?.length || 0
+        }));
+        
+        // Mettre à jour le badge dans quickLinks
+        const ordersLink = this.quickLinks.find(link => link.path === '/profile/order-history');
+        if (ordersLink) {
+          ordersLink.badge = ordersData.length;
+        }
+      },
+      error: (error) => {
+        console.error('Erreur chargement commandes récentes:', error);
+      }
+    });
+  }
+
+  loadWishlistCount(): void {
+    this.wishlistService.getWishlist().subscribe({
+      next: (response: any) => {
+        const items = response.data || [];
+        this.wishlistCount = items.length;
+        
+        // Mettre à jour le badge et la description
+        const wishlistLink = this.quickLinks.find(link => link.path === '/profile/wishlist');
+        if (wishlistLink) {
+          wishlistLink.badge = this.wishlistCount;
+          wishlistLink.description = `${this.wishlistCount} article${this.wishlistCount > 1 ? 's' : ''} dans ma liste`;
+        }
+      },
+      error: (error) => {
+        console.error('Erreur chargement wishlist:', error);
+      }
+    });
+  }
+
+  loadNotificationsCount(): void {
+    // Charger les notifications depuis l'API via UserService
+    this.userService.getNotifications({ unread_only: true }).subscribe({
+      next: (response: any) => {
+        const notifications: any[] = response.data || response || [];
+        // Mettre à jour le count avec les notifications non lues
+        this.notificationsCount = notifications.filter((n: any) => !n.read || n.read === false).length;
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement notifications:', error);
+      }
+    });
   }
 
   loadUserData(): void {

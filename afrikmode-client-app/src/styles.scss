@@ -22,18 +22,15 @@ html, body {
 body {
   margin: 0;
   background-color: #f8f9fa;
-  // Empêcher le flash blanc au chargement
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-// Empêcher le contenu de bouger pendant le chargement
 html {
   overflow-y: scroll;
   overflow-x: hidden;
 }
 
-// Animation pour tous les éléments qui se chargent
 * {
   &:not(.no-transition) {
     transition: opacity 0.2s ease-in-out;
@@ -87,54 +84,220 @@ img {
   border-radius: 16px !important;
 }
 
-// Fix pour les overlays Material (menus, dialogs, etc.)
+// ============= FIX POUR LES OVERLAYS MATERIAL =============
+
+// Container principal des overlays
 .cdk-overlay-container {
-  z-index: 10000 !important;
+  position: fixed !important;
+  z-index: 1000 !important;
+  pointer-events: none !important;
 }
+
+// Position des overlays
+.cdk-overlay-connected-position-bounding-box {
+  position: absolute !important;
+  z-index: 1000 !important;
+}
+
+// ============= BACKDROPS (FONDS SOMBRES) =============
 
 .cdk-overlay-backdrop {
-  z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  pointer-events: auto !important;
+  
+  // Backdrop transparent (pour les menus normaux)
+  &.cdk-overlay-transparent-backdrop {
+    z-index: 1000 !important;
+    background-color: transparent !important;
+  }
+  
+  // Backdrop sombre (pour les dialogs)
+  &.cdk-overlay-dark-backdrop {
+    z-index: 1050 !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+  }
+  
+  // Backdrop pour les dialogs de catégories
+  &.category-dialog-backdrop {
+    z-index: 1050 !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(4px) !important;
+  }
 }
+
+// ============= PANES (CONTENEURS D'OVERLAYS) =============
 
 .cdk-overlay-pane {
-  z-index: 10001 !important;
+  pointer-events: auto !important;
+  position: absolute !important;
+  
+  // Menus normaux (profile, notifications, etc.)
+  &:not(:has(.category-dialog-panel)) {
+    z-index: 1001 !important;
+  }
+  
+  // Dialogs de catégories - Z-INDEX CRITIQUE !
+  &:has(.category-dialog-panel) {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 1100 !important; // ← PLUS ÉLEVÉ QUE LE BACKDROP (1050)
+  }
 }
 
-// Fix spécifique pour les menus Material
+// ============= MENUS MATERIAL =============
+
 .mat-mdc-menu-panel {
-  z-index: 10001 !important;
+  z-index: 1001 !important;
   max-width: 400px !important;
+  pointer-events: auto !important;
+  background: white !important;
   
   &.profile-menu {
     min-width: 320px !important;
   }
 }
 
-// Fix pour les dialogs de catégories
-.category-dialog-backdrop {
-  background-color: rgba(0, 0, 0, 0.5) !important;
-  backdrop-filter: blur(4px);
-}
+// ============= DIALOGS DE CATÉGORIES =============
 
 .category-dialog-panel {
+  z-index: 1100 !important; // ← CRITIQUE: Plus élevé que le backdrop
+  position: relative !important;
+  pointer-events: auto !important;
+  display: block !important;
+  
+  // Container Material du dialog
   .mat-mdc-dialog-container {
     border-radius: 16px !important;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
-    overflow: hidden !important;
+    overflow: visible !important;
+    z-index: 1100 !important;
+    position: relative !important;
+    pointer-events: auto !important;
+    background: white !important;
+    max-height: 90vh !important;
     
+    // Surface du dialog
     .mdc-dialog__surface {
       border-radius: 16px !important;
-      overflow: hidden !important;
+      overflow: visible !important;
+      pointer-events: auto !important;
+      background: white !important;
+      position: relative !important;
     }
   }
 }
 
-// Empêcher la fermeture accidentelle du dialog
+// ============= TOUS LES DIALOGS MATERIAL =============
+
 .mat-mdc-dialog-container {
+  z-index: 1100 !important;
   pointer-events: auto !important;
+  background: white !important;
   
   .mdc-dialog__surface {
+    border-radius: 12px !important;
     pointer-events: auto !important;
+    background: white !important;
+  }
+  
+  // Contenu du dialog cliquable
+  .mat-mdc-dialog-content,
+  mat-dialog-content {
+    pointer-events: auto !important;
+    
+    // Tous les éléments à l'intérieur sont cliquables
+    * {
+      pointer-events: auto !important;
+    }
+  }
+  
+  // Actions du dialog cliquables
+  .mat-mdc-dialog-actions,
+  mat-dialog-actions {
+    pointer-events: auto !important;
+    
+    button {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+      
+      &:not(:disabled) {
+        opacity: 1 !important;
+      }
+    }
+  }
+  
+  // Form fields cliquables
+  mat-form-field,
+  .mat-mdc-form-field {
+    pointer-events: auto !important;
+    
+    input,
+    textarea,
+    select,
+    .mat-mdc-select {
+      pointer-events: auto !important;
+      cursor: text !important;
+    }
+    
+    // Les overlays de select
+    .mat-mdc-select-trigger {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+    }
+  }
+  
+  // Slide toggles cliquables
+  mat-slide-toggle,
+  .mat-mdc-slide-toggle {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+}
+
+// ============= OVERLAYS DES SELECTS DANS LES DIALOGS =============
+
+.cdk-overlay-pane.mat-mdc-select-panel {
+  z-index: 1150 !important; // ← Plus élevé que les dialogs
+  pointer-events: auto !important;
+  
+  .mat-mdc-option {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+  }
+}
+
+// ============= CORRECTIONS SUPPLÉMENTAIRES =============
+
+// S'assurer que les inputs ne sont pas bloqués
+input, textarea, select, button {
+  &:not(:disabled) {
+    pointer-events: auto !important;
+  }
+}
+
+// Forcer le curseur correct
+.mat-mdc-form-field input,
+.mat-mdc-form-field textarea {
+  cursor: text !important;
+}
+
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-icon-button,
+button {
+  cursor: pointer !important;
+  
+  &:disabled {
+    cursor: not-allowed !important;
   }
 }
 
@@ -145,3 +308,18 @@ img {
   padding: 0 20px;
   width: 100%;
 }
+
+// ============= DEBUG (à retirer en production) =============
+// Décommentez ces lignes pour déboguer les z-index
+
+// .cdk-overlay-backdrop {
+//   border: 3px solid red !important;
+// }
+
+// .cdk-overlay-pane {
+//   border: 3px solid blue !important;
+// }
+
+// .category-dialog-panel {
+//   border: 3px solid green !important;
+// }

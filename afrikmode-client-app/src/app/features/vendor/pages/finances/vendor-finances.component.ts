@@ -810,6 +810,7 @@ export class VendorFinancesComponent implements OnInit {
   transactions: Transaction[] = [];
   filteredTransactions: Transaction[] = [];
   payoutRequests: PayoutRequest[] = [];
+  errorMessage: string | null = null;
 
   constructor(private vendorService: VendorService) {}
 
@@ -835,90 +836,37 @@ export class VendorFinancesComponent implements OnInit {
         this.commissionRate = data.commissionRate || 10;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Erreur lors du chargement des finances:', error);
-        this.loadMockFinances();
+        // Ne pas charger de données mockées en production
+        this.errorMessage = 'Erreur lors du chargement des données financières. Veuillez réessayer.';
         this.isLoading = false;
       }
     });
   }
 
-  loadMockFinances(): void {
-    this.availableBalance = 850000;
-    this.monthlyRevenue = 2450000;
-    this.totalCommissions = 245000;
-    this.pendingAmount = 320000;
-    this.totalPayouts = 1200000;
-    this.payoutCount = 5;
-    this.totalRefunds = 50000;
-    this.refundCount = 2;
-  }
+  // Supprimé loadMockFinances() - utiliser uniquement l'API
 
   loadTransactions(): void {
-    this.vendorService.getTransactions().subscribe({
+    // Utiliser getFinances qui peut inclure les transactions
+    this.vendorService.getFinances().subscribe({
       next: (data: any) => {
-        this.transactions = data.transactions || [];
+        // Les transactions peuvent être dans data.transactions ou data.history
+        this.transactions = data.transactions || data.history || [];
         this.filteredTransactions = [...this.transactions];
         this.filterTransactions();
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Erreur lors du chargement des transactions:', error);
-        this.loadMockTransactions();
+        // Ne pas charger de données mockées en production
+        this.transactions = [];
+        this.filteredTransactions = [];
+        this.errorMessage = 'Erreur lors du chargement des transactions. Veuillez réessayer.';
       }
     });
   }
 
-  loadMockTransactions(): void {
-    this.transactions = [
-      {
-        id: '1',
-        type: 'sale',
-        reference: 'VT-20250116-001',
-        description: 'Vente - Robe Ankara Élégante',
-        amount: 90000,
-        status: 'completed',
-        date: '2025-01-16T10:30:00'
-      },
-      {
-        id: '2',
-        type: 'commission',
-        reference: 'CM-20250116-001',
-        description: 'Commission plateforme (10%)',
-        amount: 9000,
-        status: 'completed',
-        date: '2025-01-16T10:30:00'
-      },
-      {
-        id: '3',
-        type: 'payout',
-        reference: 'PY-20250115-001',
-        description: 'Retrait vers Mobile Money',
-        amount: 500000,
-        status: 'completed',
-        date: '2025-01-15T14:20:00'
-      },
-      {
-        id: '4',
-        type: 'sale',
-        reference: 'VT-20250114-045',
-        description: 'Vente - Ensemble Kente Royal',
-        amount: 85000,
-        status: 'completed',
-        date: '2025-01-14T11:45:00'
-      },
-      {
-        id: '5',
-        type: 'refund',
-        reference: 'RF-20250113-002',
-        description: 'Remboursement - Commande annulée',
-        amount: 45000,
-        status: 'completed',
-        date: '2025-01-13T09:15:00'
-      }
-    ];
-    
-    this.filteredTransactions = [...this.transactions];
-  }
+  // Supprimé loadMockTransactions() - utiliser uniquement l'API
 
   loadPayoutRequests(): void {
     this.payoutRequests = [

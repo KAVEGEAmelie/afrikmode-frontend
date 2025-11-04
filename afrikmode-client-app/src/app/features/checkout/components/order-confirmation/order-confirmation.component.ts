@@ -1,8 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
+import { OrderService } from '../../../../core/services/order.service';
+import { Order } from '../../../../core/models/order.model';
 
-interface OrderItem {
+interface OrderItemDisplay {
   id: number;
   name: string;
   price: number;
@@ -10,15 +12,18 @@ interface OrderItem {
   image: string;
 }
 
-interface OrderData {
+interface OrderDataDisplay {
   orderId: string;
-  items: OrderItem[];
+  orderNumber: string;
+  items: OrderItemDisplay[];
   total: number;
   currency: string;
   shippingAddress: any;
   paymentMethod: string;
   estimatedDelivery: string;
   trackingNumber?: string;
+  status: string;
+  paymentStatus: string;
 }
 
 @Component({
@@ -30,46 +35,89 @@ interface OrderData {
 })
 export class OrderConfirmationComponent implements OnInit {
   
-  @Input() orderData: OrderData | null = null;
+  orderId: string | null = null;
+  order: Order | null = null;
+  currentOrder: OrderDataDisplay | null = null;
+  isLoading = true;
+  error: string | null = null;
 
-  // Données de simulation si aucune commande n'est fournie
-  mockOrderData: OrderData = {
-    orderId: 'AFM-2024-001234',
-    items: [
-      {
-        id: 1,
-        name: 'Robe Ankara Élégante',
-        price: 45000,
-        quantity: 1,
-        image: '/assets/images/products/robe-1.jpg'
-      },
-      {
-        id: 2,
-        name: 'Chemise Wax Premium',
-        price: 35000,
-        quantity: 2,
-        image: '/assets/images/products/chemise-1.jpg'
-      }
-    ],
-    total: 120000,
-    currency: 'FCFA',
-    shippingAddress: {
-      firstName: 'Marie',
-      lastName: 'Dupont',
-      address: '123 Rue de la Paix',
-      city: 'Lomé',
-      country: 'Togo',
-      phone: '+228 XX XX XX XX'
-    },
-    paymentMethod: 'Carte bancaire',
-    estimatedDelivery: '2024-10-15',
-    trackingNumber: 'AFM-TRACK-789456'
-  };
-
-  currentOrder: OrderData | null = null;
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private orderService: OrderService
+  ) {}
 
   ngOnInit(): void {
-    this.currentOrder = this.orderData || this.mockOrderData;
+    // Récupérer l'ID de commande depuis les query params ou route params
+    this.route.queryParams.subscribe(params => {
+      this.orderId = params['orderId'] || params['id'];
+      if (this.orderId) {
+        this.loadOrder(this.orderId);
+      } else {
+        this.route.params.subscribe(routeParams => {
+          this.orderId = routeParams['id'];
+          if (this.orderId) {
+            this.loadOrder(this.orderId);
+          } else {
+            this.error = 'Numéro de commande manquant';
+            this.isLoading = false;
+          }
+        });
+      }
+    });
+  }
+
+  loadOrder(orderId: string): void {
+    this.isLoading = true;
+    this.error = null;
+
+    this.orderService.getOrder(orderId).subscribe({
+      next: (order) => {
+        this.order = order;
+        this.mapOrderToDisplay(order);
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Erreur chargement commande:', err);
+        this.error = 'Erreur lors du chargement de la commande';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  mapOrderToDisplay(order: Order): void {
+    const shippingAddr = typeof order.shipping_address === 'string' 
+      ? JSON.parse(order.shipping_address) 
+      : order.shipping_address;
+
+    this.currentOrder = {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      items: order.items.map(item => ({
+        id: parseInt(item.id),
+        name: item.product.name,
+        price: item.unit_price,
+        quantity: item.quantity,
+        image: item.product.image_url || (item.product.images && item.product.images.length > 0 
+          ? item.product.images[0].url 
+          : '/assets/images/products/default.jpg')
+      })),
+      total: order.total,
+      currency: order.currency || 'FCFA',
+      shippingAddress: shippingAddr || {},
+      paymentMethod: order.payment_method || 'Non spécifié',
+      estimatedDelivery: this.calculateEstimatedDelivery(),
+      trackingNumber: order.tracking_info?.tracking_number,
+      status: order.status,
+      paymentStatus: order.payment_status
+    };
+  }
+
+  calculateEstimatedDelivery(): string {
+    // Calculer la date de livraison estimée (3-5 jours à partir d'aujourd'hui)
+    const deliveryDate = new Date();
+    deliveryDate.setDate(deliveryDate.getDate() + 5);
+    return deliveryDate.toISOString().split('T')[0];
   }
 
   getOrderSubtotal(): number {
@@ -93,19 +141,36 @@ export class OrderConfirmationComponent implements OnInit {
   }
 
   downloadInvoice(): void {
-    // Simulation de téléchargement de facture
-    console.log('Téléchargement de la facture...');
-    alert('Facture téléchargée !');
+    if (!this.orderId) return;
+
+    this.orderService.downloadInvoice(this.orderId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `facture-${this.currentOrder?.orderNumber || this.orderId}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error('Erreur téléchargement facture:', err);
+        alert('Erreur lors du téléchargement de la facture');
+      }
+    });
   }
 
   trackOrder(): void {
-    // Redirection vers le suivi de commande
-    console.log('Redirection vers le suivi...');
+    if (this.orderId) {
+      this.router.navigate(['/orders', this.orderId, 'tracking']);
+    }
   }
 
   continueShopping(): void {
-    // Redirection vers la boutique
-    console.log('Retour à la boutique...');
+    this.router.navigate(['/shop']);
+  }
+
+  goToOrders(): void {
+    this.router.navigate(['/orders']);
   }
 }
 

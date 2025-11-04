@@ -56,139 +56,11 @@ export class ShopComponent implements OnInit {
   totalPages: number = 1;
 
   // Produits
-  allProducts: Product[] = [
-    {
-      id: 1,
-      name: 'Robe Ankara Élégante',
-      price: 45000,
-      oldPrice: 55000,
-      image: 'assets/images/products/robe-1.jpg',
-      category: 'Robes',
-      colors: ['rouge', 'bleu', 'jaune'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      isNew: true,
-      discount: 18,
-      rating: 4.5
-    },
-    {
-      id: 2,
-      name: 'Chemise Wax Premium',
-      price: 35000,
-      image: 'assets/images/products/chemise-1.jpg',
-      category: 'Chemises',
-      colors: ['multicolore', 'bleu'],
-      sizes: ['M', 'L', 'XL'],
-      isNew: true,
-      rating: 4.8
-    },
-    {
-      id: 3,
-      name: 'Ensemble Traditionnel',
-      price: 85000,
-      oldPrice: 95000,
-      image: 'assets/images/products/ensemble-1.jpg',
-      category: 'Ensembles',
-      colors: ['bordeaux', 'or'],
-      sizes: ['M', 'L', 'XL'],
-      discount: 11,
-      rating: 4.7
-    },
-    {
-      id: 4,
-      name: 'Sac à Main Artisanal',
-      price: 25000,
-      image: 'assets/images/products/sac-1.jpg',
-      category: 'Accessoires',
-      colors: ['marron', 'noir'],
-      isNew: true,
-      rating: 4.3
-    },
-    {
-      id: 5,
-      name: 'Boubou Homme Luxe',
-      price: 75000,
-      image: 'assets/images/products/boubou-1.jpg',
-      category: 'Hommes',
-      colors: ['blanc', 'bleu', 'noir'],
-      sizes: ['L', 'XL', 'XXL'],
-      rating: 4.6
-    },
-    {
-      id: 6,
-      name: 'Tissus Wax 6 Yards',
-      price: 30000,
-      oldPrice: 35000,
-      image: 'assets/images/products/tissu-1.jpg',
-      category: 'Tissus',
-      colors: ['multicolore'],
-      discount: 14,
-      rating: 4.9
-    },
-    {
-      id: 7,
-      name: 'Collier Perles Africaines',
-      price: 15000,
-      image: 'assets/images/products/collier-1.jpg',
-      category: 'Accessoires',
-      colors: ['multicolore'],
-      rating: 4.4
-    },
-    {
-      id: 8,
-      name: 'Pantalon Bogolan',
-      price: 40000,
-      image: 'assets/images/products/pantalon-1.jpg',
-      category: 'Pantalons',
-      colors: ['beige', 'marron'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      isNew: true,
-      rating: 4.2
-    },
-    {
-      id: 9,
-      name: 'Dashiki Homme',
-      price: 38000,
-      image: 'assets/images/products/dashiki-1.jpg',
-      category: 'Hommes',
-      colors: ['bleu', 'rouge', 'vert'],
-      sizes: ['M', 'L', 'XL'],
-      rating: 4.5
-    },
-    {
-      id: 10,
-      name: 'Jupe Africaine Midi',
-      price: 32000,
-      image: 'assets/images/products/jupe-1.jpg',
-      category: 'Robes',
-      colors: ['multicolore'],
-      sizes: ['S', 'M', 'L'],
-      rating: 4.6
-    },
-    {
-      id: 11,
-      name: 'Boucles d\'Oreilles Ethniques',
-      price: 8000,
-      image: 'assets/images/products/boucles-1.jpg',
-      category: 'Accessoires',
-      colors: ['or', 'argent'],
-      rating: 4.7
-    },
-    {
-      id: 12,
-      name: 'Caftan Brodé',
-      price: 95000,
-      oldPrice: 110000,
-      image: 'assets/images/products/caftan-1.jpg',
-      category: 'Robes',
-      colors: ['blanc', 'doré'],
-      sizes: ['M', 'L', 'XL'],
-      discount: 14,
-      rating: 4.9
-    }
-  ];
-
+  allProducts: Product[] = [];
   filteredProducts: Product[] = [];
   displayedProducts: Product[] = [];
+  totalProducts = 0;
+  isLoading = false;
 
   // Options de filtres
   filterOptions: FilterOptions = {
@@ -224,11 +96,95 @@ export class ShopComponent implements OnInit {
       if (params['search']) {
         this.searchQuery = params['search'];
       }
-      this.applyFilters();
+      if (params['category']) {
+        this.selectedCategory = params['category'];
+      }
+      // Charger les produits depuis l'API
+      this.loadProducts();
     });
 
     // Charger les IDs des produits dans la wishlist
     this.loadWishlistIds();
+  }
+
+  loadProducts(): void {
+    this.isLoading = true;
+    
+    const params: any = {
+      page: this.currentPage,
+      limit: this.itemsPerPage,
+      status: 'active'
+    };
+
+    // Ajouter les filtres
+    if (this.selectedCategory !== 'all') {
+      // Note: Il faudrait mapper le nom de catégorie à un ID, mais pour l'instant on utilise search
+      params.search = this.selectedCategory;
+    }
+
+    if (this.searchQuery) {
+      params.search = this.searchQuery;
+    }
+
+    // Ajouter le tri
+    switch (this.sortBy) {
+      case 'price-asc':
+        params.sort = 'price_asc';
+        break;
+      case 'price-desc':
+        params.sort = 'price_desc';
+        break;
+      case 'name-asc':
+        params.sort = 'name_asc';
+        break;
+      case 'rating':
+        params.sort = 'popularity';
+        break;
+      case 'newest':
+        params.sort = 'newest';
+        break;
+    }
+
+    // Ajouter filtres prix si sélectionnés
+    if (this.selectedPriceRange !== 'all') {
+      const range = this.filterOptions.priceRanges.find(r => r.label === this.selectedPriceRange);
+      if (range) {
+        params.min_price = range.min;
+        params.max_price = range.max === Infinity ? undefined : range.max;
+      }
+    }
+
+    this.productService.getProducts(params).subscribe({
+      next: (response: any) => {
+        const products = Array.isArray(response) ? response : response.data || [];
+        this.allProducts = products.map((product: any) => ({
+          id: parseInt(product.id) || product.id,
+          name: product.name,
+          price: product.price,
+          oldPrice: product.compare_price,
+          image: product.image_url || product.images?.[0]?.url || 'assets/images/products/default.jpg',
+          category: product.category?.name || '',
+          colors: product.variants?.filter((v: any) => v.attributes?.color).map((v: any) => v.attributes.color) || [],
+          sizes: product.variants?.filter((v: any) => v.attributes?.size).map((v: any) => v.attributes.size) || [],
+          isNew: product.is_featured || false,
+          discount: product.compare_price ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100) : 0,
+          rating: product.rating || 4.0
+        }));
+
+        // Mettre à jour la pagination
+        const pagination = (response as any).pagination || {};
+        this.totalProducts = pagination.total || this.allProducts.length;
+        this.totalPages = pagination.total_pages || Math.ceil(this.totalProducts / this.itemsPerPage);
+
+        // Appliquer les filtres côté client pour couleurs et tailles
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement produits:', error);
+        this.isLoading = false;
+      }
+    });
   }
 
   loadWishlistIds(): void {
@@ -250,20 +206,9 @@ export class ShopComponent implements OnInit {
 
   // Gestion des filtres
   applyFilters(): void {
+    // Les filtres principaux (catégorie, prix, recherche) sont gérés par l'API
+    // Ici on applique seulement les filtres côté client (couleurs, tailles)
     this.filteredProducts = this.allProducts.filter(product => {
-      // Filtre par catégorie
-      if (this.selectedCategory !== 'all' && product.category !== this.selectedCategory) {
-        return false;
-      }
-
-      // Filtre par prix
-      if (this.selectedPriceRange !== 'all') {
-        const range = this.filterOptions.priceRanges.find(r => r.label === this.selectedPriceRange);
-        if (range && (product.price < range.min || product.price > range.max)) {
-          return false;
-        }
-      }
-
       // Filtre par couleur
       if (this.selectedColors.length > 0) {
         const hasColor = product.colors?.some(c => this.selectedColors.includes(c));
@@ -274,13 +219,6 @@ export class ShopComponent implements OnInit {
       if (this.selectedSizes.length > 0) {
         const hasSize = product.sizes?.some(s => this.selectedSizes.includes(s));
         if (!hasSize) return false;
-      }
-
-      // Filtre par recherche
-      if (this.searchQuery) {
-        const query = this.searchQuery.toLowerCase();
-        return product.name.toLowerCase().includes(query) || 
-               product.category.toLowerCase().includes(query);
       }
 
       return true;
@@ -322,7 +260,7 @@ export class ShopComponent implements OnInit {
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
-      this.updatePagination();
+      this.loadProducts(); // Recharger depuis l'API
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
@@ -360,7 +298,7 @@ export class ShopComponent implements OnInit {
     this.searchQuery = '';
     this.sortBy = 'default';
     this.currentPage = 1;
-    this.applyFilters();
+    this.loadProducts(); // Recharger depuis l'API
   }
 
   // Changer la vue
@@ -370,7 +308,7 @@ export class ShopComponent implements OnInit {
 
   // Navigation
   viewProduct(productId: number): void {
-    this.router.navigate(['/product', productId]);
+    this.router.navigate(['/products', productId]);
   }
 
   addToCart(product: Product, event: Event): void {

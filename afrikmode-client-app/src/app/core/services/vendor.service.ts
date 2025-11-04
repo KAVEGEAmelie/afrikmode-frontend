@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { ApiService } from './api.service';
 
 export interface VendorDashboard {
@@ -69,7 +71,10 @@ export interface VendorOrder {
   providedIn: 'root'
 })
 export class VendorService {
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private http: HttpClient
+  ) {}
 
   // Dashboard
   getDashboard(): Observable<VendorDashboard> {
@@ -219,6 +224,20 @@ export class VendorService {
 
   updateSettings(settings: any): Observable<any> {
     return this.apiService.put<any>('vendor/settings', settings);
+  }
+
+  // Upload de pièces jointes pour les messages
+  uploadMessageAttachment(formData: FormData): Observable<any> {
+    // Utiliser directement HttpClient pour FormData (pas besoin de Content-Type header)
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+    const headers = new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : ''
+      // Ne pas définir Content-Type, le navigateur le fera automatiquement pour FormData
+    });
+    
+    return this.http.post<any>(`${environment.apiUrl}/vendor/messages/attachments`, formData, {
+      headers
+    });
   }
 }
 

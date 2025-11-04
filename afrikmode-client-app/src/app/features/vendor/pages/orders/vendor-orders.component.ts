@@ -1389,6 +1389,7 @@ export class VendorOrdersComponent implements OnInit {
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   expandedOrderId: string | null = null;
+  errorMessage: string | null = null;
   isLoading = false;
   
   searchTerm: string = '';
@@ -1413,11 +1414,13 @@ export class VendorOrdersComponent implements OnInit {
         this.filterOrders();
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Erreur lors du chargement des commandes:', error);
         this.isLoading = false;
-        // Garder les données mockées en cas d'erreur pour le développement
-        this.loadMockOrders();
+        // Ne pas charger de données mockées en production
+        this.orders = [];
+        this.filteredOrders = [];
+        this.errorMessage = 'Erreur lors du chargement des commandes. Veuillez réessayer.';
       }
     });
   }
@@ -1459,8 +1462,9 @@ export class VendorOrdersComponent implements OnInit {
     };
   }
 
-  private loadMockOrders(): void {
-    // Données de simulation - utilisées en cas d'erreur API pendant le développement
+  // Supprimé loadMockOrders() - utiliser uniquement l'API
+  private _loadMockOrdersRemoved(): void {
+    // Données de simulation - supprimées, utiliser uniquement l'API
     this.orders = [
       {
         id: '1',

@@ -7,19 +7,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { VendorService } from '../../../../core/services/vendor.service';
+import { PromotionDialogComponent, PromotionData } from './promotion-dialog.component';
 
-interface Promotion {
-  id: string;
-  name: string;
-  type: 'percentage' | 'fixed' | 'shipping';
-  value: number;
-  code: string;
-  status: 'active' | 'scheduled' | 'expired' | 'paused';
-  start_date: string;
-  end_date: string;
+interface Promotion extends PromotionData {
   usage_count: number;
-  usage_limit?: number;
 }
 
 @Component({
@@ -33,7 +27,9 @@ interface Promotion {
     MatIconModule,
     MatChipsModule,
     MatTabsModule,
-    MatMenuModule
+    MatMenuModule,
+    MatDialogModule,
+    MatSnackBarModule
   ],
   template: `
     <div class="vendor-marketing">
@@ -149,13 +145,15 @@ interface Promotion {
 
                       <div class="promo-content">
                         <h3>{{ promo.name }}</h3>
-                        <div class="promo-code">
-                          <mat-icon>confirmation_number</mat-icon>
-                          <span>{{ promo.code }}</span>
-                          <button mat-icon-button (click)="copyCode(promo.code)">
-                            <mat-icon>content_copy</mat-icon>
-                          </button>
-                        </div>
+                        @if (promo.code) {
+                          <div class="promo-code">
+                            <mat-icon>confirmation_number</mat-icon>
+                            <span>{{ promo.code }}</span>
+                            <button mat-icon-button (click)="copyCode(promo.code)">
+                              <mat-icon>content_copy</mat-icon>
+                            </button>
+                          </div>
+                        }
 
                         <div class="promo-details">
                           <div class="detail">
@@ -616,7 +614,11 @@ export class VendorMarketingComponent implements OnInit {
 
   promotions: Promotion[] = [];
 
-  constructor(private vendorService: VendorService) {}
+  constructor(
+    private vendorService: VendorService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
 
   ngOnInit(): void {
     this.loadPromotions();
@@ -652,7 +654,7 @@ export class VendorMarketingComponent implements OnInit {
       {
         id: '3',
         name: 'Vente Flash Février',
-        type: 'percentage',
+        type: 'flash',
         value: 30,
         code: 'FLASH30',
         status: 'scheduled',
@@ -662,6 +664,7 @@ export class VendorMarketingComponent implements OnInit {
         usage_limit: 50
       }
     ];
+    this.updateStats();
   }
 
   getPromotionsByStatus(status: string): Promotion[] {
@@ -672,7 +675,9 @@ export class VendorMarketingComponent implements OnInit {
     const icons: { [key: string]: string } = {
       'percentage': 'percent',
       'fixed': 'money_off',
-      'shipping': 'local_shipping'
+      'shipping': 'local_shipping',
+      'bundle': 'inventory_2',
+      'flash': 'flash_on'
     };
     return icons[type] || 'local_offer';
   }
@@ -681,7 +686,9 @@ export class VendorMarketingComponent implements OnInit {
     const labels: { [key: string]: string } = {
       'percentage': 'Pourcentage',
       'fixed': 'Montant fixe',
-      'shipping': 'Livraison gratuite'
+      'shipping': 'Livraison gratuite',
+      'bundle': 'Pack Produits',
+      'flash': 'Vente Flash'
     };
     return labels[type] || type;
   }
@@ -695,66 +702,266 @@ export class VendorMarketingComponent implements OnInit {
   }
 
   createPromotion(): void {
-    console.log('➕ Création d\'une nouvelle promotion');
-    alert('Formulaire de création à venir !');
+    const dialogRef = this.dialog.open(PromotionDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: true, // Empêche la fermeture au clic sur le backdrop
+      hasBackdrop: true,
+      backdropClass: 'promotion-dialog-backdrop',
+      panelClass: 'promotion-dialog-panel',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      data: { type: 'percentage' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.addPromotion(result);
+      }
+    });
   }
 
   createCouponCode(): void {
-    console.log('🎟️ Création code promo');
-    alert('Formulaire code promo à venir !');
+    const dialogRef = this.dialog.open(PromotionDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      hasBackdrop: true,
+      backdropClass: 'promotion-dialog-backdrop',
+      panelClass: 'promotion-dialog-panel',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      data: { type: 'percentage' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.addPromotion(result);
+      }
+    });
   }
 
   createFlashSale(): void {
-    console.log('⚡ Création vente flash');
-    alert('Formulaire vente flash à venir !');
+    const dialogRef = this.dialog.open(PromotionDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      hasBackdrop: true,
+      backdropClass: 'promotion-dialog-backdrop',
+      panelClass: 'promotion-dialog-panel',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      data: { type: 'flash' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.addPromotion(result);
+      }
+    });
   }
 
   createBundleOffer(): void {
-    console.log('📦 Création pack produits');
-    alert('Formulaire pack produits à venir !');
+    const dialogRef = this.dialog.open(PromotionDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      hasBackdrop: true,
+      backdropClass: 'promotion-dialog-backdrop',
+      panelClass: 'promotion-dialog-panel',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      data: { type: 'bundle' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.addPromotion(result);
+      }
+    });
   }
 
   createFreeShipping(): void {
-    console.log('🚚 Création livraison gratuite');
-    alert('Formulaire livraison gratuite à venir !');
+    const dialogRef = this.dialog.open(PromotionDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      hasBackdrop: true,
+      backdropClass: 'promotion-dialog-backdrop',
+      panelClass: 'promotion-dialog-panel',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      data: { type: 'shipping' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.addPromotion(result);
+      }
+    });
   }
 
-  copyCode(code: string): void {
+  addPromotion(promoData: PromotionData): void {
+    const newPromo: Promotion = {
+      ...promoData,
+      id: Date.now().toString(),
+      usage_count: 0
+    };
+    
+    this.promotions.push(newPromo);
+    this.updateStats();
+    
+    this.snackBar.open(`Promotion "${newPromo.name}" créée avec succès`, 'Fermer', {
+      duration: 3000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top'
+    });
+  }
+
+  updateStats(): void {
+    this.activePromotions = this.promotions.filter(p => p.status === 'active').length;
+    this.totalUses = this.promotions.reduce((sum, p) => sum + p.usage_count, 0);
+  }
+
+  copyCode(code: string | undefined): void {
+    if (!code) {
+      this.snackBar.open('Aucun code à copier', 'Fermer', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+      return;
+    }
     navigator.clipboard.writeText(code);
-    console.log('📋 Code copié:', code);
-    alert(`Code "${code}" copié dans le presse-papier !`);
+    this.snackBar.open(`Code "${code}" copié dans le presse-papier`, 'Fermer', {
+      duration: 3000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top'
+    });
   }
 
   viewStats(promo: Promotion): void {
-    console.log('📊 Statistiques de', promo.name);
+    this.snackBar.open(`Statistiques de "${promo.name}"`, 'Voir détails', {
+      duration: 3000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top'
+    });
+    // Ici on pourrait ouvrir un dialog avec les statistiques détaillées
+    console.log('📊 Statistiques de', promo.name, promo);
   }
 
   editPromo(promo: Promotion): void {
-    console.log('✏️ Modifier', promo.name);
+    const dialogRef = this.dialog.open(PromotionDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      disableClose: true,
+      hasBackdrop: true,
+      backdropClass: 'promotion-dialog-backdrop',
+      panelClass: 'promotion-dialog-panel',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      data: { 
+        promotion: promo,
+        type: promo.type as any
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const index = this.promotions.findIndex(p => p.id === promo.id);
+        if (index > -1) {
+          this.promotions[index] = { ...result, id: promo.id, usage_count: promo.usage_count };
+          this.updateStats();
+          this.snackBar.open(`Promotion "${result.name}" modifiée avec succès`, 'Fermer', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        }
+      }
+    });
   }
 
   pausePromo(promo: Promotion): void {
-    console.log('⏸️ Mettre en pause', promo.name);
-    promo.status = 'paused';
+    if (promo.status === 'active') {
+      promo.status = 'paused';
+      this.updateStats();
+      this.snackBar.open(`Promotion "${promo.name}" mise en pause`, 'Fermer', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+    }
   }
 
   duplicatePromo(promo: Promotion): void {
-    console.log('📄 Dupliquer', promo.name);
+    const duplicatedPromo: Promotion = {
+      ...promo,
+      id: Date.now().toString(),
+      name: `${promo.name} (Copie)`,
+      code: promo.code ? `${promo.code}-COPY` : undefined,
+      status: 'scheduled',
+      usage_count: 0
+    };
+    
+    this.promotions.push(duplicatedPromo);
+    this.updateStats();
+    
+    this.snackBar.open(`Promotion "${promo.name}" dupliquée`, 'Fermer', {
+      duration: 3000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top'
+    });
   }
 
   sharePromo(promo: Promotion): void {
-    console.log('🔗 Partager', promo.name);
+    const url = `${window.location.origin}/promo/${promo.code || promo.id}`;
+    if (navigator.share) {
+      navigator.share({
+        title: promo.name,
+        text: `Découvrez cette promotion: ${promo.name}`,
+        url: url
+      }).catch(err => console.log('Erreur partage:', err));
+    } else {
+      navigator.clipboard.writeText(url);
+      this.snackBar.open('Lien de promotion copié dans le presse-papier', 'Fermer', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+    }
   }
 
   deletePromo(promo: Promotion): void {
-    if (confirm(`Supprimer la promotion "${promo.name}" ?`)) {
-      console.log('🗑️ Suppression de', promo.name);
-      this.promotions = this.promotions.filter(p => p.id !== promo.id);
+    if (confirm(`Êtes-vous sûr de vouloir supprimer la promotion "${promo.name}" ?`)) {
+      const index = this.promotions.findIndex(p => p.id === promo.id);
+      if (index > -1) {
+        this.promotions.splice(index, 1);
+        this.updateStats();
+        this.snackBar.open(`Promotion "${promo.name}" supprimée`, 'Fermer', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+      }
     }
   }
 
   activateNow(promo: Promotion): void {
-    console.log('▶️ Activer maintenant', promo.name);
-    promo.status = 'active';
+    if (promo.status === 'scheduled') {
+      promo.status = 'active';
+      this.updateStats();
+      this.snackBar.open(`Promotion "${promo.name}" activée maintenant`, 'Fermer', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+    }
   }
 }

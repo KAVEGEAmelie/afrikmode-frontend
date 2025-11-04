@@ -1,7 +1,7 @@
 // src/app/features/orders/components/order-detail/order-detail.component.ts
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule, NgIf, NgFor } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../../../core/services/order.service';
 import { Order } from '../../../../core/models/order.model';
@@ -9,7 +9,7 @@ import { Order } from '../../../../core/models/order.model';
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, NgIf, NgFor],
+  imports: [CommonModule, FormsModule],
   templateUrl: './order-detail.component.html',
   styleUrls: ['./order-detail.component.scss']
 })

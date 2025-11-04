@@ -6,6 +6,8 @@ import { CartService } from '../../core/services/cart.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { AuthService } from '../../core/services/auth.service';
 import { MessageService } from '../../core/services/message.service';
+import { ProductService } from '../../core/services/product.service';
+import { ToastService } from '../../core/services/toast.service';
 import { ProductReviewsDisplayComponent } from '../../shared/components/product-reviews-display/product-reviews-display.component';
 
 interface Product {
@@ -58,66 +60,11 @@ export class ProductDetailComponent implements OnInit {
   selectedSize: string = '';
   quantity: number = 1;
   
-  // Avis
-  reviews: Review[] = [
-    {
-      id: 1,
-      author: 'Marie K.',
-      rating: 5,
-      date: '15 Mars 2025',
-      comment: 'Magnifique robe, tissu de qualité exceptionnelle. Les motifs sont encore plus beaux en vrai!',
-      verified: true
-    },
-    {
-      id: 2,
-      author: 'Kofi A.',
-      rating: 4,
-      date: '10 Mars 2025',
-      comment: 'Très satisfait de mon achat. La coupe est parfaite et le tissu respire bien.',
-      verified: true
-    },
-    {
-      id: 3,
-      author: 'Fatou D.',
-      rating: 5,
-      date: '5 Mars 2025',
-      comment: 'Service impeccable, livraison rapide. Je recommande vivement!',
-      verified: true
-    }
-  ];
+  // Avis - Chargés depuis l'API
+  reviews: Review[] = [];
   
-  // Produits similaires
-  relatedProducts = [
-    {
-      id: 2,
-      name: 'Chemise Wax Premium',
-      price: 35000,
-      image: '/assets/images/products/chemise-1.jpg',
-      rating: 4.8
-    },
-    {
-      id: 3,
-      name: 'Ensemble Traditionnel',
-      price: 85000,
-      oldPrice: 95000,
-      image: '/assets/images/products/ensemble-1.jpg',
-      rating: 4.7
-    },
-    {
-      id: 4,
-      name: 'Sac à Main Artisanal',
-      price: 25000,
-      image: '/assets/images/products/sac-1.jpg',
-      rating: 4.3
-    },
-    {
-      id: 5,
-      name: 'Boubou Homme Luxe',
-      price: 75000,
-      image: '/assets/images/products/boubou-1.jpg',
-      rating: 4.6
-    }
-  ];
+  // Produits similaires - Chargés depuis l'API
+  relatedProducts: any[] = [];
 
   // Onglets
   activeTab: 'description' | 'features' | 'reviews' = 'description';
@@ -128,7 +75,9 @@ export class ProductDetailComponent implements OnInit {
     private cartService: CartService,
     private wishlistService: WishlistService,
     private authService: AuthService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private productService: ProductService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -139,63 +88,115 @@ export class ProductDetailComponent implements OnInit {
   }
 
   loadProduct(): void {
-    // Données temporaires - à remplacer par un appel API
-    this.product = {
-      id: 1,
-      name: 'Robe Ankara Élégante',
-      price: 45000,
-      oldPrice: 55000,
-      description: `Cette magnifique robe Ankara incarne l'élégance et la sophistication de la mode africaine contemporaine. 
-      Confectionnée avec un tissu wax authentique de première qualité, elle marie harmonieusement tradition et modernité.
-      
-      La coupe ajustée sublime la silhouette tout en offrant un confort optimal grâce à un tissu respirant et léger. 
-      Les motifs géométriques vibrants témoignent du savoir-faire artisanal africain et ajoutent une touche d'authenticité à votre garde-robe.`,
-      
-      images: [
-        '/assets/images/products/robe-1.jpg',
-        '/assets/images/products/robe-2.jpg',
-        '/assets/images/products/robe-3.jpg',
-        '/assets/images/products/robe-4.jpg'
-      ],
-      
-      category: 'Robes',
-      
-      colors: [
-        { name: 'Rouge & Or', code: '#e74c3c' },
-        { name: 'Bleu Royal', code: '#3498db' },
-        { name: 'Vert Émeraude', code: '#27ae60' }
-      ],
-      
-      sizes: ['S', 'M', 'L', 'XL'],
-      stock: 15,
-      rating: 4.5,
-      reviewCount: 28,
-      sku: 'RAF-001',
-      
-      features: [
-        'Tissu wax 100% coton authentique',
-        'Coupe cintrée avec fermeture éclair invisible',
-        'Doublure intérieure en coton',
-        'Poches latérales dissimulées',
-        'Longueur midi élégante',
-        'Résistant et durable'
-      ],
-      
-      materials: 'Tissu wax 100% coton importé d\'Afrique de l\'Ouest. Doublure 100% coton.',
-      
-      careInstructions: [
-        'Lavage à la main ou en machine à 30°C',
-        'Ne pas utiliser d\'eau de javel',
-        'Repasser à température moyenne',
-        'Séchage à l\'air libre recommandé',
-        'Ne pas nettoyer à sec'
-      ]
-    };
+    if (!this.productId) return;
 
-    this.selectedImage = this.product.images[0];
-    if (this.product.colors.length > 0) {
-      this.selectedColor = this.product.colors[0].name;
-    }
+    this.productService.getProduct(this.productId.toString()).subscribe({
+      next: (product: any) => {
+        // Mapper les données de l'API vers l'interface locale
+        this.product = {
+          id: parseInt(product.id) || product.id,
+          name: product.name,
+          price: product.price,
+          oldPrice: product.compare_price,
+          description: product.description || '',
+          images: product.images && product.images.length > 0 
+            ? product.images.map((img: any) => img.url || img)
+            : [product.image_url || '/assets/images/products/default.jpg'],
+          category: product.category?.name || '',
+          colors: product.variants?.filter((v: any) => v.attributes?.color)
+            .map((v: any) => ({
+              name: v.attributes.color,
+              code: v.attributes.color_code || '#000000'
+            })) || [],
+          sizes: product.variants?.filter((v: any) => v.attributes?.size)
+            .map((v: any) => v.attributes.size) || [],
+          stock: product.stock_quantity || 0,
+          rating: product.rating || 0,
+          reviewCount: product.reviews_count || 0,
+          sku: product.sku || '',
+          features: product.specifications ? Object.entries(product.specifications).map(([key, value]) => `${key}: ${value}`) : [],
+          materials: product.materials || '',
+          careInstructions: product.care_instructions || []
+        };
+
+        // Initialiser les sélections
+        if (this.product.images.length > 0) {
+          this.selectedImage = this.product.images[0];
+        }
+        if (this.product.colors.length > 0) {
+          this.selectedColor = this.product.colors[0].name;
+        }
+        if (this.product.sizes.length > 0) {
+          this.selectedSize = this.product.sizes[0];
+        }
+
+        // Charger les avis
+        this.loadReviews();
+        // Charger les produits similaires
+        this.loadRelatedProducts();
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement produit:', error);
+        const errorMessage = error.error?.message || 'Erreur lors du chargement du produit. Veuillez réessayer.';
+        this.toastService.error(errorMessage);
+      }
+    });
+  }
+
+  loadReviews(): void {
+    if (!this.productId) return;
+
+    // Utiliser la méthode getProductReviews du ProductService
+    this.productService.getProductReviews(this.productId.toString()).subscribe({
+      next: (response: any) => {
+        const reviewsData = Array.isArray(response) ? response : response.data || [];
+        this.reviews = reviewsData.map((review: any) => ({
+          id: review.id,
+          author: review.user?.first_name + ' ' + review.user?.last_name || 'Anonyme',
+          rating: review.rating || 0,
+          date: new Date(review.created_at).toLocaleDateString('fr-FR', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          comment: review.comment || '',
+          verified: review.is_verified || false
+        }));
+      },
+      error: (error) => {
+        console.error('Erreur chargement avis:', error);
+      }
+    });
+  }
+
+  loadRelatedProducts(): void {
+    if (!this.product) return;
+
+    // Note: category_id attend un ID, pas un nom. Il faudrait mapper le nom vers l'ID
+    // Pour l'instant, on charge simplement les produits récents
+    this.productService.getProducts({
+      limit: 8,
+      status: 'active',
+      sort: 'popularity'
+    }).subscribe({
+      next: (response: any) => {
+        const products = Array.isArray(response) ? response : response.data || [];
+        this.relatedProducts = products
+          .filter((p: any) => p.id !== this.productId)
+          .slice(0, 4)
+          .map((product: any) => ({
+            id: parseInt(product.id) || product.id,
+            name: product.name,
+            price: product.price,
+            oldPrice: product.compare_price,
+            image: product.image_url || product.images?.[0]?.url || '/assets/images/products/default.jpg',
+            rating: product.rating || 0
+          }));
+      },
+      error: (error) => {
+        console.error('Erreur chargement produits similaires:', error);
+      }
+    });
   }
 
   selectImage(index: number): void {
@@ -243,13 +244,13 @@ export class ProductDetailComponent implements OnInit {
 
   addToCart(): void {
     if (!this.selectedSize) {
-      alert('Veuillez sélectionner une taille');
+      this.toastService.error('Veuillez sélectionner une taille');
       return;
     }
 
     // Vérifier si l'utilisateur est authentifié
     if (!this.authService.isAuthenticated()) {
-      alert('Veuillez vous connecter pour ajouter des articles au panier');
+      this.toastService.warning('Veuillez vous connecter pour ajouter des articles au panier');
       return;
     }
 
@@ -262,11 +263,12 @@ export class ProductDetailComponent implements OnInit {
     }).subscribe({
       next: (cartItem) => {
         console.log('✅ Produit ajouté au panier:', cartItem);
-        alert('Produit ajouté au panier avec succès!');
+        this.toastService.success(`${this.product!.name} ajouté au panier avec succès!`);
       },
       error: (error) => {
         console.error('❌ Erreur lors de l\'ajout au panier:', error);
-        alert('Erreur lors de l\'ajout au panier. Veuillez réessayer.');
+        const errorMessage = error.error?.message || 'Erreur lors de l\'ajout au panier. Veuillez réessayer.';
+        this.toastService.error(errorMessage);
       }
     });
   }
@@ -274,7 +276,7 @@ export class ProductDetailComponent implements OnInit {
   addToWishlist(): void {
     // Vérifier si l'utilisateur est authentifié
     if (!this.authService.isAuthenticated()) {
-      alert('Veuillez vous connecter pour ajouter des articles aux favoris');
+      this.toastService.warning('Veuillez vous connecter pour ajouter des articles aux favoris');
       return;
     }
 
@@ -284,11 +286,12 @@ export class ProductDetailComponent implements OnInit {
     this.wishlistService.addToWishlist(this.product.id.toString()).subscribe({
       next: (response) => {
         console.log('✅ Produit ajouté aux favoris:', response);
-        alert('Produit ajouté aux favoris avec succès!');
+        this.toastService.success(`${this.product!.name} ajouté aux favoris avec succès!`);
       },
       error: (error) => {
         console.error('❌ Erreur lors de l\'ajout aux favoris:', error);
-        alert('Erreur lors de l\'ajout aux favoris. Veuillez réessayer.');
+        const errorMessage = error.error?.message || 'Erreur lors de l\'ajout aux favoris. Veuillez réessayer.';
+        this.toastService.error(errorMessage);
       }
     });
   }
@@ -320,9 +323,9 @@ export class ProductDetailComponent implements OnInit {
 
   contactVendor(): void {
     // Vérifier si l'utilisateur est authentifié
-    this.authService.isAuthenticated$.subscribe(isAuth => {
+      this.authService.isAuthenticated$.subscribe(isAuth => {
       if (!isAuth) {
-        alert('Veuillez vous connecter pour contacter le vendeur');
+        this.toastService.warning('Veuillez vous connecter pour contacter le vendeur');
         this.router.navigate(['/auth/login']);
         return;
       }
@@ -343,7 +346,8 @@ export class ProductDetailComponent implements OnInit {
         },
         error: (error: any) => {
           console.error('❌ Erreur lors de la création de la conversation:', error);
-          alert('Erreur lors de la création de la conversation. Veuillez réessayer.');
+          const errorMessage = error.error?.message || 'Erreur lors de la création de la conversation. Veuillez réessayer.';
+          this.toastService.error(errorMessage);
         }
       });
     });

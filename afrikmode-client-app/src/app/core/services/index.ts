@@ -23,6 +23,8 @@ export * from './websocket.service';
 
 // Services Vendor & Admin
 export * from './vendor.service';
+export * from './vendor-eligibility.service';
+export * from './vendor-application.service';
 export * from './dashboard.service'; 
 
 // Services Catalogue

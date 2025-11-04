@@ -1,7 +1,22 @@
 <div class="order-confirmation">
   
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement de votre commande...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-state">
+    <i class="fas fa-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button class="btn btn-primary" (click)="goToOrders()">
+      Voir mes commandes
+    </button>
+  </div>
+
   <!-- Success Header -->
-  <div class="confirmation-header">
+  <div class="confirmation-header" *ngIf="currentOrder && !isLoading">
     <div class="success-animation">
       <div class="success-icon">
         <i class="fas fa-check-circle"></i>
@@ -18,7 +33,7 @@
     
     <div class="order-number">
       <span class="label">Numéro de commande :</span>
-      <span class="number">{{ currentOrder?.orderId }}</span>
+      <span class="number">{{ currentOrder.orderNumber || currentOrder.orderId }}</span>
     </div>
   </div>
 

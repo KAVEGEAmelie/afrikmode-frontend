@@ -28,6 +28,7 @@ export class StoreService {
   }
 
   // Créer une boutique (devenir vendeur)
+  // Peut accepter soit un objet simple, soit FormData (pour les fichiers)
   createStore(payload: {
     name: string;
     description: string;
@@ -46,9 +47,61 @@ export class StoreService {
     shippingPolicy?: string;
     defaultLanguage?: string;
     defaultCurrency?: string;
-  }): Observable<any> {
+  } | FormData): Observable<any> {
+    // Si c'est FormData, ne pas utiliser getHeaders() qui définit Content-Type
+    // Le navigateur le définit automatiquement avec le boundary
+    if (payload instanceof FormData) {
+      const token = localStorage.getItem('auth_token');
+      const headers: any = {
+        'Accept': 'application/json',
+        'Accept-Language': localStorage.getItem('language') || 'fr'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      return this.http.post(`${this.baseUrl}/stores`, payload, {
+        headers
+      });
+    }
+
+    // Sinon, utiliser les headers normaux
     return this.http.post(`${this.baseUrl}/stores`, payload, {
       headers: this.getHeaders()
+    });
+  }
+
+  // Uploader les documents d'une candidature
+  uploadStoreDocuments(storeId: string, documents: {
+    idCard?: File;
+    proofOfAddress?: File;
+    businessCertificate?: File;
+  }): Observable<any> {
+    const formData = new FormData();
+    
+    if (documents.idCard) {
+      formData.append('idCard', documents.idCard);
+    }
+    if (documents.proofOfAddress) {
+      formData.append('proofOfAddress', documents.proofOfAddress);
+    }
+    if (documents.businessCertificate) {
+      formData.append('businessCertificate', documents.businessCertificate);
+    }
+
+    const token = localStorage.getItem('auth_token');
+    const headers: any = {
+      'Accept': 'application/json',
+      'Accept-Language': localStorage.getItem('language') || 'fr'
+    };
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return this.http.post(`${this.baseUrl}/stores/${storeId}/documents`, formData, {
+      headers
     });
   }
 

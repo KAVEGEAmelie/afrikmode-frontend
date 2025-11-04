@@ -409,6 +409,18 @@ interface Category {
       padding: 24px;
     }
 
+    .categories-list:not(.list-view) {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .categories-list.list-view {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
     .category-item {
       border: 1px solid #E5E7EB;
       border-radius: 8px;
@@ -818,29 +830,50 @@ export class VendorCategoriesComponent implements OnInit {
   }
 
   openAddCategoryModal() {
-    console.log('Ouverture du modal d\'ajout de catégorie');
-    const dialogRef = this.dialog.open(CategoryFormDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      maxHeight: '90vh',
-      disableClose: false,
-      hasBackdrop: true,
-      backdropClass: 'category-dialog-backdrop',
-      panelClass: 'category-dialog-panel',
-      autoFocus: true,
-      restoreFocus: true,
-      data: {
-        category: null,
-        parentCategory: null,
-        categories: this.categories
-      }
-    });
+    console.log('🔵 Ouverture du modal d\'ajout de catégorie');
+    
+    try {
+      const dialogRef = this.dialog.open(CategoryFormDialogComponent, {
+        width: '600px',
+        maxWidth: '90vw',
+        maxHeight: '90vh',
+        disableClose: true, // Empêche la fermeture au clic sur le backdrop
+        hasBackdrop: true,
+        backdropClass: ['category-dialog-backdrop', 'cdk-overlay-dark-backdrop'],
+        panelClass: ['category-dialog-panel'],
+        autoFocus: 'first-tabbable',
+        restoreFocus: true,
+        closeOnNavigation: false, // Ne pas fermer lors de la navigation
+        position: {
+          top: '50px'
+        },
+        data: {
+          category: null,
+          parentCategory: null,
+          categories: this.categories
+        }
+      });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.addCategory(result);
-      }
-    });
+      console.log('✅ Dialog ouvert avec succès', dialogRef);
+
+      dialogRef.afterOpened().subscribe(() => {
+        console.log('✅ Dialog complètement ouvert et visible');
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('🔵 Dialog fermé avec résultat:', result);
+        if (result) {
+          this.addCategory(result);
+        }
+      });
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'ouverture du dialog:', error);
+      this.snackBar.open('Erreur lors de l\'ouverture du formulaire', 'Fermer', {
+        duration: 3000,
+        horizontalPosition: 'end',
+        verticalPosition: 'top'
+      });
+    }
   }
 
   addCategory(categoryData: any) {
@@ -881,18 +914,22 @@ export class VendorCategoriesComponent implements OnInit {
 
   editCategory(category: Category, event: Event) {
     event.stopPropagation();
-    console.log('Modification de la catégorie:', category);
+    console.log('🔵 Modification de la catégorie:', category);
     
     const dialogRef = this.dialog.open(CategoryFormDialogComponent, {
       width: '600px',
       maxWidth: '90vw',
       maxHeight: '90vh',
-      disableClose: false,
+      disableClose: true, // Empêche la fermeture au clic sur le backdrop
       hasBackdrop: true,
-      backdropClass: 'category-dialog-backdrop',
-      panelClass: 'category-dialog-panel',
-      autoFocus: true,
+      backdropClass: ['category-dialog-backdrop', 'cdk-overlay-dark-backdrop'],
+      panelClass: ['category-dialog-panel'],
+      autoFocus: 'first-tabbable',
       restoreFocus: true,
+      closeOnNavigation: false,
+      position: {
+        top: '50px'
+      },
       data: {
         category: category,
         parentCategory: null,
@@ -900,46 +937,55 @@ export class VendorCategoriesComponent implements OnInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.updateCategory(category, result);
-      }
+    dialogRef.afterOpened().subscribe(() => {
+      console.log('✅ Dialog d\'édition ouvert');
     });
-  }
 
-  updateCategory(category: Category, categoryData: any) {
-    category.name = categoryData.name;
-    category.description = categoryData.description;
-    category.isActive = categoryData.isActive;
-    category.updatedAt = new Date();
-
-    this.filterCategories();
-    this.snackBar.open('Catégorie modifiée avec succès', 'Fermer', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('🔵 Dialog fermé, résultat:', result);
+      if (result) {
+        // Mise à jour de la catégorie
+        Object.assign(category, {
+          ...result,
+          updatedAt: new Date()
+        });
+        this.filterCategories();
+        this.snackBar.open('Catégorie modifiée avec succès', 'Fermer', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+      }
     });
   }
 
   addSubcategory(category: Category, event: Event) {
     event.stopPropagation();
-    console.log('Ajout de sous-catégorie pour:', category);
+    console.log('🔵 Ajout de sous-catégorie pour:', category);
     
     const dialogRef = this.dialog.open(CategoryFormDialogComponent, {
       width: '600px',
       maxWidth: '90vw',
       maxHeight: '90vh',
-      disableClose: false,
+      disableClose: true, // Empêche la fermeture au clic sur le backdrop
       hasBackdrop: true,
-      backdropClass: 'category-dialog-backdrop',
-      panelClass: 'category-dialog-panel',
-      autoFocus: true,
+      backdropClass: ['category-dialog-backdrop', 'cdk-overlay-dark-backdrop'],
+      panelClass: ['category-dialog-panel'],
+      autoFocus: 'first-tabbable',
       restoreFocus: true,
+      closeOnNavigation: false,
+      position: {
+        top: '50px'
+      },
       data: {
         category: null,
         parentCategory: category,
         categories: this.categories
       }
+    });
+
+    dialogRef.afterOpened().subscribe(() => {
+      console.log('✅ Dialog de sous-catégorie ouvert');
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -1002,14 +1048,14 @@ export class VendorCategoriesComponent implements OnInit {
     MatIconModule
   ],
   template: `
-    <div class="category-dialog" (click)="$event.stopPropagation()">
+    <div class="category-dialog">
       <h2 mat-dialog-title>
         <i class="fas fa-tag"></i>
         {{ data.category ? 'Modifier la catégorie' : (data.parentCategory ? 'Ajouter une sous-catégorie' : 'Ajouter une catégorie') }}
       </h2>
       
-      <mat-dialog-content (click)="$event.stopPropagation()">
-        <form [formGroup]="categoryForm" class="category-form" (click)="$event.stopPropagation()">
+      <mat-dialog-content>
+        <form [formGroup]="categoryForm" class="category-form">
           @if (data.parentCategory) {
             <div class="parent-category-info">
               <i class="fas fa-folder"></i>
@@ -1018,7 +1064,7 @@ export class VendorCategoriesComponent implements OnInit {
           }
 
           @if (!data.category && !data.parentCategory) {
-            <mat-form-field appearance="outline" (click)="$event.stopPropagation()">
+            <mat-form-field appearance="outline">
               <mat-label>Catégorie parente (optionnel)</mat-label>
               <mat-select formControlName="parentId">
                 <mat-option [value]="null">Aucune (catégorie principale)</mat-option>
@@ -1029,7 +1075,7 @@ export class VendorCategoriesComponent implements OnInit {
             </mat-form-field>
           }
 
-          <mat-form-field appearance="outline" (click)="$event.stopPropagation()">
+          <mat-form-field appearance="outline">
             <mat-label>Nom de la catégorie</mat-label>
             <input matInput formControlName="name" placeholder="Ex: Robes, Chemises, Accessoires...">
             <mat-icon matPrefix>label</mat-icon>
@@ -1041,14 +1087,14 @@ export class VendorCategoriesComponent implements OnInit {
             }
           </mat-form-field>
 
-          <mat-form-field appearance="outline" (click)="$event.stopPropagation()">
+          <mat-form-field appearance="outline">
             <mat-label>Description</mat-label>
             <textarea matInput formControlName="description" rows="3" 
               placeholder="Description de la catégorie..."></textarea>
             <mat-icon matPrefix>description</mat-icon>
           </mat-form-field>
 
-          <div class="toggle-field" (click)="$event.stopPropagation()">
+          <div class="toggle-field">
             <mat-slide-toggle formControlName="isActive" color="primary">
               Catégorie active
             </mat-slide-toggle>
@@ -1070,10 +1116,39 @@ export class VendorCategoriesComponent implements OnInit {
     </div>
   `,
   styles: [`
+    :host {
+      display: block;
+      z-index: 10000 !important;
+      position: relative;
+    }
+
     .category-dialog {
       min-width: 500px;
       background: white;
-      pointer-events: auto;
+      z-index: 10000 !important;
+      position: relative;
+    }
+
+    ::ng-deep .category-dialog-backdrop {
+      background-color: rgba(0, 0, 0, 0.5) !important;
+      z-index: 9999 !important;
+    }
+
+    ::ng-deep .category-dialog-panel {
+      z-index: 10000 !important;
+      position: relative;
+      background: white !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transform: translateZ(0); /* Force GPU acceleration */
+      will-change: transform;
+    }
+
+    .category-dialog * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     h2 {
@@ -1095,14 +1170,12 @@ export class VendorCategoriesComponent implements OnInit {
       padding: 24px;
       max-height: 70vh;
       overflow-y: auto;
-      pointer-events: auto;
     }
 
     .category-form {
       display: flex;
       flex-direction: column;
       gap: 16px;
-      pointer-events: auto;
     }
 
     .parent-category-info {
@@ -1128,6 +1201,20 @@ export class VendorCategoriesComponent implements OnInit {
 
     mat-form-field {
       width: 100%;
+    }
+
+    input, textarea, select {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      filter: none !important;
+      backdrop-filter: none !important;
+      transform: none !important;
+    }
+
+    mat-form-field, mat-input, input, textarea {
+      filter: none !important;
+      backdrop-filter: none !important;
     }
 
     .toggle-field {
@@ -1172,34 +1259,7 @@ export class VendorCategoriesComponent implements OnInit {
     mat-dialog-actions button[mat-raised-button]:disabled {
       opacity: 0.6;
       cursor: not-allowed;
-    }
-
-    ::ng-deep .mat-mdc-dialog-container .mdc-dialog__surface {
-      border-radius: 16px;
-      overflow: hidden;
-    }
-
-    /* Assurer que les champs de formulaire sont cliquables */
-    ::ng-deep .mat-mdc-form-field {
-      pointer-events: auto !important;
-    }
-
-    ::ng-deep .mat-mdc-text-field-wrapper {
-      pointer-events: auto !important;
-    }
-
-    ::ng-deep .mat-mdc-form-field input,
-    ::ng-deep .mat-mdc-form-field textarea,
-    ::ng-deep .mat-mdc-form-field select {
-      pointer-events: auto !important;
-    }
-
-    ::ng-deep .mat-mdc-select {
-      pointer-events: auto !important;
-    }
-
-    ::ng-deep .mat-mdc-slide-toggle {
-      pointer-events: auto !important;
+      transform: none;
     }
 
     @media (max-width: 600px) {

@@ -31,6 +31,15 @@ import { Subscription } from 'rxjs';
     <mat-toolbar class="vendor-topbar" color="primary">
       <!-- Left Section -->
       <div class="topbar-left">
+        <!-- Menu Button (pour mobile et toggle sidebar) -->
+        <button 
+          mat-icon-button 
+          class="menu-btn"
+          (click)="toggleSidebar.emit()"
+          type="button">
+          <mat-icon>menu</mat-icon>
+        </button>
+        
         <span class="app-title">Tableau de Bord Vendeur</span>
       </div>
 
@@ -49,7 +58,7 @@ import { Subscription } from 'rxjs';
     </mat-toolbar>
 
     <!-- Profile Menu -->
-    <mat-menu #profileMenu="matMenu" class="profile-menu" xPosition="before">
+    <mat-menu #profileMenu="matMenu" xPosition="before" yPosition="below">
       <div class="profile-header" (click)="$event.stopPropagation()">
         <div class="profile-avatar">
           <img [src]="userProfile.avatar || '/assets/images/default-avatar.png'" [alt]="userProfile.name">

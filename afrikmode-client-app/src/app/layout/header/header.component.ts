@@ -162,17 +162,24 @@ export class HeaderComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Si on n'a pas scrollé assez (moins de 100px), toujours montrer le header
+    if (scrollTop < 100) {
+      this.isHeaderVisible = true;
+      this.lastScrollTop = scrollTop;
+      return;
+    }
+
     // Calculer la différence de scroll
     const scrollDifference = Math.abs(scrollTop - this.lastScrollTop);
 
     // Ne déclencher l'animation que si le scroll dépasse le seuil
     if (scrollDifference > this.scrollThreshold) {
       if (scrollTop > this.lastScrollTop) {
-        // Scroll vers le bas - cacher le header
+        // Scroll vers le bas - CACHER le header (utilisateur scrolle vers le bas)
         this.isHeaderVisible = false;
         this.showUserMenu = false; // Fermer le menu aussi
       } else {
-        // Scroll vers le haut - montrer le header
+        // Scroll vers le haut - MONTRER le header (utilisateur remonte)
         this.isHeaderVisible = true;
       }
       this.lastScrollTop = scrollTop;

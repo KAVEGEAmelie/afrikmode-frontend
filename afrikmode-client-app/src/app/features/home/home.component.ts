@@ -80,74 +80,7 @@ export class HomeComponent implements OnInit {
   popularProducts: Product[] = [];
 
   // Produits en vedette
-  featuredProducts: Product[] = [
-    {
-      id: '1',
-      name: 'Robe Ankara Élégante',
-      price: 45000,
-      oldPrice: 55000,
-      image: 'assets/images/products/robe-1.jpg',
-      category: 'Robes',
-      isNew: true,
-      discount: 18
-    },
-    {
-      id: '2',
-      name: 'Chemise Wax Premium',
-      price: 35000,
-      image: 'assets/images/products/chemise-1.jpg',
-      category: 'Chemises',
-      isNew: true
-    },
-    {
-      id: '3',
-      name: 'Ensemble Traditionnel',
-      price: 85000,
-      oldPrice: 95000,
-      image: 'assets/images/products/ensemble-1.jpg',
-      category: 'Ensembles',
-      discount: 11
-    },
-    {
-      id: '4',
-      name: 'Sac à Main Artisanal',
-      price: 25000,
-      image: 'assets/images/products/sac-1.jpg',
-      category: 'Accessoires',
-      isNew: true
-    },
-    {
-      id: '5',
-      name: 'Boubou Homme Luxe',
-      price: 75000,
-      image: 'assets/images/products/boubou-1.jpg',
-      category: 'Hommes'
-    },
-    {
-      id: '6',
-      name: 'Tissus Wax 6 Yards',
-      price: 30000,
-      oldPrice: 35000,
-      image: 'assets/images/products/tissu-1.jpg',
-      category: 'Tissus',
-      discount: 14
-    },
-    {
-      id: '7',
-      name: 'Collier Perles Africaines',
-      price: 15000,
-      image: 'assets/images/products/collier-1.jpg',
-      category: 'Accessoires'
-    },
-    {
-      id: '8',
-      name: 'Pantalon Bogolan',
-      price: 40000,
-      image: 'assets/images/products/pantalon-1.jpg',
-      category: 'Pantalons',
-      isNew: true
-    }
-  ];
+  featuredProducts: Product[] = [];
 
   // Nouvelles collections
   newArrivals: Product[] = [];
@@ -186,8 +119,6 @@ export class HomeComponent implements OnInit {
       },
       error: (error) => {
         console.error('Erreur chargement catégories:', error);
-        // Garder les données mockées en cas d'erreur
-        this.filterProducts();
       }
     });
 
@@ -209,11 +140,84 @@ export class HomeComponent implements OnInit {
           isNew: product.is_featured || false,
           discount: product.compare_price ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100) : 0
         }));
+      },
+      error: (error) => {
+        console.error('Erreur chargement produits populaires:', error);
+      }
+    });
+
+    // Charger les produits en vedette
+    this.productService.getProducts({ 
+      limit: 8, 
+      is_featured: true,
+      status: 'active'
+    }).subscribe({
+      next: (response: any) => {
+        const products = Array.isArray(response) ? response : response.data || [];
+        this.featuredProducts = products.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          oldPrice: product.compare_price,
+          image: product.image_url || product.images?.[0]?.url || 'assets/images/products/default.jpg',
+          category: product.category?.name || '',
+          isNew: product.is_featured || false,
+          discount: product.compare_price ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100) : 0
+        }));
+      },
+      error: (error) => {
+        console.error('Erreur chargement produits vedette:', error);
+      }
+    });
+
+    // Charger les nouvelles collections (produits récents)
+    this.productService.getProducts({ 
+      limit: 8, 
+      sort: 'newest',
+      status: 'active'
+    }).subscribe({
+      next: (response: any) => {
+        const products = Array.isArray(response) ? response : response.data || [];
+        this.newArrivals = products.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          oldPrice: product.compare_price,
+          image: product.image_url || product.images?.[0]?.url || 'assets/images/products/default.jpg',
+          category: product.category?.name || '',
+          isNew: true,
+          discount: product.compare_price ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100) : 0
+        }));
+      },
+      error: (error) => {
+        console.error('Erreur chargement nouvelles collections:', error);
+      }
+    });
+
+    // Charger les produits en promotion (avec réduction)
+    this.productService.getProducts({ 
+      limit: 8, 
+      status: 'active'
+    }).subscribe({
+      next: (response: any) => {
+        const products = Array.isArray(response) ? response : response.data || [];
+        // Filtrer les produits avec compare_price (réduction)
+        this.saleProducts = products
+          .filter((product: any) => product.compare_price && product.compare_price > product.price)
+          .map((product: any) => ({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            oldPrice: product.compare_price,
+            image: product.image_url || product.images?.[0]?.url || 'assets/images/products/default.jpg',
+            category: product.category?.name || '',
+            discount: Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+          }))
+          .slice(0, 8); // Limiter à 8 produits
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Erreur chargement produits:', error);
-        this.filterProducts();
+        console.error('Erreur chargement promotions:', error);
         this.isLoading = false;
       }
     });
@@ -240,11 +244,6 @@ export class HomeComponent implements OnInit {
     this.currentSlide = index;
   }
 
-  // Filtrer les produits
-  filterProducts() {
-    this.newArrivals = this.featuredProducts.filter(p => p.isNew);
-    this.saleProducts = this.featuredProducts.filter(p => p.discount);
-  }
 
   // Navigation - Supprimées, on utilise routerLink directement
 
