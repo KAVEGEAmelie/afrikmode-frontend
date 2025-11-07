@@ -22,9 +22,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 
-// Services (à implémenter plus tard)
-// import { UserService } from '../../core/services/user.service';
-// import { AuthService } from '../../core/services/auth.service';
+// Services
+import { AdminService } from '../../../../core/services/admin.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 // Dialogs
 import { UserDialogComponent, UserDialogData } from './user-dialog/user-dialog.component';
@@ -96,9 +96,9 @@ export class UsersComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private dialog: MatDialog
-    // private userService: UserService,
-    // private authService: AuthService
+    private dialog: MatDialog,
+    private adminService: AdminService,
+    private toastService: ToastService
   ) {
     this.searchForm = this.fb.group({
       search: [''],
@@ -118,34 +118,84 @@ export class UsersComponent implements OnInit {
   }
 
   private setupSearch(): void {
+    // Utiliser debounce pour éviter trop d'appels API
     this.searchForm.valueChanges.subscribe(() => {
-      this.applyFilters();
+      // Recharger les données depuis le backend avec les nouveaux filtres
+      this.loadUsers();
     });
   }
 
   private applyFilters(): void {
-    const filters = this.searchForm.value;
-    
-    this.dataSource.filterPredicate = (data: User, filter: string) => {
-      const searchMatch = !filters.search || 
-        data.firstName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        data.lastName.toLowerCase().includes(filters.search.toLowerCase()) ||
-        data.email.toLowerCase().includes(filters.search.toLowerCase());
-      
-      const roleMatch = !filters.role || data.role === filters.role;
-      const statusMatch = !filters.status || data.status === filters.status;
-      
-      return searchMatch && roleMatch && statusMatch;
-    };
-    
-    // Forcer le re-filtrage
-    this.dataSource.filter = JSON.stringify(filters);
+    // Le filtrage est maintenant géré côté serveur dans loadUsers()
+    // On garde cette méthode pour compatibilité mais elle ne fait plus rien
   }
 
   loadUsers(): void {
     this.loading = true;
     
-    // Simuler des données pour l'instant
+    // Charger les utilisateurs depuis le backend
+    const filters = this.searchForm.value;
+    this.adminService.getUsers({
+      role: filters.role || undefined,
+      status: filters.status || undefined,
+      search: filters.search || undefined,
+      page: 1,
+      limit: 1000, // Charger tous les utilisateurs pour le filtrage côté client
+      sortBy: 'created_at',
+      sortOrder: 'desc'
+    }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Transformer les données du backend en format User
+          this.dataSource.data = response.data.map((user: any) => this.mapBackendUserToUser(user));
+          this.dataSource.paginator = this.paginator;
+          this.dataSource.sort = this.sort;
+          this.loading = false;
+        } else {
+          this.toastService.error('Erreur lors du chargement des utilisateurs');
+          this.loading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Erreur chargement utilisateurs:', error);
+        this.toastService.error('Erreur lors du chargement des utilisateurs');
+        this.loading = false;
+      }
+    });
+  }
+
+  private mapBackendUserToUser(backendUser: any): User {
+    // Mapper les données du backend vers le format User
+    const nameParts = (backendUser.name || '').split(' ');
+    return {
+      id: backendUser.id,
+      firstName: nameParts[0] || '',
+      lastName: nameParts.slice(1).join(' ') || '',
+      email: backendUser.email || '',
+      role: backendUser.role || 'customer',
+      status: this.mapBackendStatusToStatus(backendUser.status || backendUser.is_active),
+      createdAt: new Date(backendUser.created_at || Date.now()),
+      lastLogin: backendUser.last_login ? new Date(backendUser.last_login) : undefined,
+      totalOrders: backendUser.total_orders || 0,
+      totalSpent: backendUser.total_spent || 0
+    };
+  }
+
+  private mapBackendStatusToStatus(backendStatus: any): 'active' | 'inactive' | 'suspended' {
+    if (typeof backendStatus === 'boolean') {
+      return backendStatus ? 'active' : 'inactive';
+    }
+    if (typeof backendStatus === 'string') {
+      const status = backendStatus.toLowerCase();
+      if (status === 'active' || status === 'enabled') return 'active';
+      if (status === 'suspended' || status === 'banned') return 'suspended';
+      return 'inactive';
+    }
+    return 'inactive';
+  }
+
+  // Méthode pour charger les données mockées (fallback - à supprimer en production)
+  private loadMockUsers(): void {
     const mockUsers: User[] = [
       // Clients
       {
@@ -328,40 +378,140 @@ export class UsersComponent implements OnInit {
   }
 
   editUser(user: User): void {
-    console.log('Edit user:', user);
-    alert(`Modifier l'utilisateur: ${user.firstName} ${user.lastName}`);
-    // TODO: Ouvrir dialog d'édition
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '600px',
+      data: {
+        user: user,
+        mode: 'edit'
+      } as UserDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Mettre à jour l'utilisateur via l'API
+        const updateData: any = {
+          name: `${result.firstName} ${result.lastName}`.trim(),
+          email: result.email,
+          role: result.role
+        };
+        
+        this.adminService.updateUser(user.id, updateData).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.toastService.success('Utilisateur modifié avec succès');
+              this.loadUsers(); // Recharger la liste
+            } else {
+              this.toastService.error(response.message || 'Erreur lors de la modification');
+            }
+          },
+          error: (error) => {
+            console.error('Erreur modification utilisateur:', error);
+            this.toastService.error('Erreur lors de la modification de l\'utilisateur');
+          }
+        });
+      }
+    });
   }
 
   deleteUser(user: User): void {
-    console.log('Delete user:', user);
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.firstName} ${user.lastName} ?`)) {
-      const index = this.dataSource.data.findIndex(u => u.id === user.id);
-      if (index > -1) {
-        this.dataSource.data.splice(index, 1);
-        this.dataSource._updateChangeSubscription();
-        alert('Utilisateur supprimé avec succès');
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Supprimer l\'utilisateur',
+        message: `Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.firstName} ${user.lastName} ?`,
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler'
+      } as ConfirmDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.adminService.deleteUser(user.id).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.toastService.success('Utilisateur supprimé avec succès');
+              this.loadUsers(); // Recharger la liste
+            } else {
+              this.toastService.error(response.message || 'Erreur lors de la suppression');
+            }
+          },
+          error: (error) => {
+            console.error('Erreur suppression utilisateur:', error);
+            this.toastService.error('Erreur lors de la suppression de l\'utilisateur');
+          }
+        });
       }
-    }
+    });
   }
 
   suspendUser(user: User): void {
-    console.log('Suspend user:', user);
-    user.status = 'suspended';
-    this.dataSource._updateChangeSubscription();
-    alert(`Utilisateur ${user.firstName} ${user.lastName} suspendu`);
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Suspendre l\'utilisateur',
+        message: `Êtes-vous sûr de vouloir suspendre l'utilisateur ${user.firstName} ${user.lastName} ?`,
+        confirmText: 'Suspendre',
+        cancelText: 'Annuler'
+      } as ConfirmDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.adminService.updateUserStatus(user.id, 'suspended').subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.toastService.success('Utilisateur suspendu avec succès');
+              this.loadUsers(); // Recharger la liste
+            } else {
+              this.toastService.error(response.message || 'Erreur lors de la suspension');
+            }
+          },
+          error: (error) => {
+            console.error('Erreur suspension utilisateur:', error);
+            this.toastService.error('Erreur lors de la suspension de l\'utilisateur');
+          }
+        });
+      }
+    });
   }
 
   activateUser(user: User): void {
-    console.log('Activate user:', user);
-    user.status = 'active';
-    this.dataSource._updateChangeSubscription();
-    alert(`Utilisateur ${user.firstName} ${user.lastName} activé`);
+    this.adminService.updateUserStatus(user.id, 'active').subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.toastService.success('Utilisateur activé avec succès');
+          this.loadUsers(); // Recharger la liste
+        } else {
+          this.toastService.error(response.message || 'Erreur lors de l\'activation');
+        }
+      },
+      error: (error) => {
+        console.error('Erreur activation utilisateur:', error);
+        this.toastService.error('Erreur lors de l\'activation de l\'utilisateur');
+      }
+    });
   }
 
   viewUserDetails(user: User): void {
-    console.log('View user details:', user);
-    alert(`Détails de l'utilisateur:\n\nNom: ${user.firstName} ${user.lastName}\nEmail: ${user.email}\nRôle: ${this.getRoleLabel(user.role)}\nStatut: ${this.getStatusLabel(user.status)}\nCommandes: ${user.totalOrders}\nTotal dépensé: ${user.totalSpent}€`);
+    // Charger les détails complets depuis l'API
+    this.adminService.getUser(user.id).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const dialogRef = this.dialog.open(UserDetailsDialogComponent, {
+            width: '700px',
+            data: {
+              user: this.mapBackendUserToUser(response.data)
+            } as UserDetailsData
+          });
+        } else {
+          this.toastService.error('Erreur lors du chargement des détails');
+        }
+      },
+      error: (error) => {
+        console.error('Erreur chargement détails:', error);
+        this.toastService.error('Erreur lors du chargement des détails');
+      }
+    });
   }
 
   exportUsers(): void {
@@ -372,9 +522,42 @@ export class UsersComponent implements OnInit {
   }
 
   addUser(): void {
-    console.log('Add new user');
-    alert('Fonctionnalité d\'ajout d\'utilisateur - À implémenter');
-    // TODO: Ouvrir dialog d'ajout
+    const dialogRef = this.dialog.open(UserDialogComponent, {
+      width: '600px',
+      data: {
+        user: null,
+        mode: 'add'
+      } as UserDialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Créer l'utilisateur via l'API
+        const userData = {
+          name: `${result.firstName} ${result.lastName}`.trim(),
+          email: result.email,
+          password: result.password, // Le mot de passe doit être fourni lors de la création
+          role: result.role,
+          status: result.status || 'active'
+        };
+        
+        this.adminService.createUser(userData).subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.toastService.success('Utilisateur créé avec succès');
+              this.loadUsers(); // Recharger la liste
+            } else {
+              this.toastService.error(response.message || 'Erreur lors de la création');
+            }
+          },
+          error: (error) => {
+            console.error('Erreur création utilisateur:', error);
+            const errorMessage = error.error?.message || error.error?.error || 'Erreur lors de la création de l\'utilisateur';
+            this.toastService.error(errorMessage);
+          }
+        });
+      }
+    });
   }
 
   private generateCSV(): string {
@@ -406,6 +589,8 @@ export class UsersComponent implements OnInit {
 
   clearFilters(): void {
     this.searchForm.reset();
+    // Recharger les données sans filtres
+    this.loadUsers();
   }
 
   getRoleColor(role: string): string {

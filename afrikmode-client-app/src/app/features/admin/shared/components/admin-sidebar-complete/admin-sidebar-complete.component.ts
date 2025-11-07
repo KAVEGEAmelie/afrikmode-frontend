@@ -10,6 +10,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { AdminService } from '../../../../../core/services/admin.service';
 
 export interface AdminMenuItem {
   id: string;
@@ -484,13 +485,19 @@ export class AdminSidebarCompleteComponent implements OnInit {
     }
   ];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private adminService: AdminService
+  ) {}
 
   ngOnInit(): void {
     // Utiliser les items fournis ou les items par défaut
     if (this.menuItems.length === 0) {
       this.menuItems = this.defaultMenuItems;
     }
+
+    // Charger les statistiques depuis le backend
+    this.loadUserStats();
 
     // Écouter les changements de route
     this.currentRoute = this.router.url;
@@ -502,6 +509,56 @@ export class AdminSidebarCompleteComponent implements OnInit {
 
     // Détecter mobile
     this.checkMobile();
+  }
+
+  private loadUserStats(): void {
+    this.adminService.getUserStats().subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          this.updateUserBadges(response.data);
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement stats utilisateurs:', error);
+        // En cas d'erreur, on garde les valeurs par défaut
+      }
+    });
+  }
+
+  private updateUserBadges(stats: any): void {
+    // Trouver le menu "Utilisateurs"
+    const usersMenu = this.menuItems.find(item => item.id === 'users');
+    if (usersMenu && usersMenu.children) {
+      // Mettre à jour le badge principal
+      usersMenu.badge = stats.total || 0;
+      
+      // Mettre à jour les badges des sous-menus
+      const allUsersItem = usersMenu.children.find(child => child.id === 'users-all');
+      if (allUsersItem) {
+        allUsersItem.badge = stats.total || 0;
+      }
+      
+      const customersItem = usersMenu.children.find(child => child.id === 'users-customers');
+      if (customersItem) {
+        customersItem.badge = stats.customers || 0;
+      }
+      
+      const vendorsItem = usersMenu.children.find(child => child.id === 'users-vendors');
+      if (vendorsItem) {
+        vendorsItem.badge = stats.vendors || 0;
+      }
+      
+      // Note: Les managers n'existent plus selon les flux, on peut les masquer ou les supprimer
+      const managersItem = usersMenu.children.find(child => child.id === 'users-managers');
+      if (managersItem) {
+        managersItem.badge = 0; // Pas de managers
+      }
+      
+      const adminsItem = usersMenu.children.find(child => child.id === 'users-admins');
+      if (adminsItem) {
+        adminsItem.badge = stats.admins || 0;
+      }
+    }
   }
 
   @HostListener('window:resize')

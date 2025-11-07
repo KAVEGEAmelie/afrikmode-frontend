@@ -24,6 +24,7 @@ import { DashboardDataService } from '../../core/services/dashboard-data.service
 import { AdminStateService } from '../../core/services/admin-state.service';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { AdminService } from '../../../../core/services/admin.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 export interface AdminMenuItem {
   id: string;
@@ -239,51 +240,8 @@ export class AdminDashboardCompleteComponent implements OnInit {
   loading = true;
   dashboardStats: any = null;
 
-  // KPI Data
-  kpiData: KPIData[] = [
-    {
-      title: 'Utilisateurs totaux',
-      value: '1,234',
-      icon: 'people',
-      color: '#5B5FED',
-      trend: { value: 12, percentage: 12.5, direction: 'up' }
-    },
-    {
-      title: 'Boutiques actives',
-      value: '89',
-      icon: 'store',
-      color: '#7C3AED',
-      trend: { value: 8, percentage: 8.3, direction: 'up' }
-    },
-    {
-      title: 'Produits en vente',
-      value: '2,456',
-      icon: 'inventory',
-      color: '#EC4899',
-      trend: { value: -3, percentage: -3.2, direction: 'down' }
-    },
-    {
-      title: 'Commandes du mois',
-      value: '456',
-      icon: 'shopping_cart',
-      color: '#06B6D4',
-      trend: { value: 15, percentage: 15.2, direction: 'up' }
-    },
-    {
-      title: 'Revenus du mois',
-      value: '45,678 €',
-      icon: 'account_balance_wallet',
-      color: '#F59E0B',
-      trend: { value: 7, percentage: 7.1, direction: 'up' }
-    },
-    {
-      title: 'Tickets ouverts',
-      value: '23',
-      icon: 'support_agent',
-      color: '#10B981',
-      trend: { value: -5, percentage: -5.2, direction: 'down' }
-    }
-  ];
+  // KPI Data - Sera rempli depuis le backend
+  kpiData: KPIData[] = [];
 
   // Quick Actions
   quickActions: QuickAction[] = [
@@ -343,13 +301,8 @@ export class AdminDashboardCompleteComponent implements OnInit {
     { icon: 'local_offer', text: 'Coupon créé', time: 'Il y a 15 min', color: '#F59E0B' }
   ];
 
-  // Pending Actions
-  pendingActions = [
-    { icon: 'store', text: 'Boutiques en attente', count: 12, type: 'stores', color: '#7C3AED' },
-    { icon: 'inventory', text: 'Produits à modérer', count: 8, type: 'products', color: '#EC4899' },
-    { icon: 'support_agent', text: 'Tickets ouverts', count: 23, type: 'tickets', color: '#06B6D4' },
-    { icon: 'payment', text: 'Paiements en attente', count: 5, type: 'payments', color: '#F59E0B' }
-  ];
+  // Pending Actions - Sera rempli depuis le backend
+  pendingActions: any[] = [];
 
   // System Status
   systemStatus = [
@@ -364,7 +317,9 @@ export class AdminDashboardCompleteComponent implements OnInit {
     private dashboardDataService: DashboardDataService,
     private adminState: AdminStateService,
     private adminAuth: AdminAuthService,
-    private router: Router
+    private adminService: AdminService,
+    private router: Router,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -374,17 +329,93 @@ export class AdminDashboardCompleteComponent implements OnInit {
   private loadDashboardData(): void {
     this.loading = true;
     
-    // Charger les vraies données du backend
-    this.adminState.loadDashboardStats().subscribe({
-      next: (stats) => {
-        this.dashboardStats = stats;
-        this.loading = false;
+    // Charger les statistiques du dashboard depuis le backend
+    this.adminService.getDashboardStats().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.dashboardStats = response.data;
+          this.updateKPIData(response.data);
+          this.loadAdditionalData();
+        } else {
+          this.toastService.error('Erreur lors du chargement des statistiques');
+          this.loading = false;
+        }
       },
       error: (error) => {
         console.error('Erreur lors du chargement des données:', error);
+        this.toastService.error('Erreur lors du chargement du dashboard');
         this.loading = false;
       }
     });
+  }
+
+  private updateKPIData(stats: any): void {
+    // Mettre à jour les KPIs avec les vraies données
+    this.kpiData = [
+      {
+        title: 'Utilisateurs totaux',
+        value: this.formatNumber(stats.totalUsers || 0),
+        icon: 'people',
+        color: '#5B5FED',
+        trend: { value: 12, percentage: 12.5, direction: 'up' } // TODO: Calculer depuis historique
+      },
+      {
+        title: 'Boutiques actives',
+        value: this.formatNumber(stats.totalStores || 0),
+        icon: 'store',
+        color: '#7C3AED',
+        trend: { value: 8, percentage: 8.3, direction: 'up' } // TODO: Calculer depuis historique
+      },
+      {
+        title: 'Produits en vente',
+        value: this.formatNumber(stats.totalProducts || 0),
+        icon: 'inventory',
+        color: '#EC4899',
+        trend: { value: -3, percentage: -3.2, direction: 'down' } // TODO: Calculer depuis historique
+      },
+      {
+        title: 'Commandes du mois',
+        value: this.formatNumber(stats.totalOrders || 0),
+        icon: 'shopping_cart',
+        color: '#06B6D4',
+        trend: { value: 15, percentage: 15.2, direction: 'up' } // TODO: Calculer depuis historique
+      },
+      {
+        title: 'Revenus totaux',
+        value: this.formatCurrency(stats.totalRevenue || 0),
+        icon: 'account_balance_wallet',
+        color: '#F59E0B',
+        trend: { value: 7, percentage: 7.1, direction: 'up' } // TODO: Calculer depuis historique
+      },
+      {
+        title: 'Boutiques en attente',
+        value: this.formatNumber(stats.pendingStores || 0),
+        icon: 'store',
+        color: '#10B981',
+        trend: { value: 0, percentage: 0, direction: 'stable' }
+      }
+    ];
+
+    // Mettre à jour les actions en attente
+    this.pendingActions = [
+      { icon: 'store', text: 'Boutiques en attente', count: stats.pendingStores || 0, type: 'stores', color: '#7C3AED' },
+      { icon: 'inventory', text: 'Produits à modérer', count: 0, type: 'products', color: '#EC4899' }, // TODO: Charger depuis API
+      { icon: 'support_agent', text: 'Tickets ouverts', count: 0, type: 'tickets', color: '#06B6D4' }, // TODO: Charger depuis API
+      { icon: 'payment', text: 'Paiements en attente', count: 0, type: 'payments', color: '#F59E0B' } // TODO: Charger depuis API
+    ];
+  }
+
+  private loadAdditionalData(): void {
+    // Charger les données supplémentaires (graphiques, activités, etc.)
+    // TODO: Implémenter les appels API pour :
+    // - Utilisateurs par rôle
+    // - Boutiques par statut
+    // - Commandes par mois
+    // - Revenus par mois
+    // - Top produits
+    // - Activités récentes
+    
+    this.loading = false;
   }
 
   executeAction(action: string): void {
@@ -439,14 +470,6 @@ export class AdminDashboardCompleteComponent implements OnInit {
       case 'info': return 'info';
       default: return 'help';
     }
-  }
-
-  formatCurrency(value: number): string {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0
-    }).format(value);
   }
 
   // Méthodes utilitaires
@@ -512,6 +535,10 @@ export class AdminDashboardCompleteComponent implements OnInit {
 
   formatNumber(value: number): string {
     return new Intl.NumberFormat('fr-FR').format(value);
+  }
+
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', minimumFractionDigits: 0 }).format(value);
   }
 
   formatPercentage(value: number): string {

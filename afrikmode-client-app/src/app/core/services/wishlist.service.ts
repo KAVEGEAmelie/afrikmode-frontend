@@ -1,7 +1,7 @@
 // src/app/core/services/wishlist.service.ts
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Product, PaginatedResponse } from '../models';
@@ -92,9 +92,17 @@ export class WishlistService {
   }
 
   isInWishlist(productId: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.baseUrl}/wishlist/${productId}/check`, {
+    return this.http.get<{success: boolean, in_wishlist: boolean}>(`${this.baseUrl}/wishlist/${productId}/check`, {
       headers: this.getHeaders()
-    });
+    }).pipe(
+      map(response => {
+        if (response && typeof response === 'object' && 'in_wishlist' in response) {
+          return response.in_wishlist;
+        }
+        return false;
+      }),
+      tap(result => console.log('✅ Produit dans wishlist:', result))
+    );
   }
 
   clearWishlist(): Observable<any> {

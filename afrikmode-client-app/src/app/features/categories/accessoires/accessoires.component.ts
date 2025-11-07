@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { WishlistService } from '../../../core/services/wishlist.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-accessoires',
@@ -46,7 +49,13 @@ export class AccessoiresComponent implements OnInit {
 
   featuredProducts = this.allProducts;
 
-  constructor(private router: Router, private route: ActivatedRoute) { }
+  constructor(
+    private router: Router, 
+    private route: ActivatedRoute,
+    private wishlistService: WishlistService,
+    private toastService: ToastService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
     // Écouter les changements de paramètres de route
@@ -73,7 +82,26 @@ export class AccessoiresComponent implements OnInit {
   }
 
   addToWishlist(product: any): void {
-    console.log('Produit ajouté à la wishlist:', product);
+    // Vérifier si l'utilisateur est authentifié
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      if (!isAuth) {
+        this.toastService.warning('Veuillez vous connecter pour ajouter des articles aux favoris');
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      // Ajouter aux favoris via le service
+      this.wishlistService.addToWishlist(product.id.toString()).subscribe({
+        next: (response) => {
+          console.log('✅ Produit ajouté aux favoris:', response);
+          this.toastService.success('Produit ajouté aux favoris avec succès!');
+        },
+        error: (error) => {
+          console.error('❌ Erreur lors de l\'ajout aux favoris:', error);
+          this.toastService.error('Erreur lors de l\'ajout aux favoris');
+        }
+      });
+    });
   }
 
   navigateToCategory(category: any): void {

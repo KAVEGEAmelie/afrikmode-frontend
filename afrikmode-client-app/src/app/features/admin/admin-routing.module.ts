@@ -452,23 +452,23 @@ const routes: Routes = [
       // Reports routes
       {
         path: 'reports/sales',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Rapport de Ventes', subtitle: 'Rapports détaillés des ventes', icon: 'assessment', message: 'Consultez les rapports de ventes ici' }
+        loadComponent: () => import('./pages/reports/reports-sales.component').then(m => m.ReportsSalesComponent),
+        data: { title: 'Rapport de Ventes', subtitle: 'Rapports détaillés des ventes', icon: 'assessment' }
       },
       {
         path: 'reports/inventory',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Rapport d\'Inventaire', subtitle: 'État des stocks', icon: 'warehouse', message: 'Consultez l\'état de votre inventaire ici' }
+        loadComponent: () => import('./pages/reports/reports-inventory.component').then(m => m.ReportsInventoryComponent),
+        data: { title: 'Rapport d\'Inventaire', subtitle: 'État des stocks', icon: 'warehouse' }
       },
       {
         path: 'reports/finance',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Rapport Financier', subtitle: 'Synthèse financière', icon: 'account_balance', message: 'Consultez vos rapports financiers ici' }
+        loadComponent: () => import('./pages/reports/reports-finance.component').then(m => m.ReportsFinanceComponent),
+        data: { title: 'Rapport Financier', subtitle: 'Synthèse financière', icon: 'account_balance' }
       },
       {
         path: 'reports/custom',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Rapports Personnalisés', subtitle: 'Créez vos rapports', icon: 'tune', message: 'Créez des rapports personnalisés ici' }
+        loadComponent: () => import('./pages/reports/reports-custom.component').then(m => m.ReportsCustomComponent),
+        data: { title: 'Rapports Personnalisés', subtitle: 'Créez vos rapports', icon: 'tune' }
       },
       // Messages route
       {
@@ -495,43 +495,43 @@ const routes: Routes = [
       // Settings routes
       {
         path: 'settings/general',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Paramètres Généraux', subtitle: 'Configuration générale', icon: 'settings', message: 'Paramètres généraux du système' }
+        loadComponent: () => import('./pages/settings/settings-general.component').then(m => m.SettingsGeneralComponent),
+        data: { title: 'Paramètres Généraux', subtitle: 'Configuration générale', icon: 'settings' }
       },
       {
         path: 'settings/security',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Sécurité', subtitle: 'Configuration sécurité', icon: 'security', message: 'Paramètres de sécurité' }
+        loadComponent: () => import('./pages/settings/settings-security.component').then(m => m.SettingsSecurityComponent),
+        data: { title: 'Sécurité', subtitle: 'Configuration sécurité', icon: 'security' }
       },
       {
         path: 'settings/email',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Configuration Email', subtitle: 'Paramètres SMTP', icon: 'email', message: 'Configuration des emails' }
+        loadComponent: () => import('./pages/settings/settings-email.component').then(m => m.SettingsEmailComponent),
+        data: { title: 'Configuration Email', subtitle: 'Paramètres SMTP', icon: 'email' }
       },
       {
         path: 'settings/payments',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Moyens de Paiement', subtitle: 'Configuration paiements', icon: 'payment', message: 'Configuration des moyens de paiement' }
+        loadComponent: () => import('./pages/settings/settings-payments.component').then(m => m.SettingsPaymentsComponent),
+        data: { title: 'Moyens de Paiement', subtitle: 'Configuration paiements', icon: 'payment' }
       },
       {
         path: 'settings/shipping',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Livraison', subtitle: 'Zones et tarifs', icon: 'local_shipping', message: 'Configuration de la livraison' }
+        loadComponent: () => import('./pages/settings/settings-shipping.component').then(m => m.SettingsShippingComponent),
+        data: { title: 'Livraison', subtitle: 'Zones et tarifs', icon: 'local_shipping' }
       },
       {
         path: 'settings/taxes',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Taxes & TVA', subtitle: 'Configuration fiscale', icon: 'receipt_long', message: 'Configuration des taxes' }
+        loadComponent: () => import('./pages/settings/settings-taxes.component').then(m => m.SettingsTaxesComponent),
+        data: { title: 'Taxes & TVA', subtitle: 'Configuration fiscale', icon: 'receipt_long' }
       },
       {
         path: 'settings/integrations',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'Intégrations', subtitle: 'Services tiers', icon: 'extension', message: 'Gérez vos intégrations ici' }
+        loadComponent: () => import('./pages/settings/settings-integrations.component').then(m => m.SettingsIntegrationsComponent),
+        data: { title: 'Intégrations', subtitle: 'Services tiers', icon: 'extension' }
       },
       {
         path: 'settings/api',
-        loadComponent: () => import('./pages/shared/generic-admin-page.component').then(m => m.GenericAdminPageComponent),
-        data: { title: 'API', subtitle: 'Configuration API', icon: 'api', message: 'Configuration des API' }
+        loadComponent: () => import('./pages/settings/settings-api.component').then(m => m.SettingsApiComponent),
+        data: { title: 'API', subtitle: 'Configuration API', icon: 'api' }
       },
       // Logs route
       {

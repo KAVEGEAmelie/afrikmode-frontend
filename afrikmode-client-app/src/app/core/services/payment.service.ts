@@ -50,16 +50,26 @@ export class PaymentService {
   }
 
   createPaymentIntent(data: any): Observable<PaymentIntent> {
-    return this.http.post<PaymentIntent>(`${this.baseUrl}/payments/intent`, data, {
+    // Utiliser la route /initiate qui existe dans le backend
+    return this.http.post<PaymentIntent>(`${this.baseUrl}/payments/initiate`, data, {
       headers: this.getHeaders()
     });
   }
 
-  confirmPayment(intentId: string, paymentMethodId: string): Observable<Payment> {
-    return this.http.post<Payment>(`${this.baseUrl}/payments/confirm`, {
-      intent_id: intentId,
+  confirmPayment(paymentId: string, paymentMethodId?: string): Observable<Payment> {
+    // Utiliser la route /initiate pour confirmer le paiement
+    // Le backend gère la confirmation dans initiate
+    return this.http.post<Payment>(`${this.baseUrl}/payments/initiate`, {
+      payment_id: paymentId,
       payment_method_id: paymentMethodId
     }, {
+      headers: this.getHeaders()
+    });
+  }
+
+  processPayment(orderData: any): Observable<Payment> {
+    // Route principale pour traiter un paiement
+    return this.http.post<Payment>(`${this.baseUrl}/payments/initiate`, orderData, {
       headers: this.getHeaders()
     });
   }

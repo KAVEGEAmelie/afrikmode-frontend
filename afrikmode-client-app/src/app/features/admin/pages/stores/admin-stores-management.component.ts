@@ -18,6 +18,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { AdminService } from '../../../../core/services/admin.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 export interface Store {
   id: string;
@@ -405,22 +407,117 @@ export class AdminStoresManagementComponent implements OnInit {
 
   loading = true;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private adminService: AdminService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.loadStores();
+    this.loadStoreStats();
+  }
+
+  private loadStoreStats(): void {
+    this.adminService.getStoreStats().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.storeStats = {
+            total: response.data.total || 0,
+            active: response.data.active || 0,
+            pending: response.data.pending || 0,
+            suspended: 0, // Pas dans la réponse, on le calcule depuis les stores
+            verified: response.data.active || 0, // Approximatif
+            featured: 0, // Pas dans la réponse
+            totalRevenue: 0, // Pas dans la réponse
+            totalProducts: 0 // Pas dans la réponse
+          };
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement stats boutiques:', error);
+      }
+    });
   }
 
   private loadStores(): void {
     this.loading = true;
-    
-    // Simuler le chargement des données
-    setTimeout(() => {
-      this.stores = this.generateMockStores();
-      this.filteredStores = [...this.stores];
-      this.calculateStats();
-      this.loading = false;
-    }, 1000);
+
+    // Charger les boutiques depuis le backend
+    this.adminService.getStoreRequests({
+      page: 1,
+      limit: 1000,
+      sortBy: 'created_at',
+      sortOrder: 'desc'
+    }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Transformer les données du backend en format Store
+          this.stores = response.data.map((store: any) => this.mapBackendStoreToStore(store));
+          this.filteredStores = [...this.stores];
+          this.calculateStats();
+          this.loading = false;
+        } else {
+          this.toastService.error('Erreur lors du chargement des boutiques');
+          this.loading = false;
+        }
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement boutiques:', error);
+        this.toastService.error('Erreur lors du chargement des boutiques');
+        this.loading = false;
+      }
+    });
+  }
+
+  private mapBackendStoreToStore(backendStore: any): Store {
+    return {
+      id: backendStore.id,
+      name: backendStore.business_name || backendStore.name,
+      slug: backendStore.slug || backendStore.id,
+      description: backendStore.description || '',
+      logo: backendStore.logo,
+      banner: backendStore.banner,
+      owner: {
+        id: backendStore.owner_id || '',
+        name: backendStore.vendor_name || '',
+        email: backendStore.email || ''
+      },
+      status: this.mapBackendStatusToStatus(backendStore.status),
+      isVerified: backendStore.is_verified || false,
+      isFeatured: backendStore.is_featured || false,
+      rating: backendStore.rating || 0,
+      totalReviews: backendStore.total_reviews || 0,
+      totalProducts: backendStore.total_products || 0,
+      totalSales: backendStore.total_sales || 0,
+      revenue: backendStore.revenue || 0,
+      address: {
+        street: backendStore.address || '',
+        city: backendStore.city || '',
+        country: backendStore.country || '',
+        postalCode: backendStore.postal_code || ''
+      },
+      contact: {
+        phone: backendStore.phone || '',
+        email: backendStore.email || '',
+        website: backendStore.website
+      },
+      settings: {
+        currency: backendStore.currency || 'XOF',
+        language: backendStore.language || 'fr',
+        timezone: backendStore.timezone || 'Africa/Lome'
+      },
+      createdAt: new Date(backendStore.submitted_at || backendStore.created_at),
+      updatedAt: new Date(backendStore.updated_at || backendStore.created_at)
+    };
+  }
+
+  private mapBackendStatusToStatus(backendStatus: string): 'pending' | 'active' | 'suspended' | 'rejected' {
+    const status = (backendStatus || '').toLowerCase();
+    if (status === 'active' || status === 'approved') return 'active';
+    if (status === 'suspended') return 'suspended';
+    if (status === 'rejected') return 'rejected';
+    return 'pending';
   }
 
   private generateMockStores(): Store[] {

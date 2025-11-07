@@ -80,6 +80,9 @@ export class AdminService {
     sortBy?: string;
     sortOrder?: string;
     search?: string;
+    country?: string;
+    is_verified?: boolean;
+    is_featured?: boolean;
   } = {}): Observable<StoreRequestsResponse> {
     let httpParams = new HttpParams();
     
@@ -137,6 +140,45 @@ export class AdminService {
     return this.http.patch<{ success: boolean; message: string }>(
       `${this.apiUrl}/stores/${storeId}/notes`,
       { notes }
+    );
+  }
+
+  /**
+   * Suspendre une boutique
+   */
+  suspendStore(storeId: string, reason: string, notes?: string): Observable<ApproveResponse> {
+    return this.http.patch<ApproveResponse>(
+      `${this.apiUrl}/stores/${storeId}/suspend`,
+      { reason, notes }
+    );
+  }
+
+  /**
+   * Réactiver une boutique suspendue
+   */
+  activateStore(storeId: string, notes?: string): Observable<ApproveResponse> {
+    return this.http.patch<ApproveResponse>(
+      `${this.apiUrl}/stores/${storeId}/activate`,
+      { notes }
+    );
+  }
+
+  /**
+   * Supprimer une boutique
+   */
+  deleteStore(storeId: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(
+      `${this.apiUrl}/stores/${storeId}`
+    );
+  }
+
+  /**
+   * Mettre/retirer une boutique en vedette
+   */
+  toggleStoreFeatured(storeId: string, isFeatured: boolean): Observable<ApproveResponse> {
+    return this.http.patch<ApproveResponse>(
+      `${this.apiUrl}/stores/${storeId}/featured`,
+      { is_featured: isFeatured }
     );
   }
 

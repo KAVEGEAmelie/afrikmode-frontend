@@ -144,7 +144,7 @@ export class ProductService {
    * Obtenir les nouveaux produits / New Arrivals
    */
   getNewArrivals(limit: number = 12): Observable<Product[]> {
-    return this.http.get<Product[]>(`${this.baseUrl}/products/new-arrivals`, {
+    return this.http.get<Product[]>(`${this.baseUrl}/products/new`, {
       headers: this.getHeaders(),
       params: this.buildParams({ limit })
     });
@@ -325,8 +325,9 @@ export class ProductService {
     rating?: number;
     sort?: string;
   }): Observable<PaginatedResponse<Review>> {
+    // Utiliser la route reviews/product/:productId qui est implémentée dans le backend
     return this.http.get<PaginatedResponse<Review>>(
-      `${this.baseUrl}/products/${productId}/reviews`,
+      `${this.baseUrl}/reviews/product/${productId}`,
       {
         headers: this.getHeaders(),
         params: this.buildParams(params)

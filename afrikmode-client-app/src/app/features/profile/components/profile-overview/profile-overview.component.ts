@@ -73,7 +73,7 @@ export class ProfileOverviewComponent implements OnInit {
   }
 
   loadRecentOrders(): void {
-    this.orderService.getOrders({ page: 1, per_page: 3 }).subscribe({
+    this.orderService.getOrders({ page: 1, limit: 3 }).subscribe({
       next: (response: any) => {
         const ordersData = Array.isArray(response) ? response : response.data || [];
         this.recentOrders = ordersData.slice(0, 3).map((order: any) => ({

@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { WishlistService } from '../../../core/services/wishlist.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-enfants',
@@ -48,7 +51,13 @@ export class EnfantsComponent implements OnInit {
 
   featuredProducts = this.allProducts;
 
-  constructor(private router: Router, private route: ActivatedRoute) { }
+  constructor(
+    private router: Router, 
+    private route: ActivatedRoute,
+    private wishlistService: WishlistService,
+    private toastService: ToastService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
     // Écouter les changements de paramètres de route
@@ -75,7 +84,33 @@ export class EnfantsComponent implements OnInit {
   }
 
   addToWishlist(product: any): void {
-    console.log('Produit ajouté à la wishlist:', product);
+    // Vérifier si l'utilisateur est connecté
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      if (!isAuth) {
+        this.toastService.error('Veuillez vous connecter pour ajouter des produits aux favoris');
+        this.router.navigate(['/login'], { 
+          queryParams: { returnUrl: this.router.url } 
+        });
+        return;
+      }
+
+      // Ajouter le produit aux favoris
+      const productId = product.id?.toString() || product;
+      this.wishlistService.addToWishlist(productId).subscribe({
+        next: (response) => {
+          this.toastService.success('Produit ajouté aux favoris !');
+          console.log('✅ Produit ajouté aux favoris:', product);
+        },
+        error: (error) => {
+          console.error('❌ Erreur ajout aux favoris:', error);
+          if (error.status === 409) {
+            this.toastService.info('Ce produit est déjà dans vos favoris');
+          } else {
+            this.toastService.error('Erreur lors de l\'ajout aux favoris');
+          }
+        }
+      });
+    });
   }
 
   navigateToCategory(category: any): void {

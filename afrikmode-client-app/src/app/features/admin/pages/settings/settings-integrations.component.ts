@@ -1,0 +1,370 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { SettingsService, IntegrationSettings } from '../../core/services/settings.service';
+import { ToastService } from '../../../../core/services/toast.service';
+
+@Component({
+  selector: 'app-settings-integrations',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSlideToggleModule,
+    MatProgressSpinnerModule
+  ],
+  template: `
+    <div class="settings-page">
+      <!-- Header -->
+      <div class="page-header">
+        <div class="header-left">
+          <h1>
+            <mat-icon>extension</mat-icon>
+            Intégrations
+          </h1>
+          <p class="subtitle">Configuration des services tiers</p>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      @if (loading) {
+        <div class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Chargement des paramètres...</p>
+        </div>
+      }
+
+      <!-- Settings Form -->
+      @if (!loading) {
+        <form [formGroup]="settingsForm" (ngSubmit)="saveSettings()">
+          <!-- Google Analytics -->
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>analytics</mat-icon>
+                Google Analytics
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="toggle-item">
+                <div class="toggle-info">
+                  <h4>Activer Google Analytics</h4>
+                  <p>Suivez les statistiques de votre site</p>
+                </div>
+                <mat-slide-toggle formControlName="googleAnalyticsEnabled"></mat-slide-toggle>
+              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>ID de suivi</mat-label>
+                <input matInput formControlName="googleAnalyticsId" placeholder="G-XXXXXXXXXX">
+                <mat-icon matPrefix>tag</mat-icon>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Facebook Pixel -->
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>facebook</mat-icon>
+                Facebook Pixel
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="toggle-item">
+                <div class="toggle-info">
+                  <h4>Activer Facebook Pixel</h4>
+                  <p>Suivez les conversions et créez des audiences</p>
+                </div>
+                <mat-slide-toggle formControlName="facebookPixelEnabled"></mat-slide-toggle>
+              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Pixel ID</mat-label>
+                <input matInput formControlName="facebookPixelId" placeholder="123456789012345">
+                <mat-icon matPrefix>tag</mat-icon>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Stripe -->
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>credit_card</mat-icon>
+                Stripe
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="toggle-item">
+                <div class="toggle-info">
+                  <h4>Activer Stripe</h4>
+                  <p>Intégration avec Stripe pour les paiements</p>
+                </div>
+                <mat-slide-toggle formControlName="stripeEnabled"></mat-slide-toggle>
+              </div>
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Clé publique</mat-label>
+                  <input matInput formControlName="stripePublicKey" placeholder="pk_test_...">
+                  <mat-icon matPrefix>vpn_key</mat-icon>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Clé secrète</mat-label>
+                  <input matInput type="password" formControlName="stripeSecretKey" placeholder="sk_test_...">
+                  <mat-icon matPrefix>lock</mat-icon>
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- PayPal -->
+          <mat-card class="settings-card">
+            <mat-card-header>
+              <mat-card-title>
+                <mat-icon>account_balance_wallet</mat-icon>
+                PayPal
+              </mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="toggle-item">
+                <div class="toggle-info">
+                  <h4>Activer PayPal</h4>
+                  <p>Intégration avec PayPal pour les paiements</p>
+                </div>
+                <mat-slide-toggle formControlName="paypalEnabled"></mat-slide-toggle>
+              </div>
+              <div class="form-grid">
+                <mat-form-field appearance="outline">
+                  <mat-label>Client ID</mat-label>
+                  <input matInput formControlName="paypalClientId" placeholder="AeA1QIZX...">
+                  <mat-icon matPrefix>vpn_key</mat-icon>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Secret</mat-label>
+                  <input matInput type="password" formControlName="paypalSecret" placeholder="EC...">
+                  <mat-icon matPrefix>lock</mat-icon>
+                </mat-form-field>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <button mat-raised-button type="button" (click)="resetForm()" [disabled]="saving">
+              <mat-icon>refresh</mat-icon>
+              Réinitialiser
+            </button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+              <mat-icon>save</mat-icon>
+              {{ saving ? 'Enregistrement...' : 'Enregistrer' }}
+            </button>
+          </div>
+        </form>
+      }
+    </div>
+  `,
+  styles: [`
+    .settings-page {
+      padding: 24px;
+      background: #f8f9fa;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      margin-bottom: 24px;
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .page-header h1 {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .page-header h1 mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #6366f1;
+    }
+
+    .settings-card {
+      margin-bottom: 24px;
+    }
+
+    .toggle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .full-width {
+      width: 100%;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      padding: 24px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  `]
+})
+export class SettingsIntegrationsComponent implements OnInit {
+  settingsForm: FormGroup;
+  loading = false;
+  saving = false;
+  originalSettings: IntegrationSettings | null = null;
+
+  constructor(
+    private fb: FormBuilder,
+    private settingsService: SettingsService,
+    private toastService: ToastService
+  ) {
+    this.settingsForm = this.fb.group({
+      googleAnalyticsEnabled: [false],
+      googleAnalyticsId: [''],
+      facebookPixelEnabled: [false],
+      facebookPixelId: [''],
+      stripeEnabled: [false],
+      stripePublicKey: [''],
+      stripeSecretKey: [''],
+      paypalEnabled: [false],
+      paypalClientId: [''],
+      paypalSecret: ['']
+    });
+  }
+
+  ngOnInit(): void {
+    this.loadSettings();
+  }
+
+  private loadSettings(): void {
+    this.loading = true;
+    this.settingsService.getIntegrationSettings().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.originalSettings = response.data;
+          this.settingsForm.patchValue({
+            googleAnalyticsEnabled: response.data.googleAnalytics?.enabled || false,
+            googleAnalyticsId: response.data.googleAnalytics?.trackingId || '',
+            facebookPixelEnabled: response.data.facebookPixel?.enabled || false,
+            facebookPixelId: response.data.facebookPixel?.pixelId || '',
+            stripeEnabled: response.data.stripe?.enabled || false,
+            stripePublicKey: response.data.stripe?.publicKey || '',
+            stripeSecretKey: response.data.stripe?.secretKey || '',
+            paypalEnabled: response.data.paypal?.enabled || false,
+            paypalClientId: response.data.paypal?.clientId || '',
+            paypalSecret: response.data.paypal?.secret || ''
+          });
+        }
+        this.loading = false;
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement paramètres:', error);
+        this.toastService.error('Erreur lors du chargement des paramètres');
+        this.loading = false;
+      }
+    });
+  }
+
+  saveSettings(): void {
+    if (!this.settingsForm.valid) {
+      this.toastService.warning('Veuillez corriger les erreurs du formulaire');
+      return;
+    }
+
+    this.saving = true;
+    const settings: IntegrationSettings = {
+      googleAnalytics: {
+        enabled: this.settingsForm.value.googleAnalyticsEnabled,
+        trackingId: this.settingsForm.value.googleAnalyticsId
+      },
+      facebookPixel: {
+        enabled: this.settingsForm.value.facebookPixelEnabled,
+        pixelId: this.settingsForm.value.facebookPixelId
+      },
+      stripe: {
+        enabled: this.settingsForm.value.stripeEnabled,
+        publicKey: this.settingsForm.value.stripePublicKey,
+        secretKey: this.settingsForm.value.stripeSecretKey
+      },
+      paypal: {
+        enabled: this.settingsForm.value.paypalEnabled,
+        clientId: this.settingsForm.value.paypalClientId,
+        secret: this.settingsForm.value.paypalSecret
+      }
+    };
+
+    this.settingsService.updateIntegrationSettings(settings).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.toastService.success('Paramètres d\'intégration enregistrés');
+          this.originalSettings = settings;
+        } else {
+          this.toastService.error(response.message || 'Erreur lors de l\'enregistrement');
+        }
+        this.saving = false;
+      },
+      error: (error: any) => {
+        console.error('Erreur enregistrement:', error);
+        this.toastService.error('Erreur lors de l\'enregistrement');
+        this.saving = false;
+      }
+    });
+  }
+
+  resetForm(): void {
+    if (this.originalSettings) {
+      this.settingsForm.patchValue({
+        googleAnalyticsEnabled: this.originalSettings.googleAnalytics?.enabled || false,
+        googleAnalyticsId: this.originalSettings.googleAnalytics?.trackingId || '',
+        facebookPixelEnabled: this.originalSettings.facebookPixel?.enabled || false,
+        facebookPixelId: this.originalSettings.facebookPixel?.pixelId || '',
+        stripeEnabled: this.originalSettings.stripe?.enabled || false,
+        stripePublicKey: this.originalSettings.stripe?.publicKey || '',
+        stripeSecretKey: this.originalSettings.stripe?.secretKey || '',
+        paypalEnabled: this.originalSettings.paypal?.enabled || false,
+        paypalClientId: this.originalSettings.paypal?.clientId || '',
+        paypalSecret: this.originalSettings.paypal?.secret || ''
+      });
+      this.toastService.info('Formulaire réinitialisé');
+    }
+  }
+}
+
+
+

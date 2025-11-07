@@ -118,31 +118,39 @@ export class ShopComponent implements OnInit {
 
     // Ajouter les filtres
     if (this.selectedCategory !== 'all') {
-      // Note: Il faudrait mapper le nom de catégorie à un ID, mais pour l'instant on utilise search
-      params.search = this.selectedCategory;
+      // Utiliser category pour filtrer par catégorie (slug ou ID)
+      params.category = this.selectedCategory;
     }
 
     if (this.searchQuery) {
       params.search = this.searchQuery;
     }
 
-    // Ajouter le tri
+    // Ajouter le tri (mapper vers sortBy et sortOrder du backend)
     switch (this.sortBy) {
       case 'price-asc':
-        params.sort = 'price_asc';
+        params.sortBy = 'price';
+        params.sortOrder = 'asc';
         break;
       case 'price-desc':
-        params.sort = 'price_desc';
+        params.sortBy = 'price';
+        params.sortOrder = 'desc';
         break;
       case 'name-asc':
-        params.sort = 'name_asc';
+        params.sortBy = 'name';
+        params.sortOrder = 'asc';
         break;
       case 'rating':
-        params.sort = 'popularity';
+        params.sortBy = 'sales_count';
+        params.sortOrder = 'desc';
         break;
       case 'newest':
-        params.sort = 'newest';
+        params.sortBy = 'created_at';
+        params.sortOrder = 'desc';
         break;
+      default:
+        params.sortBy = 'created_at';
+        params.sortOrder = 'desc';
     }
 
     // Ajouter filtres prix si sélectionnés

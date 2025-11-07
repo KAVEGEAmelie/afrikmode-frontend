@@ -58,7 +58,7 @@ export class OrderHistoryComponent implements OnInit {
     
     const params: any = {
       page: 1,
-      per_page: 50
+      limit: 50
     };
 
     if (this.selectedStatus !== 'all') {

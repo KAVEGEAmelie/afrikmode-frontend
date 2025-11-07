@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
+import { WishlistService } from '../../../core/services/wishlist.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-nouveautes',
@@ -117,7 +120,12 @@ export class NouveautesComponent implements OnInit {
     }
   ];
 
-  constructor() { }
+  constructor(
+    private router: Router,
+    private wishlistService: WishlistService,
+    private toastService: ToastService,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
   }
@@ -128,8 +136,33 @@ export class NouveautesComponent implements OnInit {
   }
 
   addToWishlist(product: any): void {
-    console.log('Produit ajouté à la wishlist:', product);
-    // Logique d'ajout à la wishlist
+    // Vérifier si l'utilisateur est connecté
+    this.authService.isAuthenticated$.subscribe(isAuth => {
+      if (!isAuth) {
+        this.toastService.error('Veuillez vous connecter pour ajouter des produits aux favoris');
+        this.router.navigate(['/login'], { 
+          queryParams: { returnUrl: this.router.url } 
+        });
+        return;
+      }
+
+      // Ajouter le produit aux favoris
+      const productId = product.id?.toString() || product;
+      this.wishlistService.addToWishlist(productId).subscribe({
+        next: (response) => {
+          this.toastService.success('Produit ajouté aux favoris !');
+          console.log('✅ Produit ajouté aux favoris:', product);
+        },
+        error: (error) => {
+          console.error('❌ Erreur ajout aux favoris:', error);
+          if (error.status === 409) {
+            this.toastService.info('Ce produit est déjà dans vos favoris');
+          } else {
+            this.toastService.error('Erreur lors de l\'ajout aux favoris');
+          }
+        }
+      });
+    });
   }
 
   viewProduct(product: any): void {

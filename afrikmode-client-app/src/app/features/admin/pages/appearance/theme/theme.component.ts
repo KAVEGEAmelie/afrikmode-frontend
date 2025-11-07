@@ -1,7 +1,7 @@
 // src/app/features/admin/pages/appearance/theme/theme.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,20 +11,9 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatChipsModule } from '@angular/material/chips';
-
-interface ThemeSettings {
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  successColor: string;
-  warningColor: string;
-  errorColor: string;
-  backgroundColor: string;
-  textColor: string;
-  borderRadius: string;
-  fontFamily: string;
-  darkMode: boolean;
-}
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { AppearanceService, ThemeSettings } from '../../../core/services/appearance.service';
+import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-theme',
@@ -32,6 +21,7 @@ interface ThemeSettings {
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -40,7 +30,8 @@ interface ThemeSettings {
     MatSelectModule,
     MatSlideToggleModule,
     MatTabsModule,
-    MatChipsModule
+    MatChipsModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './theme.component.html',
   styleUrls: ['./theme.component.scss']
@@ -129,13 +120,36 @@ export class ThemeComponent implements OnInit {
     { value: '24px', label: 'Extra Grand' }
   ];
 
+  loading = false;
+  saving = false;
+  originalTheme: ThemeSettings | null = null;
+
+  constructor(
+    private appearanceService: AppearanceService,
+    private toastService: ToastService
+  ) {}
+
   ngOnInit(): void {
     this.loadTheme();
   }
 
   loadTheme(): void {
-    // TODO: Load theme from backend
-    console.log('Loading theme...');
+    this.loading = true;
+    this.appearanceService.getThemeSettings().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.originalTheme = response.data;
+          this.theme = { ...response.data };
+          this.applyTheme();
+        }
+        this.loading = false;
+      },
+      error: (error: any) => {
+        console.error('Erreur chargement thème:', error);
+        this.toastService.error('Erreur lors du chargement du thème');
+        this.loading = false;
+      }
+    });
   }
 
   applyPreset(preset: any): void {
@@ -163,9 +177,24 @@ export class ThemeComponent implements OnInit {
   }
 
   saveTheme(): void {
-    // TODO: Save theme to backend
-    this.applyTheme();
-    console.log('✅ Theme saved!', this.theme);
+    this.saving = true;
+    this.appearanceService.updateThemeSettings(this.theme).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.applyTheme();
+          this.originalTheme = { ...this.theme };
+          this.toastService.success('Thème enregistré avec succès');
+        } else {
+          this.toastService.error(response.message || 'Erreur lors de l\'enregistrement');
+        }
+        this.saving = false;
+      },
+      error: (error: any) => {
+        console.error('Erreur enregistrement thème:', error);
+        this.toastService.error('Erreur lors de l\'enregistrement du thème');
+        this.saving = false;
+      }
+    });
   }
 
   resetTheme(): void {

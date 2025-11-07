@@ -837,16 +837,15 @@ export class VendorCategoriesComponent implements OnInit {
         width: '600px',
         maxWidth: '90vw',
         maxHeight: '90vh',
-        disableClose: true, // Empêche la fermeture au clic sur le backdrop
+        disableClose: false, // Permet la fermeture au clic sur le backdrop
         hasBackdrop: true,
-        backdropClass: ['category-dialog-backdrop', 'cdk-overlay-dark-backdrop'],
+        backdropClass: ['category-dialog-backdrop'],
         panelClass: ['category-dialog-panel'],
-        autoFocus: 'first-tabbable',
+        autoFocus: true,
         restoreFocus: true,
-        closeOnNavigation: false, // Ne pas fermer lors de la navigation
-        position: {
-          top: '50px'
-        },
+        closeOnNavigation: true,
+        enterAnimationDuration: '300ms',
+        exitAnimationDuration: '200ms',
         data: {
           category: null,
           parentCategory: null,
@@ -920,16 +919,15 @@ export class VendorCategoriesComponent implements OnInit {
       width: '600px',
       maxWidth: '90vw',
       maxHeight: '90vh',
-      disableClose: true, // Empêche la fermeture au clic sur le backdrop
+      disableClose: false,
       hasBackdrop: true,
-      backdropClass: ['category-dialog-backdrop', 'cdk-overlay-dark-backdrop'],
+      backdropClass: ['category-dialog-backdrop'],
       panelClass: ['category-dialog-panel'],
-      autoFocus: 'first-tabbable',
+      autoFocus: true,
       restoreFocus: true,
-      closeOnNavigation: false,
-      position: {
-        top: '50px'
-      },
+      closeOnNavigation: true,
+      enterAnimationDuration: '300ms',
+      exitAnimationDuration: '200ms',
       data: {
         category: category,
         parentCategory: null,
@@ -967,16 +965,15 @@ export class VendorCategoriesComponent implements OnInit {
       width: '600px',
       maxWidth: '90vw',
       maxHeight: '90vh',
-      disableClose: true, // Empêche la fermeture au clic sur le backdrop
+      disableClose: false,
       hasBackdrop: true,
-      backdropClass: ['category-dialog-backdrop', 'cdk-overlay-dark-backdrop'],
+      backdropClass: ['category-dialog-backdrop'],
       panelClass: ['category-dialog-panel'],
-      autoFocus: 'first-tabbable',
+      autoFocus: true,
       restoreFocus: true,
-      closeOnNavigation: false,
-      position: {
-        top: '50px'
-      },
+      closeOnNavigation: true,
+      enterAnimationDuration: '300ms',
+      exitAnimationDuration: '200ms',
       data: {
         category: null,
         parentCategory: category,
@@ -1118,32 +1115,49 @@ export class VendorCategoriesComponent implements OnInit {
   styles: [`
     :host {
       display: block;
-      z-index: 10000 !important;
-      position: relative;
     }
 
     .category-dialog {
       min-width: 500px;
+      max-width: 600px;
+      width: 100%;
       background: white;
-      z-index: 10000 !important;
-      position: relative;
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
+      overflow: hidden;
     }
 
     ::ng-deep .category-dialog-backdrop {
       background-color: rgba(0, 0, 0, 0.5) !important;
-      z-index: 9999 !important;
+      backdrop-filter: blur(2px);
     }
 
     ::ng-deep .category-dialog-panel {
-      z-index: 10000 !important;
-      position: relative;
+      position: relative !important;
       background: white !important;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+      border-radius: 12px !important;
+      overflow: hidden !important;
+      display: flex !important;
+      flex-direction: column !important;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
-      transform: translateZ(0); /* Force GPU acceleration */
+      transform: translateZ(0);
       will-change: transform;
+      max-height: 90vh !important;
+      max-width: 90vw !important;
+    }
+
+    ::ng-deep .category-dialog-panel .mat-mdc-dialog-container {
+      padding: 0 !important;
+      overflow: visible !important;
+    }
+
+    ::ng-deep .category-dialog-panel .mat-mdc-dialog-surface {
+      border-radius: 12px !important;
+      overflow: hidden !important;
     }
 
     .category-dialog * {
@@ -1160,6 +1174,9 @@ export class VendorCategoriesComponent implements OnInit {
       padding: 24px 24px 16px;
       border-bottom: 1px solid #E5E7EB;
       background: linear-gradient(135deg, #8B2E2E10 0%, #D9744F10 100%);
+      font-size: 1.5rem;
+      font-weight: 600;
+      flex-shrink: 0;
     }
 
     h2 i {
@@ -1167,9 +1184,17 @@ export class VendorCategoriesComponent implements OnInit {
     }
 
     mat-dialog-content {
-      padding: 24px;
-      max-height: 70vh;
-      overflow-y: auto;
+      padding: 24px !important;
+      max-height: calc(90vh - 200px) !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      flex: 1;
+      display: block !important;
+    }
+
+    ::ng-deep mat-dialog-content {
+      padding: 24px !important;
+      margin: 0 !important;
     }
 
     .category-form {
@@ -1207,14 +1232,20 @@ export class VendorCategoriesComponent implements OnInit {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
       text-rendering: optimizeLegibility;
-      filter: none !important;
-      backdrop-filter: none !important;
-      transform: none !important;
     }
 
-    mat-form-field, mat-input, input, textarea {
-      filter: none !important;
-      backdrop-filter: none !important;
+    mat-form-field {
+      display: block;
+      width: 100%;
+    }
+
+    ::ng-deep .mat-mdc-form-field {
+      width: 100%;
+      display: block;
+    }
+
+    ::ng-deep .mat-mdc-text-field-wrapper {
+      background-color: white;
     }
 
     .toggle-field {
@@ -1231,10 +1262,20 @@ export class VendorCategoriesComponent implements OnInit {
     }
 
     mat-dialog-actions {
-      padding: 16px 24px;
+      padding: 16px 24px !important;
       border-top: 1px solid #E5E7EB;
       gap: 12px;
       background: #F9FAFB;
+      margin: 0 !important;
+      flex-shrink: 0;
+      display: flex !important;
+      justify-content: flex-end !important;
+      align-items: center !important;
+    }
+
+    ::ng-deep mat-dialog-actions {
+      padding: 16px 24px !important;
+      margin: 0 !important;
     }
 
     mat-dialog-actions button {

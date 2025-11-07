@@ -1,7 +1,7 @@
 // src/app/core/services/cart.service.ts
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { tap, map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { Cart, CartItem, AddToCartRequest, UpdateCartItemRequest } from '../models';
@@ -51,18 +51,50 @@ export class CartService {
   }
 
   getCart(): Observable<Cart> {
-    return this.http.get<Cart>(`${this.baseUrl}/cart`, {
+    return this.http.get<{success: boolean, data: any}>(`${this.baseUrl}/cart`, {
       headers: this.getHeaders()
     }).pipe(
-      tap(cart => this.cartSubject.next(cart))
+      map((response: any) => {
+        // Transformer la réponse backend en format Cart
+        const totalAmount = response.data?.total_amount || response.data?.total || 0;
+        const cart: Cart = {
+          id: '',
+          user_id: '',
+          items: response.data?.items || [],
+          total_items: response.data?.total_items || 0,
+          subtotal: totalAmount,
+          tax_amount: 0,
+          shipping_cost: 0,
+          discount_amount: 0,
+          total: totalAmount,
+          currency: response.data?.currency || 'FCFA',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          coupon_code: response.data?.coupon_code
+        };
+        this.cartSubject.next(cart);
+        return cart;
+      })
     );
   }
 
   addToCart(item: AddToCartRequest): Observable<CartItem> {
-    return this.http.post<CartItem>(`${this.baseUrl}/cart`, item, {
+    return this.http.post<{success: boolean, message?: string, data?: CartItem}>(`${this.baseUrl}/cart`, item, {
       headers: this.getHeaders()
     }).pipe(
-      tap(() => this.loadCart())
+      tap(() => {
+        // Recharger le panier pour mettre à jour le compteur
+        this.loadCart();
+      }),
+      map(response => {
+        // Retourner un CartItem ou créer un objet par défaut
+        return response.data || {
+          id: '',
+          product_id: item.product_id,
+          quantity: item.quantity || 1,
+          product: {} as any
+        } as CartItem;
+      })
     );
   }
 
@@ -91,18 +123,56 @@ export class CartService {
   }
 
   applyCoupon(code: string): Observable<Cart> {
-    return this.http.post<Cart>(`${this.baseUrl}/cart/coupon`, { code }, {
+    return this.http.post<{success: boolean, data: any}>(`${this.baseUrl}/cart/coupon`, { code }, {
       headers: this.getHeaders()
     }).pipe(
-      tap(cart => this.cartSubject.next(cart))
+      map((response: any) => {
+        const totalAmount = response.data?.total_amount || response.data?.total || 0;
+        const cart: Cart = {
+          id: '',
+          user_id: '',
+          items: response.data?.items || [],
+          total_items: response.data?.total_items || 0,
+          subtotal: totalAmount,
+          tax_amount: 0,
+          shipping_cost: 0,
+          discount_amount: 0,
+          total: totalAmount,
+          currency: response.data?.currency || 'FCFA',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          coupon_code: response.data?.coupon_code || code
+        };
+        this.cartSubject.next(cart);
+        return cart;
+      })
     );
   }
 
   removeCoupon(): Observable<Cart> {
-    return this.http.delete<Cart>(`${this.baseUrl}/cart/coupon`, {
+    return this.http.delete<{success: boolean, data: any}>(`${this.baseUrl}/cart/coupon`, {
       headers: this.getHeaders()
     }).pipe(
-      tap(cart => this.cartSubject.next(cart))
+      map((response: any) => {
+        const totalAmount = response.data?.total_amount || response.data?.total || 0;
+        const cart: Cart = {
+          id: '',
+          user_id: '',
+          items: response.data?.items || [],
+          total_items: response.data?.total_items || 0,
+          subtotal: totalAmount,
+          tax_amount: 0,
+          shipping_cost: 0,
+          discount_amount: 0,
+          total: totalAmount,
+          currency: response.data?.currency || 'FCFA',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          coupon_code: undefined
+        };
+        this.cartSubject.next(cart);
+        return cart;
+      })
     );
   }
 
@@ -124,5 +194,12 @@ export class CartService {
   getCartTotal(): number {
     const cart = this.getCurrentCart();
     return cart ? cart.total : 0;
+  }
+
+  // Observable pour le compteur d'articles (pour le header)
+  getCartCount$(): Observable<number> {
+    return this.cart$.pipe(
+      map(cart => cart ? cart.total_items : 0)
+    );
   }
 }
