@@ -119,10 +119,13 @@ export class ProfileLayoutComponent implements OnInit {
         // L'API retourne les données dans response.data
         const user = response.data || response;
         
+        // Normaliser l'URL de l'avatar (remplacer les backslashes Windows)
+        const avatarUrl = user.avatarUrl ? this.normalizeImageUrl(user.avatarUrl) : null;
+        
         this.user = {
           name: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur',
           email: user.email || '',
-          avatar: user.avatarUrl || 'assets/images/avatar-placeholder.png',
+          avatar: avatarUrl || 'assets/images/avatar-placeholder.png',
           memberSince: user.createdAt ? new Date(user.createdAt).getFullYear().toString() : '2023'
         };
         console.log('✅ Utilisateur formaté (layout):', JSON.stringify(this.user, null, 2));
@@ -189,6 +192,15 @@ export class ProfileLayoutComponent implements OnInit {
         console.log('Profil mis à jour:', this.user);
       }, 1000);
     }
+  }
+
+  /**
+   * Normalise une URL d'image en remplaçant les backslashes Windows par des slashes
+   */
+  normalizeImageUrl(url: string | null): string | null {
+    if (!url) return null;
+    // Remplacer les backslashes par des slashes
+    return url.replace(/\\/g, '/');
   }
 
   logout(): void {

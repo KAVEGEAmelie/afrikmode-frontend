@@ -63,8 +63,8 @@ export class OrderService {
     });
   }
 
-  confirmDelivery(id: string): Observable<Order> {
-    return this.http.put<Order>(`${this.baseUrl}/orders/${id}/confirm-delivery`, {}, {
+  confirmDelivery(id: string, data?: { notes?: string }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/orders/${id}/confirm-delivery`, data || {}, {
       headers: this.getHeaders()
     });
   }

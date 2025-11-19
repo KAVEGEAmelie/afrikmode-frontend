@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, Observable, of, throwError, interval, timer } from 'rxjs';
+import { delay, map, switchMap, take, tap, catchError, filter, takeWhile } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 export interface PaymentMethod {
   id: string;
@@ -59,9 +61,13 @@ export interface PaymentStatus {
   providedIn: 'root'
 })
 export class PaymentSimulationService {
-  
+
   private paymentStatusSubject = new BehaviorSubject<PaymentStatus | null>(null);
   public paymentStatus$ = this.paymentStatusSubject.asObservable();
+
+  private readonly apiUrl = `${environment.apiUrl}/payments`;
+
+  constructor(private http: HttpClient) {}
 
   // Méthodes de paiement disponibles
   public readonly paymentMethods: PaymentMethod[] = [
@@ -194,16 +200,16 @@ export class PaymentSimulationService {
     return { valid: true };
   }
 
-  // Traitement du paiement
+  // Traitement du paiement (nouvelle version connectée au backend)
   processPayment(request: PaymentRequest): Observable<PaymentResponse> {
     const method = this.paymentMethods.find(m => m.id === request.method);
     if (!method) {
       return throwError(() => new Error('Méthode de paiement non supportée'));
     }
 
-    // Validation selon la méthode
+    // Validation locale selon la méthode
     let validation: { valid: boolean; error?: string } = { valid: true };
-    
+
     if (request.method === 'card' && request.cardInfo) {
       validation = this.validateCard(request.cardInfo);
     } else if (request.method === 'mobile_money' && request.mobileMoneyInfo) {
@@ -214,98 +220,193 @@ export class PaymentSimulationService {
       return throwError(() => new Error(validation.error));
     }
 
-    // Générer un ID de transaction
-    const transactionId = this.generateTransactionId();
-    
-    // Simuler le traitement
-    return this.simulatePaymentProcessing(transactionId, request, method);
-  }
+    // Déterminer le scénario selon le taux de succès
+    const scenario = this.getScenarioFromSuccessRate(method.successRate);
 
-  private simulatePaymentProcessing(
-    transactionId: string, 
-    request: PaymentRequest, 
-    method: PaymentMethod
-  ): Observable<PaymentResponse> {
-    
-    // Déterminer si le paiement va réussir
-    const willSucceed = Math.random() * 100 < method.successRate;
-    
-    // Simuler les étapes de traitement
-    const steps = this.getProcessingSteps(request.method);
-    let currentStepIndex = 0;
-    
-    const updateStatus = (step: string, progress: number) => {
-      this.paymentStatusSubject.next({
-        transactionId,
-        status: 'processing',
-        progress,
-        currentStep: step,
-        estimatedTime: Math.max(0, method.processingTime - (progress * method.processingTime / 100)) / 1000,
-        message: step
-      });
-    };
+    // Mapper la méthode au format backend
+    const paymentMethod = this.mapPaymentMethod(request.method, request.mobileMoneyInfo?.provider);
 
-    return new Observable(observer => {
-      const interval = setInterval(() => {
-        if (currentStepIndex < steps.length) {
-          const step = steps[currentStepIndex];
-          const progress = ((currentStepIndex + 1) / steps.length) * 100;
-          
-          updateStatus(step, progress);
-          currentStepIndex++;
-        } else {
-          clearInterval(interval);
-          
-          // Finaliser le paiement
-          if (willSucceed) {
-            this.paymentStatusSubject.next({
-              transactionId,
-              status: 'completed',
-              progress: 100,
-              currentStep: 'Paiement réussi',
-              estimatedTime: 0,
-              message: 'Paiement traité avec succès'
-            });
-            
-            observer.next({
-              success: true,
-              transactionId,
-              status: 'completed',
-              message: 'Paiement traité avec succès',
-              processingTime: method.processingTime,
-              fees: method.fees,
-              receiptUrl: `/receipts/${transactionId}.pdf`
-            });
-          } else {
-            this.paymentStatusSubject.next({
-              transactionId,
-              status: 'failed',
-              progress: 100,
-              currentStep: 'Paiement échoué',
-              estimatedTime: 0,
-              message: 'Paiement refusé'
-            });
-            
-            observer.next({
-              success: false,
-              transactionId,
-              status: 'failed',
-              message: 'Paiement refusé par la banque',
-              processingTime: method.processingTime,
-              fees: 0,
-              errorCode: 'PAYMENT_DECLINED',
-              errorMessage: 'Fonds insuffisants ou carte bloquée'
-            });
-          }
-          
-          observer.complete();
+    // Appeler le backend pour initier le paiement
+    return this.http.post<any>(`${this.apiUrl}/test/process`, {
+      orderId: request.orderId,
+      amount: request.amount,
+      paymentMethod: paymentMethod,
+      phoneNumber: request.mobileMoneyInfo?.number || request.customerInfo.phone,
+      scenario: scenario,
+      delay: 3000,
+      currency: request.currency || 'FCFA'
+    }).pipe(
+      switchMap(response => {
+        if (!response.success) {
+          throw new Error(response.error || 'Erreur lors du paiement');
         }
-      }, method.processingTime / steps.length);
 
-      // Nettoyer l'intervalle si l'observable est annulé
-      return () => clearInterval(interval);
-    });
+        const transactionId = response.data.transactionId;
+        const steps = response.data.steps;
+        const estimatedTime = response.data.estimatedTime;
+
+        // Initialiser le statut
+        this.paymentStatusSubject.next({
+          transactionId: transactionId,
+          status: 'processing',
+          progress: 0,
+          currentStep: steps[0]?.message || 'Initialisation...',
+          estimatedTime: estimatedTime / 1000,
+          message: 'Traitement en cours...'
+        });
+
+        // Démarrer le polling du statut
+        return this.pollPaymentStatus(transactionId, steps);
+      }),
+      map(finalStatus => {
+        // Convertir le résultat backend en PaymentResponse
+        return {
+          success: finalStatus.status === 'completed',
+          transactionId: finalStatus.transactionId,
+          status: finalStatus.status,
+          message: finalStatus.status === 'completed'
+            ? 'Paiement traité avec succès'
+            : finalStatus.error?.message || 'Paiement échoué',
+          processingTime: method.processingTime,
+          fees: method.fees,
+          receiptUrl: finalStatus.status === 'completed' ? `/receipts/${finalStatus.transactionId}.pdf` : undefined,
+          errorCode: finalStatus.error?.code,
+          errorMessage: finalStatus.error?.details
+        } as PaymentResponse;
+      }),
+      catchError(error => {
+        console.error('Erreur traitement paiement:', error);
+        this.paymentStatusSubject.next({
+          transactionId: '',
+          status: 'failed',
+          progress: 100,
+          currentStep: 'Erreur',
+          estimatedTime: 0,
+          message: error.error?.message || error.message || 'Erreur de paiement'
+        });
+        return throwError(() => error);
+      })
+    );
   }
+
+  /**
+   * Déterminer le scénario de test basé sur le taux de succès
+   */
+  private getScenarioFromSuccessRate(successRate: number): string {
+    const random = Math.random() * 100;
+
+    if (random < successRate) {
+      return 'success';
+    } else {
+      // Choisir un scénario d'échec au hasard
+      const failureScenarios = [
+        'insufficient_funds',
+        'card_declined',
+        'timeout',
+        'network_error'
+      ];
+      return failureScenarios[Math.floor(Math.random() * failureScenarios.length)];
+    }
+  }
+
+  /**
+   * Mapper la méthode de paiement frontend au format backend
+   */
+  private mapPaymentMethod(method: string, provider?: string): string {
+    if (method === 'mobile_money' && provider) {
+      // Mapper les providers spécifiques
+      const providerMap: { [key: string]: string } = {
+        'tmoney': 'tmoney',
+        't-money': 'tmoney',
+        'flooz': 'flooz',
+        'orange': 'orange_money',
+        'orange money': 'orange_money',
+        'mtn': 'mtn_money',
+        'mtn money': 'mtn_money',
+        'moov': 'moov_money'
+      };
+      return providerMap[provider.toLowerCase()] || 'tmoney';
+    }
+
+    if (method === 'card') {
+      return 'card';
+    }
+
+    if (method === 'cash_on_delivery') {
+      return 'cash_on_delivery';
+    }
+
+    if (method === 'bank_transfer') {
+      return 'bank_transfer';
+    }
+
+    return method;
+  }
+
+  /**
+   * Polling du statut de paiement auprès du backend
+   */
+  private pollPaymentStatus(transactionId: string, steps: any[]): Observable<any> {
+    let currentStep = 0;
+    const totalSteps = steps.length;
+    let pollCount = 0;
+    const maxPolls = 30; // Maximum 30 secondes
+
+    return interval(1000).pipe( // Vérifier toutes les secondes
+      take(maxPolls),
+      switchMap(() =>
+        this.http.get<any>(`${this.apiUrl}/test/status/${transactionId}`).pipe(
+          catchError(err => {
+            console.error('Erreur polling:', err);
+            return of({ success: false, error: err });
+          })
+        )
+      ),
+      tap(response => {
+        pollCount++;
+
+        if (response.success && response.data) {
+          const status = response.data.status;
+          const providerStatus = response.data.providerStatus;
+
+          // Mettre à jour la progression basée sur le provider status
+          if (providerStatus && providerStatus.startsWith('STEP_')) {
+            currentStep = parseInt(providerStatus.split('_')[1]) - 1;
+          } else {
+            currentStep = Math.min(currentStep + 1, totalSteps - 1);
+          }
+
+          const progress = Math.min(((currentStep + 1) / totalSteps) * 100, 100);
+
+          this.paymentStatusSubject.next({
+            transactionId: transactionId,
+            status: status === 'pending' ? 'processing' : status as any,
+            progress: progress,
+            currentStep: steps[currentStep]?.message || 'Traitement...',
+            estimatedTime: Math.max(0, (totalSteps - currentStep - 1)),
+            message: status === 'pending' ? 'Traitement en cours...' :
+                     status === 'completed' ? 'Paiement réussi !' :
+                     status === 'failed' ? 'Paiement échoué' : 'En cours...'
+          });
+        }
+      }),
+      filter(response => {
+        // Continuer jusqu'à ce que le statut soit final ou timeout
+        if (!response.success) return pollCount >= maxPolls;
+        const status = response.data?.status;
+        return status === 'completed' || status === 'failed' || pollCount >= maxPolls;
+      }),
+      take(1), // Prendre seulement le premier résultat final
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error('Timeout ou erreur lors du paiement');
+        }
+        return response.data;
+      })
+    );
+  }
+
+  // Note: simulatePaymentProcessing supprimée - on utilise maintenant le backend
 
   private getProcessingSteps(method: string): string[] {
     switch (method) {
@@ -350,22 +451,42 @@ export class PaymentSimulationService {
     return `AFM-${timestamp}-${random}`.toUpperCase();
   }
 
-  // Vérifier le statut d'un paiement
+  // Vérifier le statut d'un paiement (depuis le backend)
   checkPaymentStatus(transactionId: string): Observable<PaymentStatus> {
-    // Simulation - en réalité, on interrogerait l'API
-    const status = this.paymentStatusSubject.value;
-    if (status && status.transactionId === transactionId) {
-      return of(status);
-    }
-    
-    return of({
-      transactionId,
-      status: 'completed',
-      progress: 100,
-      currentStep: 'Paiement terminé',
-      estimatedTime: 0,
-      message: 'Paiement traité avec succès'
-    });
+    return this.http.get<any>(`${this.apiUrl}/test/status/${transactionId}`).pipe(
+      map(response => {
+        if (!response.success || !response.data) {
+          throw new Error('Impossible de récupérer le statut du paiement');
+        }
+
+        const data = response.data;
+
+        return {
+          transactionId: data.transactionId,
+          status: data.status === 'pending' ? 'processing' : data.status as any,
+          progress: data.status === 'completed' ? 100 :
+                   data.status === 'failed' ? 100 :
+                   data.status === 'pending' ? 50 : 0,
+          currentStep: data.status === 'completed' ? 'Paiement terminé' :
+                      data.status === 'failed' ? 'Paiement échoué' :
+                      'Traitement en cours',
+          estimatedTime: data.status === 'pending' ? 5 : 0,
+          message: data.status === 'completed' ? 'Paiement traité avec succès' :
+                  data.error?.message || 'En cours...'
+        } as PaymentStatus;
+      }),
+      catchError(error => {
+        console.error('Erreur vérification statut:', error);
+        return of({
+          transactionId,
+          status: 'failed',
+          progress: 100,
+          currentStep: 'Erreur',
+          estimatedTime: 0,
+          message: 'Impossible de vérifier le statut'
+        } as PaymentStatus);
+      })
+    );
   }
 
   // Annuler un paiement

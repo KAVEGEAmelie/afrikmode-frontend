@@ -37,8 +37,8 @@ export class AdminUsersService {
   /**
    * Récupère un utilisateur par ID
    */
-  getUserById(id: string): Observable<AdminUser> {
-    return this.http.get<AdminUser>(`${this.apiUrl}/${id}`);
+  getUserById(id: string): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/admin/users/${id}`);
   }
 
   /**

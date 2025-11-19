@@ -63,9 +63,10 @@ export class TokenRefreshService {
         this.isRefreshing = false;
         this.refreshSubject.next(false);
         
-        // Si le refresh token est invalide, déconnecter l'utilisateur
+        // Si le refresh token est invalide, nettoyer et déconnecter
         if (error.status === 401 || error.status === 403) {
-          this.authService.logout().subscribe();
+          // Ne pas appeler logout() pour éviter les boucles, juste nettoyer
+          this.authService.clearAuthData();
         }
       }
     });

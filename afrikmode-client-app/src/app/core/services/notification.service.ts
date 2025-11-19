@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { WebsocketService } from './websocket.service';
 import { ApiService } from './api.service';
 
@@ -35,12 +36,22 @@ export class NotificationService {
 
   private initializeWebSocketListeners(): void {
     // Écouter les notifications en temps réel
-    this.websocketService.on('notification').subscribe((data: any) => {
+    this.websocketService.on('notification').pipe(
+      catchError(error => {
+        console.warn('WebSocket notification error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.addNotification(data);
     });
 
     // Écouter les mises à jour de commandes
-    this.websocketService.on('order_update').subscribe((data: any) => {
+    this.websocketService.on('order_update').pipe(
+      catchError(error => {
+        console.warn('WebSocket order_update error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.addNotification({
         id: `order_${data.orderId}_${Date.now()}`,
         type: 'order',
@@ -54,7 +65,12 @@ export class NotificationService {
     });
 
     // Écouter les nouveaux paiements
-    this.websocketService.on('payment_received').subscribe((data: any) => {
+    this.websocketService.on('payment_received').pipe(
+      catchError(error => {
+        console.warn('WebSocket payment_received error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.addNotification({
         id: `payment_${data.paymentId}_${Date.now()}`,
         type: 'payment',
@@ -68,7 +84,12 @@ export class NotificationService {
     });
 
     // Écouter les alertes de stock
-    this.websocketService.on('stock_alert').subscribe((data: any) => {
+    this.websocketService.on('stock_alert').pipe(
+      catchError(error => {
+        console.warn('WebSocket stock_alert error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.addNotification({
         id: `stock_${data.productId}_${Date.now()}`,
         type: 'stock',
@@ -82,7 +103,12 @@ export class NotificationService {
     });
 
     // Écouter les nouveaux avis
-    this.websocketService.on('new_review').subscribe((data: any) => {
+    this.websocketService.on('new_review').pipe(
+      catchError(error => {
+        console.warn('WebSocket new_review error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.addNotification({
         id: `review_${data.reviewId}_${Date.now()}`,
         type: 'review',
@@ -96,7 +122,12 @@ export class NotificationService {
     });
 
     // Écouter les nouveaux messages
-    this.websocketService.on('chat_message').subscribe((data: any) => {
+    this.websocketService.on('chat_message').pipe(
+      catchError(error => {
+        console.warn('WebSocket chat_message error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.addNotification({
         id: `message_${data.messageId}_${Date.now()}`,
         type: 'message',

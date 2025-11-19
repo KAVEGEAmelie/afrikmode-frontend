@@ -24,9 +24,9 @@
             <div class="kpi-icon">👥</div>
           </div>
           <div class="kpi-value">{{ stats.totalOrders | number }}</div>
-          <div class="kpi-change positive">
-            <span class="change-arrow">↗</span>
-            <span class="change-text">+15% ce mois</span>
+          <div class="kpi-change" [ngClass]="stats.ordersChange >= 0 ? 'positive' : 'negative'" *ngIf="stats.ordersChange !== 0">
+            <span class="change-arrow">{{ stats.ordersChange >= 0 ? '↗' : '↘' }}</span>
+            <span class="change-text">{{ stats.ordersChange >= 0 ? '+' : '' }}{{ stats.ordersChange.toFixed(1) }}% ce mois</span>
           </div>
         </div>
 
@@ -37,9 +37,9 @@
             <div class="kpi-icon">💰</div>
           </div>
           <div class="kpi-value">{{ stats.totalRevenue | currency:'XOF':'symbol':'1.0-0' }}</div>
-          <div class="kpi-change positive">
-            <span class="change-arrow">↗</span>
-            <span class="change-text">+1.8% ce mois</span>
+          <div class="kpi-change" [ngClass]="stats.revenueChange >= 0 ? 'positive' : 'negative'" *ngIf="stats.revenueChange !== 0">
+            <span class="change-arrow">{{ stats.revenueChange >= 0 ? '↗' : '↘' }}</span>
+            <span class="change-text">{{ stats.revenueChange >= 0 ? '+' : '' }}{{ stats.revenueChange.toFixed(1) }}% ce mois</span>
           </div>
         </div>
 
@@ -50,9 +50,9 @@
             <div class="kpi-icon">📦</div>
           </div>
           <div class="kpi-value">{{ stats.totalOrders | number }}</div>
-          <div class="kpi-change positive">
-            <span class="change-arrow">↗</span>
-            <span class="change-text">+8.5% ce mois</span>
+          <div class="kpi-change" [ngClass]="stats.ordersChange >= 0 ? 'positive' : 'negative'" *ngIf="stats.ordersChange !== 0">
+            <span class="change-arrow">{{ stats.ordersChange >= 0 ? '↗' : '↘' }}</span>
+            <span class="change-text">{{ stats.ordersChange >= 0 ? '+' : '' }}{{ stats.ordersChange.toFixed(1) }}% ce mois</span>
           </div>
         </div>
 
@@ -63,10 +63,7 @@
             <div class="kpi-icon">🏪</div>
           </div>
           <div class="kpi-value">{{ stats.activeShops | number }}</div>
-          <div class="kpi-change positive">
-            <span class="change-arrow">↗</span>
-            <span class="change-text">+8.7% ce mois</span>
-          </div>
+          <!-- Trends calculés depuis les données réelles -->
         </div>
 
       </div>

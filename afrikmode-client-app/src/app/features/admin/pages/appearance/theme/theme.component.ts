@@ -1,7 +1,7 @@
 // src/app/features/admin/pages/appearance/theme/theme.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,8 +12,18 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AppearanceService, ThemeSettings } from '../../../core/services/appearance.service';
+import { Subject, takeUntil } from 'rxjs';
+import { AdminService } from '../../../../../core/services/admin.service';
 import { ToastService } from '../../../../../core/services/toast.service';
+
+/**
+ * Interface for color settings
+ */
+interface ColorSettings {
+  primary_color?: string;
+  secondary_color?: string;
+  accent_color?: string;
+}
 
 @Component({
   selector: 'app-theme',
@@ -36,68 +46,67 @@ import { ToastService } from '../../../../../core/services/toast.service';
   templateUrl: './theme.component.html',
   styleUrls: ['./theme.component.scss']
 })
-export class ThemeComponent implements OnInit {
-  theme: ThemeSettings = {
-    primaryColor: '#3b82f6',
-    secondaryColor: '#8b5cf6',
-    accentColor: '#f59e0b',
-    successColor: '#10b981',
-    warningColor: '#f59e0b',
-    errorColor: '#ef4444',
-    backgroundColor: '#ffffff',
-    textColor: '#1e293b',
-    borderRadius: '8px',
-    fontFamily: 'Inter, sans-serif',
-    darkMode: false
+export class ThemeComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
+  // Color settings from backend
+  colors: ColorSettings = {
+    primary_color: '#3b82f6',
+    secondary_color: '#8b5cf6',
+    accent_color: '#f59e0b'
   };
 
+  // Original colors for reset functionality
+  originalColors: ColorSettings = {};
+
+  // Preset themes for quick application
   presetThemes = [
     {
       name: 'Bleu Moderne',
       colors: {
-        primaryColor: '#3b82f6',
-        secondaryColor: '#8b5cf6',
-        accentColor: '#f59e0b'
+        primary_color: '#3b82f6',
+        secondary_color: '#8b5cf6',
+        accent_color: '#f59e0b'
       }
     },
     {
       name: 'Vert Nature',
       colors: {
-        primaryColor: '#10b981',
-        secondaryColor: '#059669',
-        accentColor: '#f59e0b'
+        primary_color: '#10b981',
+        secondary_color: '#059669',
+        accent_color: '#f59e0b'
       }
     },
     {
       name: 'Orange Vibrant',
       colors: {
-        primaryColor: '#f97316',
-        secondaryColor: '#ea580c',
-        accentColor: '#eab308'
+        primary_color: '#f97316',
+        secondary_color: '#ea580c',
+        accent_color: '#eab308'
       }
     },
     {
       name: 'Rose Élégant',
       colors: {
-        primaryColor: '#ec4899',
-        secondaryColor: '#d946ef',
-        accentColor: '#8b5cf6'
+        primary_color: '#ec4899',
+        secondary_color: '#d946ef',
+        accent_color: '#8b5cf6'
       }
     },
     {
       name: 'Pourpre Royal',
       colors: {
-        primaryColor: '#8b5cf6',
-        secondaryColor: '#7c3aed',
-        accentColor: '#ec4899'
+        primary_color: '#8b5cf6',
+        secondary_color: '#7c3aed',
+        accent_color: '#ec4899'
       }
     },
     {
       name: 'Sombre Élégant',
       colors: {
-        primaryColor: '#1e293b',
-        secondaryColor: '#334155',
-        accentColor: '#3b82f6'
+        primary_color: '#1e293b',
+        secondary_color: '#334155',
+        accent_color: '#3b82f6'
       }
     }
   ];
@@ -120,114 +129,164 @@ export class ThemeComponent implements OnInit {
     { value: '24px', label: 'Extra Grand' }
   ];
 
-  loading = false;
-  saving = false;
-  originalTheme: ThemeSettings | null = null;
+  isLoading = false;
+  isSaving = false;
 
   constructor(
-    private appearanceService: AppearanceService,
+    private adminService: AdminService,
     private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
-    this.loadTheme();
+    this.loadColors();
   }
 
-  loadTheme(): void {
-    this.loading = true;
-    this.appearanceService.getThemeSettings().subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.originalTheme = response.data;
-          this.theme = { ...response.data };
-          this.applyTheme();
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  /**
+   * Load color settings from the backend
+   */
+  loadColors(): void {
+    this.isLoading = true;
+    this.adminService.getAppearanceSettings()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            // Extract color settings from colors category
+            const colors = response.data.colors || [];
+            this.colors = {
+              primary_color: this.findSettingValue(colors, 'primary_color') || '#3b82f6',
+              secondary_color: this.findSettingValue(colors, 'secondary_color') || '#8b5cf6',
+              accent_color: this.findSettingValue(colors, 'accent_color') || '#f59e0b'
+            };
+            this.originalColors = { ...this.colors };
+            this.applyTheme();
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading colors:', error);
+          this.toastService.error('Erreur lors du chargement des couleurs');
+          this.isLoading = false;
         }
-        this.loading = false;
-      },
-      error: (error: any) => {
-        console.error('Erreur chargement thème:', error);
-        this.toastService.error('Erreur lors du chargement du thème');
-        this.loading = false;
-      }
-    });
+      });
   }
 
+  /**
+   * Find setting value by key in settings array
+   */
+  private findSettingValue(settings: any[], key: string): string | undefined {
+    const setting = settings.find(s => s.key === key);
+    return setting?.value;
+  }
+
+  /**
+   * Apply a preset theme
+   */
   applyPreset(preset: any): void {
-    this.theme.primaryColor = preset.colors.primaryColor;
-    this.theme.secondaryColor = preset.colors.secondaryColor;
-    this.theme.accentColor = preset.colors.accentColor;
+    this.colors.primary_color = preset.colors.primary_color;
+    this.colors.secondary_color = preset.colors.secondary_color;
+    this.colors.accent_color = preset.colors.accent_color;
     this.applyTheme();
+    this.toastService.info(`Thème "${preset.name}" appliqué`);
   }
 
+  /**
+   * Apply theme colors to document root for live preview
+   */
   applyTheme(): void {
-    // Apply theme to document root
     const root = document.documentElement;
-    root.style.setProperty('--primary-color', this.theme.primaryColor);
-    root.style.setProperty('--secondary-color', this.theme.secondaryColor);
-    root.style.setProperty('--accent-color', this.theme.accentColor);
-    root.style.setProperty('--success-color', this.theme.successColor);
-    root.style.setProperty('--warning-color', this.theme.warningColor);
-    root.style.setProperty('--error-color', this.theme.errorColor);
-    root.style.setProperty('--background-color', this.theme.backgroundColor);
-    root.style.setProperty('--text-color', this.theme.textColor);
-    root.style.setProperty('--border-radius', this.theme.borderRadius);
-    root.style.setProperty('--font-family', this.theme.fontFamily);
-
-    console.log('🎨 Theme applied!');
-  }
-
-  saveTheme(): void {
-    this.saving = true;
-    this.appearanceService.updateThemeSettings(this.theme).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.applyTheme();
-          this.originalTheme = { ...this.theme };
-          this.toastService.success('Thème enregistré avec succès');
-        } else {
-          this.toastService.error(response.message || 'Erreur lors de l\'enregistrement');
-        }
-        this.saving = false;
-      },
-      error: (error: any) => {
-        console.error('Erreur enregistrement thème:', error);
-        this.toastService.error('Erreur lors de l\'enregistrement du thème');
-        this.saving = false;
-      }
-    });
-  }
-
-  resetTheme(): void {
-    this.theme = {
-      primaryColor: '#3b82f6',
-      secondaryColor: '#8b5cf6',
-      accentColor: '#f59e0b',
-      successColor: '#10b981',
-      warningColor: '#f59e0b',
-      errorColor: '#ef4444',
-      backgroundColor: '#ffffff',
-      textColor: '#1e293b',
-      borderRadius: '8px',
-      fontFamily: 'Inter, sans-serif',
-      darkMode: false
-    };
-    this.applyTheme();
-  }
-
-  toggleDarkMode(): void {
-    this.theme.darkMode = !this.theme.darkMode;
-    if (this.theme.darkMode) {
-      this.theme.backgroundColor = '#0f172a';
-      this.theme.textColor = '#f1f5f9';
-    } else {
-      this.theme.backgroundColor = '#ffffff';
-      this.theme.textColor = '#1e293b';
+    if (this.colors.primary_color) {
+      root.style.setProperty('--primary-color', this.colors.primary_color);
     }
+    if (this.colors.secondary_color) {
+      root.style.setProperty('--secondary-color', this.colors.secondary_color);
+    }
+    if (this.colors.accent_color) {
+      root.style.setProperty('--accent-color', this.colors.accent_color);
+    }
+  }
+
+  /**
+   * Save color settings to the backend
+   */
+  saveTheme(): void {
+    this.isSaving = true;
+
+    // Prepare settings array for bulk update
+    const settings = [
+      { key: 'primary_color', value: this.colors.primary_color },
+      { key: 'secondary_color', value: this.colors.secondary_color },
+      { key: 'accent_color', value: this.colors.accent_color }
+    ];
+
+    this.adminService.bulkUpdateAppearanceSettings(settings)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.originalColors = { ...this.colors };
+            this.applyTheme();
+            this.toastService.success('Thème enregistré avec succès');
+          } else {
+            this.toastService.error(response.message || 'Erreur lors de l\'enregistrement');
+          }
+          this.isSaving = false;
+        },
+        error: (error) => {
+          console.error('Error saving theme:', error);
+          this.toastService.error(
+            error.error?.message || 'Erreur lors de l\'enregistrement du thème'
+          );
+          this.isSaving = false;
+        }
+      });
+  }
+
+  /**
+   * Reset colors to default values
+   */
+  resetTheme(): void {
+    if (confirm('Êtes-vous sûr de vouloir réinitialiser le thème aux valeurs par défaut ?')) {
+      this.isLoading = true;
+      this.adminService.resetAppearanceToDefaults()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.toastService.success('Thème réinitialisé avec succès');
+              // Reload colors after reset
+              this.loadColors();
+            } else {
+              this.toastService.error('Erreur lors de la réinitialisation');
+              this.isLoading = false;
+            }
+          },
+          error: (error) => {
+            console.error('Error resetting theme:', error);
+            this.toastService.error('Erreur lors de la réinitialisation du thème');
+            this.isLoading = false;
+          }
+        });
+    }
+  }
+
+  /**
+   * Update individual color and apply live preview
+   */
+  onColorChange(): void {
     this.applyTheme();
   }
 
+  /**
+   * Export theme as JSON file
+   */
   exportTheme(): void {
-    const themeJson = JSON.stringify(this.theme, null, 2);
+    const themeJson = JSON.stringify(this.colors, null, 2);
     const blob = new Blob([themeJson], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -235,8 +294,12 @@ export class ThemeComponent implements OnInit {
     link.download = 'theme-afrikmode.json';
     link.click();
     URL.revokeObjectURL(url);
+    this.toastService.success('Thème exporté avec succès');
   }
 
+  /**
+   * Import theme from JSON file
+   */
   importTheme(event: any): void {
     const file = event.target.files[0];
     if (file) {
@@ -244,14 +307,35 @@ export class ThemeComponent implements OnInit {
       reader.onload = (e: any) => {
         try {
           const importedTheme = JSON.parse(e.target.result);
-          this.theme = { ...this.theme, ...importedTheme };
+
+          // Validate imported theme
+          if (importedTheme.primary_color) this.colors.primary_color = importedTheme.primary_color;
+          if (importedTheme.secondary_color) this.colors.secondary_color = importedTheme.secondary_color;
+          if (importedTheme.accent_color) this.colors.accent_color = importedTheme.accent_color;
+
           this.applyTheme();
-          console.log('✅ Theme imported!');
+          this.toastService.success('Thème importé avec succès');
         } catch (error) {
-          console.error('❌ Error importing theme:', error);
+          console.error('Error importing theme:', error);
+          this.toastService.error('Erreur lors de l\'importation du thème');
         }
       };
       reader.readAsText(file);
     }
+  }
+
+  /**
+   * Check if there are unsaved changes
+   */
+  hasUnsavedChanges(): boolean {
+    return JSON.stringify(this.colors) !== JSON.stringify(this.originalColors);
+  }
+
+  /**
+   * Toggle dark mode (placeholder for future implementation)
+   */
+  toggleDarkMode(): void {
+    // This would be implemented when dark mode is fully supported
+    this.toastService.info('Fonctionnalité bientôt disponible');
   }
 }

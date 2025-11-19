@@ -507,9 +507,21 @@ export class AdminStoresManagementComponent implements OnInit {
         language: backendStore.language || 'fr',
         timezone: backendStore.timezone || 'Africa/Lome'
       },
-      createdAt: new Date(backendStore.submitted_at || backendStore.created_at),
-      updatedAt: new Date(backendStore.updated_at || backendStore.created_at)
+      createdAt: this.parseDate(backendStore.submitted_at || backendStore.created_at),
+      updatedAt: this.parseDate(backendStore.updated_at || backendStore.created_at)
     };
+  }
+
+  private parseDate(dateValue: any): Date {
+    if (!dateValue) return new Date();
+    if (dateValue instanceof Date) {
+      return isNaN(dateValue.getTime()) ? new Date() : dateValue;
+    }
+    if (typeof dateValue === 'string') {
+      const date = new Date(dateValue);
+      return isNaN(date.getTime()) ? new Date() : date;
+    }
+    return new Date();
   }
 
   private mapBackendStatusToStatus(backendStatus: string): 'pending' | 'active' | 'suspended' | 'rejected' {

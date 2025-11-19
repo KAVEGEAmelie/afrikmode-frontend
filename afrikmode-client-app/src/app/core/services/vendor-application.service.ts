@@ -60,23 +60,107 @@ export class VendorApplicationService {
    * Récupérer le statut de la candidature de l'utilisateur connecté
    */
   getApplicationStatus(applicationId?: string): Observable<VendorApplication> {
-    const url = applicationId 
-      ? `${this.baseUrl}/vendor/applications/${applicationId}`
-      : `${this.baseUrl}/vendor/applications/current`;
+    // Utiliser la nouvelle API vendor-application
+    const url = `${this.baseUrl}/vendor-application/application/status`;
 
     return this.http.get<ApplicationStatusResponse>(url, {
       headers: this.getHeaders()
     }).pipe(
       map(response => {
+        console.log('📥 Réponse API getApplicationStatus:', response);
+        
         if (response.success && response.data) {
-          return response.data;
+          // Adapter le format de l'API au format attendu par le frontend
+          const data = response.data as any;
+          const mapped = {
+            id: data.id?.toString() || '',
+            applicationNumber: this.generateApplicationNumber(data.id, data.submitted_at),
+            shopName: data.store_name || '',
+            status: this.mapBackendStatus(data.status),
+            submittedAt: data.submitted_at,
+            lastUpdatedAt: data.submitted_at,
+            reviewedBy: data.approved_by || data.rejected_by,
+            reviewedAt: data.approved_at || data.rejected_at,
+            rejectionReason: data.rejection_reason,
+            adminMessages: [],
+            storeId: undefined
+          };
+          console.log('✅ Données mappées:', mapped);
+          return mapped;
         }
+        
+        // Si pas de data, lancer une erreur 404
+        if (response.success && !response.data) {
+          console.log('ℹ️ Aucune candidature trouvée');
+          throw { status: 404, message: 'Aucune candidature trouvée' };
+        }
+        
         return response as any;
       }),
       catchError(error => {
-        console.error('Erreur lors de la récupération du statut:', error);
+        console.error('❌ Erreur lors de la récupération du statut:', error);
         return throwError(() => ({
-          message: error.error?.message || 'Erreur lors de la récupération du statut',
+          message: error.error?.message || error.message || 'Erreur lors de la récupération du statut',
+          status: error.status || 500
+        }));
+      })
+    );
+  }
+
+  /**
+   * Mapper le statut backend vers le statut frontend
+   */
+  private mapBackendStatus(status: string): 'pending' | 'under_review' | 'approved' | 'rejected' | 'info_required' {
+    switch (status) {
+      case 'pending':
+        return 'under_review'; // En attente = en cours d'examen côté UI
+      case 'approved':
+        return 'approved';
+      case 'rejected':
+        return 'rejected';
+      default:
+        return 'pending';
+    }
+  }
+
+  /**
+   * Générer un numéro de candidature au format VA-YYYYMMDD-NNNN
+   */
+  private generateApplicationNumber(id: number, submittedAt: string): string {
+    const date = new Date(submittedAt);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const idStr = String(id).padStart(4, '0');
+    return `VA-${year}${month}${day}-${idStr}`;
+  }
+
+  /**
+   * Soumettre une nouvelle demande vendeur
+   */
+  submitApplication(data: {
+    business_name: string;
+    business_type: 'individual' | 'company' | 'cooperative' | 'association';
+    contact_email: string;
+    contact_phone: string;
+    tax_id?: string;
+    registration_number?: string;
+    business_address?: any;
+    website?: string;
+    description?: string;
+    documents?: any;
+  }): Observable<{ success: boolean; data: any; message: string }> {
+    return this.http.post<{ success: boolean; data: any; message: string }>(
+      `${this.baseUrl}/vendor-requests`,
+      data,
+      {
+        headers: this.getHeaders()
+      }
+    ).pipe(
+      catchError(error => {
+        console.error('Erreur lors de la soumission:', error);
+        return throwError(() => ({
+          message: error.error?.message || 'Erreur lors de la soumission de la demande',
           status: error.status || 500
         }));
       })
@@ -166,8 +250,8 @@ export class VendorApplicationService {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    return this.http.post<{ success: boolean; message: string }>(
-      `${this.baseUrl}/vendor/applications/${applicationId}/additional-info`,
+    return this.http.put<{ success: boolean; message: string }>(
+      `${this.baseUrl}/vendor-requests/${applicationId}/update`,
       formData,
       {
         headers: headers.has('Authorization') ? headers : undefined

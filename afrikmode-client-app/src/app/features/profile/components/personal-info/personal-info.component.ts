@@ -58,6 +58,11 @@ export class PersonalInfoComponent implements OnInit {
         // L'API retourne les données dans response.data
         const user = response.data || response;
         
+        // Charger l'avatar et normaliser l'URL (remplacer les backslashes Windows)
+        const avatarUrl = user.avatarUrl || null;
+        this.avatarPreview = avatarUrl ? this.normalizeImageUrl(avatarUrl) : null;
+        console.log('🖼️ Avatar URL chargée:', this.avatarPreview);
+        
         this.personalInfoForm.patchValue({
           first_name: user.firstName,
           last_name: user.lastName,
@@ -147,15 +152,26 @@ export class PersonalInfoComponent implements OnInit {
 
     this.userService.uploadAvatar(this.selectedFile).subscribe({
       next: (response) => {
-        console.log('✅ Avatar uploadé avec succès:', response);
+        console.log('✅ Avatar uploadé avec succès - réponse complète:', JSON.stringify(response, null, 2));
+        console.log('📦 response.data:', response.data);
+        console.log('🖼️ response.data?.avatarUrl:', response.data?.avatarUrl);
+        
         this.isUploadingAvatar = false;
         this.successMessage = 'Photo de profil mise à jour avec succès !';
         setTimeout(() => this.successMessage = '', 5000);
         
-        // Mettre à jour l'aperçu si l'API retourne une URL
-        if (response.avatarUrl) {
-          this.avatarPreview = response.avatarUrl;
+        // Mettre à jour l'aperçu immédiatement avec la nouvelle URL (normalisée)
+        if (response.data?.avatarUrl) {
+          this.avatarPreview = this.normalizeImageUrl(response.data.avatarUrl);
+          console.log('✅ Avatar preview mis à jour vers:', this.avatarPreview);
+        } else {
+          console.warn('⚠️ Pas d\'avatarUrl dans la réponse, rechargement du profil...');
         }
+        
+        // Recharger le profil complet pour synchroniser toutes les données
+        setTimeout(() => {
+          this.loadUserData();
+        }, 500);
       },
       error: (error) => {
         console.error('❌ Erreur lors de l\'upload:', error);
@@ -163,6 +179,15 @@ export class PersonalInfoComponent implements OnInit {
         this.errorMessage = `Erreur d'upload: ${error.userMessage || error.message || 'Impossible de télécharger la photo'}`;
       }
     });
+  }
+
+  /**
+   * Normalise une URL d'image en remplaçant les backslashes Windows par des slashes
+   */
+  normalizeImageUrl(url: string | null): string | null {
+    if (!url) return null;
+    // Remplacer les backslashes par des slashes
+    return url.replace(/\\/g, '/');
   }
 
   removeAvatar(): void {

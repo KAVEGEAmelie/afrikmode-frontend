@@ -1,4 +1,15 @@
-<div class="product-detail-page" *ngIf="product">
+<div class="product-detail-page">
+  <div *ngIf="loading" class="loading-container">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Chargement du produit...</p>
+  </div>
+  
+  <div *ngIf="!loading && !product" class="error-container">
+    <i class="fas fa-exclamation-triangle"></i>
+    <p>Produit introuvable</p>
+  </div>
+  
+  <div *ngIf="!loading && product">
   
     <!-- Breadcrumb -->
     <div class="breadcrumb">
@@ -19,7 +30,7 @@
         <!-- Galerie d'images -->
         <div class="product-gallery">
           <div class="main-image">
-            <img [src]="selectedImage" [alt]="product.name">
+            <img [src]="selectedImage | safeImage:'product'" [alt]="product.name">
             
             <!-- Badges -->
             <div class="image-badges">
@@ -43,7 +54,7 @@
               class="thumbnail"
               [class.active]="i === selectedImageIndex"
               (click)="selectImage(i)">
-              <img [src]="image" [alt]="product.name + ' - Image ' + (i + 1)">
+              <img [src]="image | safeImage:'product'" [alt]="product.name + ' - Image ' + (i + 1)">
             </div>
           </div>
         </div>
@@ -262,7 +273,7 @@
             </div>
 
             <!-- Composant réutilisable connecté à la DB -->
-            <app-product-reviews-display [productId]="product.id.toString()"></app-product-reviews-display>
+            <app-product-reviews-display [productId]="productId"></app-product-reviews-display>
           </div>
         </div>
       </div>
@@ -273,9 +284,9 @@
         <div class="related-products-grid">
           <div *ngFor="let relatedProduct of relatedProducts" 
                class="related-product-card"
-               [routerLink]="['/products', relatedProduct.id]">
+               [routerLink]="['/products', relatedProduct.id?.toString() || relatedProduct.id]">
             <div class="related-product-image">
-              <img [src]="relatedProduct.image" [alt]="relatedProduct.name">
+              <img [src]="relatedProduct.image_url || relatedProduct.image | safeImage:'product'" [alt]="relatedProduct.name">
             </div>
             <div class="related-product-info">
               <h4>{{ relatedProduct.name }}</h4>
@@ -297,3 +308,4 @@
       </div>
     </div>
   </div>
+</div>

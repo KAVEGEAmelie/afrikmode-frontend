@@ -25,6 +25,14 @@ export interface Order {
     created_at: string;
     updated_at: string;
     delivered_at?: string;
+    confirmed_at?: string;
+    confirmed_by?: string;
+    delivery_confirmation_notes?: string;
+    auto_confirmed?: boolean;
+    payout_processed?: boolean;
+    payout_processed_at?: string;
+    vendor_payout_amount?: number;
+    platform_commission?: number;
   }
   
   export interface OrderItem {

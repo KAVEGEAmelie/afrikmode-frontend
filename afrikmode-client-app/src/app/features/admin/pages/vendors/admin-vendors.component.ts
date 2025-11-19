@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { AdminApiService } from '../../core/services/admin-api.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { environment } from '../../../../../environments/environment';
 
 interface Vendor {
   id: string;
@@ -97,7 +101,7 @@ interface Vendor {
         </div>
       </div>
 
-      <div class="vendors-grid">
+      <div class="vendors-grid" *ngIf="!isLoading">
         <div *ngFor="let vendor of filteredVendors" class="vendor-card" [class]="vendor.status">
           <div class="vendor-header">
             <div class="vendor-info">
@@ -185,6 +189,16 @@ interface Vendor {
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-state">
+        <p>Chargement des vendeurs...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && filteredVendors.length === 0" class="empty-state">
+        <p>Aucun vendeur trouvé</p>
       </div>
 
       <!-- Modal Actions -->
@@ -339,11 +353,115 @@ export class AdminVendorsComponent implements OnInit {
   suspensionDuration = '30';
   banReason = '';
 
+  isLoading = false;
+
+  constructor(
+    private adminApi: AdminApiService,
+    private http: HttpClient,
+    private toastService: ToastService
+  ) {}
+
   ngOnInit() {
     this.loadVendors();
   }
 
   loadVendors() {
+    this.isLoading = true;
+    
+    // Charger les boutiques actives (vendeurs) depuis l'API
+    // Utiliser l'endpoint /api/admin/stores/requests avec status='active'
+    let httpParams = new HttpParams();
+    httpParams = httpParams.set('status', 'active');
+    httpParams = httpParams.set('limit', '1000');
+    httpParams = httpParams.set('sortBy', 'created_at');
+    httpParams = httpParams.set('sortOrder', 'desc');
+    
+    this.http.get<any>(`${environment.apiUrl}/admin/stores/requests`, {
+      headers: this.adminApi.getHeaders(),
+      params: httpParams
+    }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          // Fonction helper pour parser une date de manière sécurisée
+          const parseDate = (dateValue: any): string => {
+            if (!dateValue) {
+              return new Date().toISOString().split('T')[0];
+            }
+            if (dateValue instanceof Date) {
+              return isNaN(dateValue.getTime()) 
+                ? new Date().toISOString().split('T')[0]
+                : dateValue.toISOString().split('T')[0];
+            }
+            if (typeof dateValue === 'string') {
+              const date = new Date(dateValue);
+              return isNaN(date.getTime()) 
+                ? new Date().toISOString().split('T')[0]
+                : date.toISOString().split('T')[0];
+            }
+            return new Date().toISOString().split('T')[0];
+          };
+
+          // Transformer les données de stores en format Vendor
+          this.vendors = (Array.isArray(response.data) ? response.data : []).map((store: any) => {
+            return {
+              id: store.id,
+              name: store.vendor_name || store.business_name || 'Vendeur',
+              email: store.email || '',
+              phone: store.phone || '',
+              store_name: store.business_name || store.name || 'Boutique sans nom',
+              store_logo: undefined, // Logo non disponible dans cette réponse
+              status: this.mapStoreStatusToVendorStatus(store.status),
+              subscription_plan: 'basic' as const,
+              joined_date: parseDate(store.submitted_at),
+              last_active: parseDate(store.submitted_at),
+              stats: {
+                total_products: 0, // Non disponible dans cette réponse
+                total_sales: 0,
+                revenue: 0,
+                rating: 0,
+                total_reviews: 0,
+                response_rate: 0
+              },
+              warnings: []
+            };
+          });
+          
+          this.applyFilters();
+        } else {
+          this.vendors = [];
+          this.filteredVendors = [];
+          this.toastService.error(response.message || 'Erreur lors du chargement des vendeurs');
+        }
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement vendeurs:', error);
+        this.vendors = [];
+        this.filteredVendors = [];
+        this.isLoading = false;
+        const errorMessage = error.error?.message || error.message || 'Erreur lors du chargement des vendeurs';
+        this.toastService.error(errorMessage);
+      }
+    });
+  }
+
+  mapStoreStatusToVendorStatus(storeStatus: string): 'active' | 'suspended' | 'warning' | 'banned' {
+    switch (storeStatus) {
+      case 'active':
+        return 'active';
+      case 'suspended':
+        return 'suspended';
+      case 'closed':
+        return 'banned';
+      case 'rejected':
+        return 'banned';
+      default:
+        return 'active';
+    }
+  }
+
+  // Méthode temporaire pour charger les données mockées (à supprimer)
+  loadVendorsMock() {
     this.vendors = [
       {
         id: '1',

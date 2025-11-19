@@ -1,7 +1,7 @@
 // src/app/app.config.ts
 // Configuration complète de l'application avec guards et interceptors
 import { ApplicationConfig, provideZoneChangeDetection, LOCALE_ID } from '@angular/core';
-import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import { provideRouter, withInMemoryScrolling, withComponentInputBinding } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { registerLocaleData } from '@angular/common';
@@ -28,7 +28,8 @@ export const appConfig: ApplicationConfig = {
       withInMemoryScrolling({
         scrollPositionRestoration: 'top',
         anchorScrolling: 'enabled'
-      })
+      }),
+      withComponentInputBinding()
     ),
     provideHttpClient(
       withInterceptors([

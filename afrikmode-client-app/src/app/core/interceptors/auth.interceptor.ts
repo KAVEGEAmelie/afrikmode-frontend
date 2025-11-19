@@ -9,18 +9,32 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  // Exclure l'endpoint logout de l'intercepteur pour éviter les boucles
+  if (req.url.includes('/auth/logout')) {
+    return next(req);
+  }
+
+  // Vérifier si c'est un FormData
+  const isFormData = req.body instanceof FormData;
+
   // Ajouter le token d'authentification si disponible
   const token = localStorage.getItem('auth_token');
   
   if (token) {
+    const headers: any = {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
+      'Accept-Language': localStorage.getItem('language') || 'fr',
+      'X-Currency': localStorage.getItem('currency') || 'XOF'
+    };
+    
+    // Ne pas définir Content-Type pour FormData
+    if (!isFormData) {
+      headers['Content-Type'] = 'application/json';
+    }
+    
     req = req.clone({
-      setHeaders: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Accept-Language': localStorage.getItem('language') || 'fr',
-        'X-Currency': localStorage.getItem('currency') || 'XOF'
-      }
+      setHeaders: headers
     });
   }
 
@@ -31,20 +45,27 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         return authService.refreshToken().pipe(
           switchMap((authResponse) => {
             // Token rafraîchi avec succès, retry la requête
+            const headers: any = {
+              'Authorization': `Bearer ${authResponse.token}`,
+              'Accept': 'application/json',
+              'Accept-Language': localStorage.getItem('language') || 'fr',
+              'X-Currency': localStorage.getItem('currency') || 'XOF'
+            };
+            
+            // Ne pas définir Content-Type pour FormData
+            if (!isFormData) {
+              headers['Content-Type'] = 'application/json';
+            }
+            
             const newReq = req.clone({
-              setHeaders: {
-                'Authorization': `Bearer ${authResponse.token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Accept-Language': localStorage.getItem('language') || 'fr',
-                'X-Currency': localStorage.getItem('currency') || 'XOF'
-              }
+              setHeaders: headers
             });
             return next(newReq);
           }),
           catchError((refreshError) => {
-            // Impossible de rafraîchir le token, rediriger vers la page de connexion
-            authService.logout().subscribe();
+            // Impossible de rafraîchir le token, nettoyer et rediriger
+            // Ne pas appeler logout() pour éviter les boucles, juste nettoyer
+            authService.clearAuthData();
             router.navigate(['/login']);
             return throwError(() => refreshError);
           })

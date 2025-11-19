@@ -78,7 +78,7 @@ export interface UserDialogData {
           <div class="form-row">
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Rôle</mat-label>
-              <mat-select formControlName="role" [disabled]="isViewMode">
+              <mat-select formControlName="role">
                 <mat-option value="customer">Client</mat-option>
                 <mat-option value="vendor">Vendeur</mat-option>
                 <mat-option value="admin">Admin</mat-option>
@@ -87,7 +87,7 @@ export interface UserDialogData {
 
             <mat-form-field appearance="outline" class="form-field">
               <mat-label>Statut</mat-label>
-              <mat-select formControlName="status" [disabled]="isViewMode">
+              <mat-select formControlName="status">
                 <mat-option value="active">Actif</mat-option>
                 <mat-option value="inactive">Inactif</mat-option>
                 <mat-option value="suspended">Suspendu</mat-option>
@@ -249,13 +249,17 @@ export class UserDialogComponent implements OnInit {
     this.isEditMode = data.mode === 'edit';
     this.isViewMode = data.mode === 'view';
     
+    // Créer les FormControls avec disabled si en mode view
+    const roleControl = this.fb.control({value: 'customer', disabled: this.isViewMode}, Validators.required);
+    const statusControl = this.fb.control({value: 'active', disabled: this.isViewMode}, Validators.required);
+    
     this.userForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(2)]],
       lastName: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       phone: [''],
-      role: ['customer', Validators.required],
-      status: ['active', Validators.required],
+      role: roleControl,
+      status: statusControl,
       password: ['', this.isEditMode ? [] : [Validators.required, Validators.minLength(6)]],
       confirmPassword: [''],
       address: [''],
@@ -271,6 +275,11 @@ export class UserDialogComponent implements OnInit {
         password: '',
         confirmPassword: ''
       });
+    }
+    
+    // Désactiver tous les champs si en mode view
+    if (this.isViewMode) {
+      this.userForm.disable();
     }
   }
 

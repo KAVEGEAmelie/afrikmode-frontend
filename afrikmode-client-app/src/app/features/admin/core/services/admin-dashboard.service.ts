@@ -94,6 +94,35 @@ export class AdminDashboardService {
   }
 
   /**
+   * Récupère les commissions de la plateforme
+   */
+  getCommissionsData(period: string = '30d'): Observable<any> {
+    const params = new HttpParams().set('period', period);
+    return this.http.get(`${this.apiUrl}/commissions`, { params });
+  }
+
+  /**
+   * Récupère les paiements en attente pour les vendeurs
+   */
+  getPendingPayouts(): Observable<any> {
+    return this.http.get(`${environment.apiUrl}/admin/finances/pending-payouts`);
+  }
+
+  /**
+   * Approuve un paiement vendeur
+   */
+  approvePayout(payoutId: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/admin/finances/payouts/${payoutId}/approve`, {});
+  }
+
+  /**
+   * Rejette un paiement vendeur
+   */
+  rejectPayout(payoutId: string, reason: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/admin/finances/payouts/${payoutId}/reject`, { reason });
+  }
+
+  /**
    * Exporte les données du dashboard
    */
   exportDashboardData(format: 'pdf' | 'excel' = 'pdf'): Observable<Blob> {

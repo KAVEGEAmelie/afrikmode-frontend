@@ -25,6 +25,8 @@ import { AdminStateService } from '../../core/services/admin-state.service';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
 import { AdminService } from '../../../../core/services/admin.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 
 export interface AdminMenuItem {
   id: string;
@@ -130,13 +132,13 @@ export interface QuickAction {
                   <app-donut-chart
                     title="Utilisateurs par rôle"
                     [data]="usersByRole"
-                    totalValue="1,234">
+                    [totalValue]="usersByRoleTotal">
                   </app-donut-chart>
                   
                   <app-donut-chart
                     title="Boutiques par statut"
                     [data]="storesByStatus"
-                    totalValue="89">
+                    [totalValue]="storesByStatusTotal">
                   </app-donut-chart>
                 </div>
 
@@ -144,13 +146,13 @@ export interface QuickAction {
                   <app-bar-chart
                     title="Commandes par mois"
                     [data]="ordersByMonth"
-                    [maxValue]="500">
+                    [maxValue]="ordersByMonthMax">
                   </app-bar-chart>
                   
                   <app-bar-chart
                     title="Revenus par mois"
                     [data]="revenueByMonth"
-                    [maxValue]="100000"
+                    [maxValue]="revenueByMonthMax"
                     [valueFormatter]="formatCurrency">
                   </app-bar-chart>
                 </div>
@@ -208,25 +210,6 @@ export interface QuickAction {
                 </mat-card-content>
               </mat-card>
 
-              <!-- System Status -->
-              <mat-card class="system-status-card">
-                <mat-card-header>
-                  <mat-card-title>État du système</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <div class="status-list">
-                    <div *ngFor="let status of systemStatus" class="status-item">
-                      <div class="status-indicator" [ngClass]="'status-' + status.status">
-                        <mat-icon>{{ getStatusIcon(status.status) }}</mat-icon>
-                      </div>
-                      <div class="status-content">
-                        <div class="status-name">{{ status.name }}</div>
-                        <div class="status-value">{{ status.value }}</div>
-                      </div>
-                    </div>
-                  </div>
-                </mat-card-content>
-              </mat-card>
             </div>
           </div>
         </div>
@@ -252,72 +235,36 @@ export class AdminDashboardCompleteComponent implements OnInit {
     { label: 'Générer rapport', icon: 'assessment', color: '#F59E0B', action: 'generate-report' }
   ];
 
-  // Charts Data
-  usersByRole: DonutData[] = [
-    { label: 'Clients', value: 856, color: '#5B5FED' },
-    { label: 'Vendeurs', value: 234, color: '#7C3AED' },
-    { label: 'Managers', value: 89, color: '#EC4899' },
-    { label: 'Admins', value: 55, color: '#06B6D4' }
-  ];
-
-  storesByStatus: DonutData[] = [
-    { label: 'Actives', value: 67, color: '#10B981' },
-    { label: 'En attente', value: 12, color: '#F59E0B' },
-    { label: 'Suspendues', value: 8, color: '#EF4444' },
-    { label: 'En révision', value: 2, color: '#6B7280' }
-  ];
-
-  ordersByMonth: BarChartData[] = [
-    { label: 'Jan', value: 234, color: '#5B5FED' },
-    { label: 'Fév', value: 189, color: '#7C3AED' },
-    { label: 'Mar', value: 267, color: '#EC4899' },
-    { label: 'Avr', value: 312, color: '#06B6D4' },
-    { label: 'Mai', value: 456, color: '#F59E0B' }
-  ];
-
-  revenueByMonth: BarChartData[] = [
-    { label: 'Jan', value: 23456, color: '#5B5FED' },
-    { label: 'Fév', value: 18923, color: '#7C3AED' },
-    { label: 'Mar', value: 26789, color: '#EC4899' },
-    { label: 'Avr', value: 31245, color: '#06B6D4' },
-    { label: 'Mai', value: 45678, color: '#F59E0B' }
-  ];
-
-  // Top Products
-  topProducts: TopProduct[] = [
-    { name: 'Robe Wax Africaine', value: '2,456 €', trend: 'up' },
-    { name: 'Chemise Dashiki', value: '1,890 €', trend: 'up' },
-    { name: 'Pantalon Kente', value: '1,567 €', trend: 'stable' },
-    { name: 'Sac Bogolan', value: '1,234 €', trend: 'down' },
-    { name: 'Chaussures Adinkra', value: '987 €', trend: 'up' }
-  ];
-
-  // Recent Activities
-  recentActivities = [
-    { icon: 'person_add', text: 'Nouvel utilisateur inscrit', time: 'Il y a 2 min', color: '#5B5FED' },
-    { icon: 'store', text: 'Nouvelle boutique créée', time: 'Il y a 5 min', color: '#7C3AED' },
-    { icon: 'shopping_cart', text: 'Nouvelle commande reçue', time: 'Il y a 8 min', color: '#EC4899' },
-    { icon: 'support_agent', text: 'Ticket résolu', time: 'Il y a 12 min', color: '#06B6D4' },
-    { icon: 'local_offer', text: 'Coupon créé', time: 'Il y a 15 min', color: '#F59E0B' }
-  ];
+  // Charts Data - Initialisés vides, seront remplis depuis l'API
+  usersByRole: DonutData[] = [];
+  storesByStatus: DonutData[] = [];
+  ordersByMonth: BarChartData[] = [];
+  revenueByMonth: BarChartData[] = [];
+  topProducts: TopProduct[] = [];
+  recentActivities: any[] = [];
+  
+  // Totaux pour les graphiques donut
+  usersByRoleTotal: string = '0';
+  storesByStatusTotal: string = '0';
+  
+  // Max values pour les bar charts
+  ordersByMonthMax: number = 100;
+  revenueByMonthMax: number = 100000;
 
   // Pending Actions - Sera rempli depuis le backend
   pendingActions: any[] = [];
 
-  // System Status
-  systemStatus = [
-    { name: 'Serveur API', value: 'Opérationnel', status: 'success' },
-    { name: 'Base de données', value: 'Connectée', status: 'success' },
-    { name: 'Cache Redis', value: 'Actif', status: 'success' },
-    { name: 'Notifications', value: 'En cours', status: 'warning' },
-    { name: 'Sauvegarde', value: 'Programmée', status: 'info' }
-  ];
+  // System Status - Supprimé car pas d'API pour ça
+  // systemStatus sera supprimé ou rendu optionnel
+
+  private apiUrl = `${environment.apiUrl}/admin`;
 
   constructor(
     private dashboardDataService: DashboardDataService,
     private adminState: AdminStateService,
     private adminAuth: AdminAuthService,
     private adminService: AdminService,
+    private http: HttpClient,
     private router: Router,
     private toastService: ToastService
   ) {}
@@ -350,42 +297,43 @@ export class AdminDashboardCompleteComponent implements OnInit {
   }
 
   private updateKPIData(stats: any): void {
-    // Mettre à jour les KPIs avec les vraies données
+    // Les trends seront calculés après avoir chargé les données historiques
+    // Pour l'instant, on initialise sans trends
     this.kpiData = [
       {
         title: 'Utilisateurs totaux',
         value: this.formatNumber(stats.totalUsers || 0),
         icon: 'people',
         color: '#5B5FED',
-        trend: { value: 12, percentage: 12.5, direction: 'up' } // TODO: Calculer depuis historique
+        trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
         title: 'Boutiques actives',
         value: this.formatNumber(stats.totalStores || 0),
         icon: 'store',
         color: '#7C3AED',
-        trend: { value: 8, percentage: 8.3, direction: 'up' } // TODO: Calculer depuis historique
+        trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
         title: 'Produits en vente',
         value: this.formatNumber(stats.totalProducts || 0),
         icon: 'inventory',
         color: '#EC4899',
-        trend: { value: -3, percentage: -3.2, direction: 'down' } // TODO: Calculer depuis historique
+        trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
         title: 'Commandes du mois',
         value: this.formatNumber(stats.totalOrders || 0),
         icon: 'shopping_cart',
         color: '#06B6D4',
-        trend: { value: 15, percentage: 15.2, direction: 'up' } // TODO: Calculer depuis historique
+        trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
         title: 'Revenus totaux',
         value: this.formatCurrency(stats.totalRevenue || 0),
         icon: 'account_balance_wallet',
         color: '#F59E0B',
-        trend: { value: 7, percentage: 7.1, direction: 'up' } // TODO: Calculer depuis historique
+        trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
         title: 'Boutiques en attente',
@@ -396,26 +344,381 @@ export class AdminDashboardCompleteComponent implements OnInit {
       }
     ];
 
-    // Mettre à jour les actions en attente
-    this.pendingActions = [
-      { icon: 'store', text: 'Boutiques en attente', count: stats.pendingStores || 0, type: 'stores', color: '#7C3AED' },
-      { icon: 'inventory', text: 'Produits à modérer', count: 0, type: 'products', color: '#EC4899' }, // TODO: Charger depuis API
-      { icon: 'support_agent', text: 'Tickets ouverts', count: 0, type: 'tickets', color: '#06B6D4' }, // TODO: Charger depuis API
-      { icon: 'payment', text: 'Paiements en attente', count: 0, type: 'payments', color: '#F59E0B' } // TODO: Charger depuis API
-    ];
+    // Charger les actions en attente depuis l'API
+    this.loadPendingActions(stats.pendingStores || 0);
   }
 
   private loadAdditionalData(): void {
-    // Charger les données supplémentaires (graphiques, activités, etc.)
-    // TODO: Implémenter les appels API pour :
-    // - Utilisateurs par rôle
-    // - Boutiques par statut
-    // - Commandes par mois
-    // - Revenus par mois
-    // - Top produits
-    // - Activités récentes
+    // Charger les graphiques depuis l'API
+    this.http.get(`${this.apiUrl}/dashboard/charts`).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          const chartsData = response.data;
+          
+          // Utilisateurs par rôle
+          if (chartsData.usersByRole && Array.isArray(chartsData.usersByRole)) {
+            this.usersByRole = chartsData.usersByRole.map((item: any) => ({
+              label: this.getRoleLabel(item.role || 'unknown'),
+              value: parseInt(item.count || 0),
+              color: this.getRoleColor(item.role || 'unknown')
+            }));
+            // Calculer le total depuis les données réelles
+            const totalUsers = this.usersByRole.reduce((sum, item) => sum + item.value, 0);
+            this.usersByRoleTotal = this.formatNumber(totalUsers);
+          } else {
+            this.usersByRole = [];
+            this.usersByRoleTotal = '0';
+          }
+          
+          // Boutiques par statut
+          if (chartsData.storesByStatus && Array.isArray(chartsData.storesByStatus)) {
+            this.storesByStatus = chartsData.storesByStatus.map((item: any) => ({
+              label: this.getStoreStatusLabel(item.status || 'unknown'),
+              value: parseInt(item.count || 0),
+              color: this.getStoreStatusColor(item.status || 'unknown')
+            }));
+            // Calculer le total depuis les données réelles
+            const totalStores = this.storesByStatus.reduce((sum, item) => sum + item.value, 0);
+            this.storesByStatusTotal = this.formatNumber(totalStores);
+          } else {
+            this.storesByStatus = [];
+            this.storesByStatusTotal = '0';
+          }
+          
+          // Commandes par mois
+          if (chartsData.ordersByMonth && Array.isArray(chartsData.ordersByMonth)) {
+            const colors = ['#5B5FED', '#7C3AED', '#EC4899', '#06B6D4', '#F59E0B', '#10B981', '#EF4444'];
+            this.ordersByMonth = chartsData.ordersByMonth.map((item: any, index: number) => ({
+              label: this.formatMonth(item.month || ''),
+              value: parseInt(item.count || 0),
+              color: colors[index % colors.length]
+            }));
+            // Calculer le maxValue dynamiquement depuis les données (avec un peu de marge)
+            const maxOrders = Math.max(...this.ordersByMonth.map(item => item.value), 1);
+            this.ordersByMonthMax = Math.ceil(maxOrders * 1.1); // 10% de marge
+          } else {
+            this.ordersByMonth = [];
+            this.ordersByMonthMax = 100;
+          }
+          
+          // Revenus par mois
+          if (chartsData.revenueByMonth && Array.isArray(chartsData.revenueByMonth)) {
+            const colors = ['#5B5FED', '#7C3AED', '#EC4899', '#06B6D4', '#F59E0B', '#10B981', '#EF4444'];
+            this.revenueByMonth = chartsData.revenueByMonth.map((item: any, index: number) => ({
+              label: this.formatMonth(item.month || ''),
+              value: parseFloat(item.revenue || 0),
+              color: colors[index % colors.length]
+            }));
+            // Calculer le maxValue dynamiquement depuis les données (avec un peu de marge)
+            const maxRevenue = Math.max(...this.revenueByMonth.map(item => item.value), 1);
+            this.revenueByMonthMax = Math.ceil(maxRevenue * 1.1); // 10% de marge
+            
+            // Calculer les trends pour les KPIs basés sur les revenus
+            this.calculateTrendsFromHistory(chartsData.ordersByMonth, chartsData.revenueByMonth);
+          } else {
+            this.revenueByMonth = [];
+            this.revenueByMonthMax = 100000;
+          }
+          
+          // Top produits
+          if (chartsData.topProducts && Array.isArray(chartsData.topProducts)) {
+            this.topProducts = chartsData.topProducts.slice(0, 5).map((item: any, index: number) => ({
+              name: item.name || 'Produit sans nom',
+              value: this.formatCurrency(parseFloat(item.total_revenue || 0)),
+              trend: index < 2 ? 'up' : index === 2 ? 'stable' : 'down'
+            }));
+          } else {
+            this.topProducts = [];
+          }
+        } else {
+          // Pas de données disponibles
+          console.warn('Aucune donnée de graphiques disponible');
+          this.usersByRole = [];
+          this.storesByStatus = [];
+          this.ordersByMonth = [];
+          this.revenueByMonth = [];
+          this.topProducts = [];
+        }
+        
+        // Charger les activités récentes
+        this.loadRecentActivity();
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des graphiques:', error);
+        this.toastService.error('Erreur lors du chargement des graphiques');
+        // Initialiser avec des tableaux vides en cas d'erreur
+        this.usersByRole = [];
+        this.storesByStatus = [];
+        this.ordersByMonth = [];
+        this.revenueByMonth = [];
+        this.topProducts = [];
+        this.loading = false;
+      }
+    });
+  }
+
+  private loadPendingActions(pendingStoresCount: number): void {
+    // Charger les produits en attente de modération
+    this.http.get(`${this.apiUrl}/products/pending?limit=1`).subscribe({
+      next: (response: any) => {
+        const pendingProductsCount = response.success && response.pagination ? response.pagination.total : 0;
+        
+        // Charger les tickets ouverts
+        this.http.get(`${environment.apiUrl}/tickets?status=open&limit=1`).subscribe({
+          next: (ticketsResponse: any) => {
+            const openTicketsCount = ticketsResponse.success && ticketsResponse.pagination ? ticketsResponse.pagination.total : 0;
+            
+            // Charger les paiements en attente (depuis les finances)
+            this.http.get(`${this.apiUrl}/finances/pending-payouts?limit=1`).subscribe({
+              next: (paymentsResponse: any) => {
+                const pendingPaymentsCount = paymentsResponse.success && paymentsResponse.pagination ? paymentsResponse.pagination.total : 0;
+                
+                // Mettre à jour les actions en attente avec les vraies données
+                this.pendingActions = [
+                  { 
+                    icon: 'store', 
+                    text: 'Boutiques en attente', 
+                    count: pendingStoresCount, 
+                    type: 'stores', 
+                    color: '#7C3AED' 
+                  },
+                  { 
+                    icon: 'inventory', 
+                    text: 'Produits à modérer', 
+                    count: pendingProductsCount, 
+                    type: 'products', 
+                    color: '#EC4899' 
+                  },
+                  { 
+                    icon: 'support_agent', 
+                    text: 'Tickets ouverts', 
+                    count: openTicketsCount, 
+                    type: 'tickets', 
+                    color: '#06B6D4' 
+                  },
+                  { 
+                    icon: 'payment', 
+                    text: 'Paiements en attente', 
+                    count: pendingPaymentsCount, 
+                    type: 'payments', 
+                    color: '#F59E0B' 
+                  }
+                ];
+              },
+              error: (error) => {
+                console.error('Erreur lors du chargement des paiements en attente:', error);
+                // Continuer avec 0 si l'endpoint n'existe pas encore
+                this.pendingActions = [
+                  { icon: 'store', text: 'Boutiques en attente', count: pendingStoresCount, type: 'stores', color: '#7C3AED' },
+                  { icon: 'inventory', text: 'Produits à modérer', count: pendingProductsCount, type: 'products', color: '#EC4899' },
+                  { icon: 'support_agent', text: 'Tickets ouverts', count: openTicketsCount, type: 'tickets', color: '#06B6D4' },
+                  { icon: 'payment', text: 'Paiements en attente', count: 0, type: 'payments', color: '#F59E0B' }
+                ];
+              }
+            });
+          },
+          error: (error) => {
+            console.error('Erreur lors du chargement des tickets:', error);
+            // Continuer avec les données disponibles
+            this.pendingActions = [
+              { icon: 'store', text: 'Boutiques en attente', count: pendingStoresCount, type: 'stores', color: '#7C3AED' },
+              { icon: 'inventory', text: 'Produits à modérer', count: pendingProductsCount, type: 'products', color: '#EC4899' },
+              { icon: 'support_agent', text: 'Tickets ouverts', count: 0, type: 'tickets', color: '#06B6D4' },
+              { icon: 'payment', text: 'Paiements en attente', count: 0, type: 'payments', color: '#F59E0B' }
+            ];
+          }
+        });
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des produits en attente:', error);
+        // Continuer avec les données disponibles
+        this.pendingActions = [
+          { icon: 'store', text: 'Boutiques en attente', count: pendingStoresCount, type: 'stores', color: '#7C3AED' },
+          { icon: 'inventory', text: 'Produits à modérer', count: 0, type: 'products', color: '#EC4899' },
+          { icon: 'support_agent', text: 'Tickets ouverts', count: 0, type: 'tickets', color: '#06B6D4' },
+          { icon: 'payment', text: 'Paiements en attente', count: 0, type: 'payments', color: '#F59E0B' }
+        ];
+      }
+    });
+  }
+
+  private calculateTrendsFromHistory(ordersByMonth: any[], revenueByMonth: any[]): void {
+    // Calculer les trends en comparant le mois actuel avec le mois précédent
+    if (ordersByMonth && ordersByMonth.length >= 2) {
+      const currentMonthOrders = ordersByMonth[ordersByMonth.length - 1]?.count || 0;
+      const previousMonthOrders = ordersByMonth[ordersByMonth.length - 2]?.count || 0;
+      
+      if (previousMonthOrders > 0) {
+        const ordersTrend = this.calculateGrowthRate(currentMonthOrders, previousMonthOrders);
+        const ordersDirection = this.getGrowthDirection(currentMonthOrders, previousMonthOrders);
+        
+        // Mettre à jour le KPI des commandes
+        const ordersKPI = this.kpiData.find(kpi => kpi.title === 'Commandes du mois');
+        if (ordersKPI) {
+          ordersKPI.trend = {
+            value: Math.abs(ordersTrend),
+            percentage: Math.abs(ordersTrend),
+            direction: ordersDirection as 'up' | 'down' | 'stable'
+          };
+        }
+      }
+    }
     
-    this.loading = false;
+    if (revenueByMonth && revenueByMonth.length >= 2) {
+      const currentMonthRevenue = parseFloat(revenueByMonth[revenueByMonth.length - 1]?.revenue || 0);
+      const previousMonthRevenue = parseFloat(revenueByMonth[revenueByMonth.length - 2]?.revenue || 0);
+      
+      if (previousMonthRevenue > 0) {
+        const revenueTrend = this.calculateGrowthRate(currentMonthRevenue, previousMonthRevenue);
+        const revenueDirection = this.getGrowthDirection(currentMonthRevenue, previousMonthRevenue);
+        
+        // Mettre à jour le KPI des revenus
+        const revenueKPI = this.kpiData.find(kpi => kpi.title === 'Revenus totaux');
+        if (revenueKPI) {
+          revenueKPI.trend = {
+            value: Math.abs(revenueTrend),
+            percentage: Math.abs(revenueTrend),
+            direction: revenueDirection as 'up' | 'down' | 'stable'
+          };
+        }
+      }
+    }
+  }
+
+  private loadRecentActivity(): void {
+    this.http.get(`${this.apiUrl}/dashboard/recent-activity?limit=10`).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          const activities: any[] = [];
+          
+          // Commandes récentes
+          if (response.data.recentOrders && Array.isArray(response.data.recentOrders)) {
+            response.data.recentOrders.forEach((order: any) => {
+              activities.push({
+                icon: 'shopping_cart',
+                text: `Nouvelle commande #${order.order_number || order.id}`,
+                time: this.getTimeAgo(order.created_at),
+                color: '#EC4899'
+              });
+            });
+          }
+          
+          // Nouveaux utilisateurs
+          if (response.data.recentUsers && Array.isArray(response.data.recentUsers)) {
+            response.data.recentUsers.forEach((user: any) => {
+              const userName = user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Utilisateur';
+              activities.push({
+                icon: 'person_add',
+                text: `Nouvel utilisateur: ${userName}`,
+                time: this.getTimeAgo(user.created_at),
+                color: '#5B5FED'
+              });
+            });
+          }
+          
+          // Nouvelles boutiques
+          if (response.data.recentStores && Array.isArray(response.data.recentStores)) {
+            response.data.recentStores.forEach((store: any) => {
+              activities.push({
+                icon: 'store',
+                text: `Nouvelle boutique: ${store.store_name || store.name || 'Sans nom'}`,
+                time: this.getTimeAgo(store.created_at),
+                color: '#7C3AED'
+              });
+            });
+          }
+          
+          // Trier par date (plus récent en premier) et prendre les 5 plus récentes
+          activities.sort((a, b) => {
+            // Les activités sont déjà triées par date décroissante depuis le backend
+            // On garde l'ordre d'ajout
+            return 0;
+          });
+          this.recentActivities = activities.slice(0, 5);
+        } else {
+          this.recentActivities = [];
+        }
+        
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des activités:', error);
+        this.toastService.error('Erreur lors du chargement des activités récentes');
+        this.recentActivities = [];
+        this.loading = false;
+      }
+    });
+  }
+
+  private getRoleLabel(role: string): string {
+    const labels: { [key: string]: string } = {
+      'customer': 'Clients',
+      'vendor': 'Vendeurs',
+      'manager': 'Managers',
+      'admin': 'Admins',
+      'super_admin': 'Super Admins'
+    };
+    return labels[role] || role;
+  }
+
+  private getRoleColor(role: string): string {
+    const colors: { [key: string]: string } = {
+      'customer': '#5B5FED',
+      'vendor': '#7C3AED',
+      'manager': '#EC4899',
+      'admin': '#06B6D4',
+      'super_admin': '#F59E0B'
+    };
+    return colors[role] || '#6B7280';
+  }
+
+  private getStoreStatusLabel(status: string): string {
+    const labels: { [key: string]: string } = {
+      'active': 'Actives',
+      'pending': 'En attente',
+      'suspended': 'Suspendues',
+      'closed': 'Fermées',
+      'inactive': 'Inactives'
+    };
+    return labels[status] || status;
+  }
+
+  private getStoreStatusColor(status: string): string {
+    const colors: { [key: string]: string } = {
+      'active': '#10B981',
+      'pending': '#F59E0B',
+      'suspended': '#EF4444',
+      'closed': '#6B7280',
+      'inactive': '#9CA3AF'
+    };
+    return colors[status] || '#6B7280';
+  }
+
+
+  private formatMonth(monthStr: string): string {
+    const [year, month] = monthStr.split('-');
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    return months[parseInt(month) - 1] || monthStr;
+  }
+
+  private getRandomColor(): string {
+    const colors = ['#5B5FED', '#7C3AED', '#EC4899', '#06B6D4', '#F59E0B', '#10B981'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  private getTimeAgo(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'À l\'instant';
+    if (diffMins < 60) return `Il y a ${diffMins} min`;
+    if (diffHours < 24) return `Il y a ${diffHours} h`;
+    if (diffDays < 7) return `Il y a ${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+    return date.toLocaleDateString('fr-FR');
   }
 
   executeAction(action: string): void {

@@ -1,0 +1,6 @@
+<svg width="400" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="200" fill="#f9fafb"/>
+  <rect x="20" y="20" width="60" height="60" rx="8" fill="#e5e7eb"/>
+  <text x="50" y="50" text-anchor="middle" fill="#9ca3af" font-family="Arial, sans-serif" font-size="32">🏪</text>
+  <text x="200" y="110" text-anchor="middle" fill="#6b7280" font-family="Arial, sans-serif" font-size="18">Boutique</text>
+</svg>

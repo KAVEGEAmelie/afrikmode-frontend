@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Router } from '@angular/router';
+import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { VendorService, VendorProduct } from '../../../../core/services/vendor.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { ProductFormComponent } from './product-form/product-form.component';
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-vendor-products',
@@ -175,7 +176,7 @@ import { ProductFormComponent } from './product-form/product-form.component';
           @for (product of filteredProducts; track product.id) {
             <div class="product-card">
             <div class="product-image">
-              <img [src]="product.images[0] || '/assets/images/products/default.jpg'" [alt]="product.name">
+              <img [src]="(product.images && product.images.length > 0 ? product.images[0] : null) || 'https://via.placeholder.com/300x300?text=Produit'" [alt]="product.name">
               <div class="product-status" [class]="'status-' + product.status">
                 {{ getStatusLabel(product.status) }}
               </div>
@@ -227,7 +228,7 @@ import { ProductFormComponent } from './product-form/product-form.component';
           @for (product of filteredProducts; track product.id) {
             <div class="list-item">
             <div class="col-name">
-              <img [src]="product.images[0] || '/assets/images/products/default.jpg'" [alt]="product.name">
+              <img [src]="(product.images && product.images.length > 0 ? product.images[0] : null) || 'https://via.placeholder.com/300x300?text=Produit'" [alt]="product.name">
               <div>
                 <h4>{{ product.name }}</h4>
                 <p>{{ product.description }}</p>
@@ -959,7 +960,34 @@ export class VendorProductsComponent implements OnInit {
     this.loading = true;
     this.vendorService.getProducts().subscribe({
       next: (response) => {
-        this.products = response.products;
+        // Normaliser les produits pour s'assurer que tous les champs sont correctement formatés
+        this.products = (response.products || []).map((product: any) => {
+          // Normaliser les images en vérifiant plusieurs champs possibles
+          let normalizedImages = this.normalizeImages(product.images);
+          
+          // Si pas d'images normalisées, essayer d'autres champs
+          if (normalizedImages.length === 0) {
+            if (product.primary_image) {
+              normalizedImages = [product.primary_image];
+            } else if (product.image_url) {
+              normalizedImages = [product.image_url];
+            } else if (product.image) {
+              normalizedImages = Array.isArray(product.image) ? product.image : [product.image];
+            }
+          }
+          
+          return {
+            ...product,
+            images: normalizedImages,
+            stock: product.stock || product.stock_quantity || 0,
+            price: product.price || 0,
+            description: product.description || '',
+            category: product.category || product.category_id || '',
+            status: product.status || 'draft',
+            createdAt: product.createdAt || product.created_at || new Date().toISOString(),
+            updatedAt: product.updatedAt || product.updated_at || new Date().toISOString()
+          };
+        });
         this.filteredProducts = [...this.products];
         this.loading = false;
       },
@@ -972,6 +1000,53 @@ export class VendorProductsComponent implements OnInit {
         this.filteredProducts = [];
       }
     });
+  }
+
+  /**
+   * Normalise le champ images pour s'assurer qu'il est toujours un tableau
+   */
+  private normalizeImages(images: any): string[] {
+    if (!images) return [];
+    
+    // Si c'est déjà un tableau
+    if (Array.isArray(images)) {
+      return images.map((img: any) => {
+        if (typeof img === 'string') return img;
+        if (img && typeof img === 'object') {
+          // Extraire l'URL depuis différents formats d'objets
+          return img.url || img.path || img.image_url || img.src || img.primary_image || '';
+        }
+        return '';
+      }).filter((url: string) => url && url.trim() !== '');
+    }
+    
+    // Si c'est une chaîne JSON
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images);
+        if (Array.isArray(parsed)) {
+          return parsed.map((img: any) => {
+            if (typeof img === 'string') return img;
+            if (img && typeof img === 'object') {
+              return img.url || img.path || img.image_url || img.src || '';
+            }
+            return '';
+          }).filter((url: string) => url && url.trim() !== '');
+        }
+        return [images];
+      } catch {
+        // Si ce n'est pas du JSON, c'est probablement une URL simple
+        return [images];
+      }
+    }
+    
+    // Si c'est un objet unique (pas un tableau)
+    if (typeof images === 'object') {
+      const url = images.url || images.path || images.image_url || images.src || images.primary_image || '';
+      return url ? [url] : [];
+    }
+    
+    return [];
   }
 
   filterProducts() {
@@ -1084,7 +1159,30 @@ export class VendorProductsComponent implements OnInit {
         next: (updatedProduct) => {
           const index = this.products.findIndex(p => p.id === this.selectedProduct!.id);
           if (index !== -1) {
-            this.products[index] = updatedProduct;
+          // Normaliser le produit mis à jour
+          const updatedProductAny = updatedProduct as any;
+          
+          // Normaliser les images
+          let normalizedImages = this.normalizeImages(updatedProduct.images);
+          if (normalizedImages.length === 0) {
+            if (updatedProductAny.primary_image) {
+              normalizedImages = [updatedProductAny.primary_image];
+            } else if (updatedProductAny.image_url) {
+              normalizedImages = [updatedProductAny.image_url];
+            }
+          }
+          
+          this.products[index] = {
+            ...updatedProduct,
+            images: normalizedImages,
+            stock: updatedProduct.stock || updatedProductAny.stock_quantity || 0,
+            price: updatedProduct.price || 0,
+            description: updatedProduct.description || '',
+            category: updatedProduct.category || updatedProductAny.category_id || '',
+            status: updatedProduct.status || 'draft',
+            createdAt: updatedProduct.createdAt || updatedProductAny.created_at || this.products[index].createdAt,
+            updatedAt: updatedProduct.updatedAt || updatedProductAny.updated_at || new Date().toISOString()
+          };
           }
           this.filterProducts();
           this.closeProductForm();
@@ -1100,7 +1198,31 @@ export class VendorProductsComponent implements OnInit {
       // Création d'un nouveau produit
       this.vendorService.createProduct(productData).subscribe({
         next: (newProduct) => {
-          this.products.unshift(newProduct);
+          // Normaliser le nouveau produit
+          const productAny = newProduct as any;
+          
+          // Normaliser les images
+          let normalizedImages = this.normalizeImages(newProduct.images);
+          if (normalizedImages.length === 0) {
+            if (productAny.primary_image) {
+              normalizedImages = [productAny.primary_image];
+            } else if (productAny.image_url) {
+              normalizedImages = [productAny.image_url];
+            }
+          }
+          
+          const normalizedProduct: VendorProduct = {
+            ...newProduct,
+            images: normalizedImages,
+            stock: newProduct.stock || productAny.stock_quantity || 0,
+            price: newProduct.price || 0,
+            description: newProduct.description || '',
+            category: newProduct.category || productAny.category_id || '',
+            status: newProduct.status || 'draft',
+            createdAt: newProduct.createdAt || productAny.created_at || new Date().toISOString(),
+            updatedAt: newProduct.updatedAt || productAny.updated_at || new Date().toISOString()
+          };
+          this.products.unshift(normalizedProduct);
           this.filterProducts();
           this.closeProductForm();
           this.toastService.success('Produit créé avec succès !');
@@ -1127,10 +1249,120 @@ export class VendorProductsComponent implements OnInit {
     console.log(`📊 Export des produits en format ${format.toUpperCase()}...`);
     this.showExportMenu = false;
     
-    // Simulation d'export
-    setTimeout(() => {
-      console.log(`✅ Export ${format.toUpperCase()} généré avec succès !`);
-    }, 1000);
+    if (this.products.length === 0) {
+      this.toastService.warning('Aucun produit à exporter');
+      return;
+    }
+
+    try {
+      switch (format.toLowerCase()) {
+        case 'csv':
+          this.exportToCSV();
+          break;
+        case 'excel':
+          this.exportToExcel();
+          break;
+        case 'json':
+          this.exportToJSON();
+          break;
+        default:
+          this.toastService.error('Format d\'export non supporté');
+      }
+      this.toastService.success(`Export ${format.toUpperCase()} généré avec succès !`);
+    } catch (error) {
+      console.error('Erreur lors de l\'export:', error);
+      this.toastService.error('Erreur lors de l\'export des produits');
+    }
+  }
+
+  private exportToCSV(): void {
+    const headers = ['Nom', 'SKU', 'Description', 'Prix', 'Stock', 'Statut', 'Catégorie', 'Vues', 'Ventes', 'Note'];
+    const rows = this.products.map(product => [
+      product.name || '',
+      (product as any).sku || '',
+      (product.description || '').replace(/"/g, '""'), // Échapper les guillemets
+      product.price?.toString() || '0',
+      product.stock?.toString() || '0',
+      this.getStatusLabel(product.status),
+      product.category || '',
+      this.getProductViews(product).toString(),
+      this.getProductSales(product).toString(),
+      this.getProductRating(product).toString()
+    ]);
+
+    // Créer le contenu CSV
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    // Ajouter BOM pour Excel (UTF-8)
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+    this.downloadFile(blob, `produits_${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+  }
+
+  private exportToExcel(): void {
+    // Préparer les données pour Excel
+    const headers = ['Nom', 'SKU', 'Description', 'Prix', 'Stock', 'Statut', 'Catégorie', 'Vues', 'Ventes', 'Note'];
+    const data = this.products.map(product => [
+      product.name || '',
+      (product as any).sku || '',
+      product.description || '',
+      product.price || 0,
+      product.stock || 0,
+      this.getStatusLabel(product.status),
+      product.category || '',
+      this.getProductViews(product),
+      this.getProductSales(product),
+      this.getProductRating(product)
+    ]);
+
+    // Créer un workbook
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...data]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Produits');
+
+    // Générer le fichier Excel
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    this.downloadFile(blob, `produits_${new Date().toISOString().split('T')[0]}.xlsx`, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  }
+
+  private exportToJSON(): void {
+    const data = this.products.map(product => ({
+      id: product.id,
+      name: product.name,
+      sku: (product as any).sku || '',
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      status: product.status,
+      statusLabel: this.getStatusLabel(product.status),
+      category: product.category,
+      images: product.images,
+      views: this.getProductViews(product),
+      sales: this.getProductSales(product),
+      rating: this.getProductRating(product),
+      createdAt: product.createdAt,
+      updatedAt: product.updatedAt
+    }));
+
+    const jsonContent = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+    this.downloadFile(blob, `produits_${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+  }
+
+  private downloadFile(blob: Blob, filename: string, contentType: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   }
 
   // Méthodes pour accéder aux propriétés des produits

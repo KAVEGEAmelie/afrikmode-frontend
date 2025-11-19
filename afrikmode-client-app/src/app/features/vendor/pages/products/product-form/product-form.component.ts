@@ -1,6 +1,15 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CategoryService } from '../../../../../core/services/category.service';
+import { ActivatedRoute } from '@angular/router';
+
+interface CategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+  subcategories?: CategoryOption[];
+}
 
 interface ProductFormData {
   name: string;
@@ -144,15 +153,25 @@ interface ProductFormData {
                 <div class="form-grid">
                   <div class="form-group">
                     <label for="category">Catégorie *</label>
-                    <select id="category" [(ngModel)]="formData.category" name="category" required>
-                      <option value="">Sélectionner une catégorie</option>
-                      <option value="femmes">👗 Femmes</option>
-                      <option value="hommes">👔 Hommes</option>
-                      <option value="enfants">🧸 Enfants</option>
-                      <option value="accessoires">👜 Accessoires</option>
-                      <option value="chaussures">👞 Chaussures</option>
-                      <option value="sacs">💼 Sacs & Maroquinerie</option>
+                    <select 
+                      id="category" 
+                      [(ngModel)]="formData.category" 
+                      name="category" 
+                      required
+                      [disabled]="loadingCategories">
+                      <option value="">{{ loadingCategories ? 'Chargement...' : 'Sélectionner une catégorie' }}</option>
+                      <option 
+                        *ngFor="let cat of flatCategories" 
+                        [value]="cat.id || cat.slug || cat.name">
+                        {{ cat.name }}
+                      </option>
                     </select>
+                    <small class="help-text" *ngIf="loadingCategories">
+                      Chargement des catégories...
+                    </small>
+                    <small class="help-text" *ngIf="!loadingCategories && flatCategories.length === 0">
+                      Aucune catégorie disponible. Créez-en une depuis le dashboard admin.
+                    </small>
                   </div>
 
                   <div class="form-group">
@@ -615,30 +634,36 @@ interface ProductFormData {
   `,
   styles: [`
     .product-form-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 20px;
-      overflow-y: auto; /* ✅ AJOUT: Permet le scroll de l'overlay */
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      background: rgba(0, 0, 0, 0.5) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      z-index: 99999 !important; /* Au-dessus de tout (Material Dialog: 1000, Admin: peut-être plus élevé) */
+      padding: 20px !important;
+      overflow-y: auto !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .product-form-modal {
-      background: white;
-      border-radius: 12px;
-      width: 100%;
-      max-width: 900px;
-      max-height: 90vh; /* ✅ AJOUT: Limite la hauteur */
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-      margin: auto; /* ✅ AJOUT: Centre verticalement quand plus petit */
+      position: relative !important;
+      z-index: 100000 !important;
+      background: white !important;
+      border-radius: 12px !important;
+      width: 100% !important;
+      max-width: 900px !important;
+      max-height: 90vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2) !important;
+      margin: auto !important;
+      visibility: visible !important;
+      opacity: 1 !important;
     }
 
     .modal-header {
@@ -1215,7 +1240,7 @@ interface ProductFormData {
     }
   `]
 })
-export class ProductFormComponent implements OnInit {
+export class ProductFormComponent implements OnInit, OnChanges {
   @Input() isVisible: boolean = false;
   @Input() isEditMode: boolean = false;
   @Input() productData?: any;
@@ -1283,14 +1308,195 @@ export class ProductFormComponent implements OnInit {
   ];
 
   availableSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'];
+  
+  categories: CategoryOption[] = [];
+  loadingCategories = false;
+  flatCategories: CategoryOption[] = []; // Liste plate pour le select
+
+  constructor(private categoryService: CategoryService) {}
 
   ngOnInit() {
+    // Charger les catégories dès l'initialisation
+    this.loadCategories();
     if (this.productData) {
       this.loadProductData(this.productData);
     }
   }
 
+  // Méthode pour recharger les catégories si nécessaire
+  ngOnChanges(changes: SimpleChanges) {
+    // Si le formulaire devient visible et qu'on n'a pas encore de catégories, les charger
+    if (changes['isVisible'] && changes['isVisible'].currentValue === true && 
+        this.flatCategories.length === 0 && !this.loadingCategories) {
+      console.log('📋 Formulaire visible - Chargement des catégories...');
+      this.loadCategories();
+    }
+    
+    // Si le formulaire devient invisible, réinitialiser les données
+    if (changes['isVisible'] && changes['isVisible'].currentValue === false) {
+      this.resetForm();
+    }
+    
+    // Si les données du produit changent, les charger
+    if (changes['productData'] && changes['productData'].currentValue) {
+      this.loadProductData(changes['productData'].currentValue);
+    }
+  }
+  
+  /**
+   * Réinitialise le formulaire
+   */
+  resetForm() {
+    this.selectedImages = [];
+    this.formData = {
+      name: '',
+      description: '',
+      shortDescription: '',
+      price: 0,
+      compareAtPrice: undefined,
+      sku: '',
+      status: 'draft',
+      category: '',
+      fabricType: '',
+      genderTarget: 'unisexe',
+      ageGroup: 'adulte',
+      season: 'toute_saison',
+      occasion: 'quotidien',
+      stockQuantity: 0,
+      lowStockThreshold: undefined,
+      weight: undefined,
+      dimensions: { length: 0, width: 0, height: 0 },
+      colorsAvailable: [],
+      sizesAvailable: [],
+      materials: [],
+      careInstructions: '',
+      culturalSignificance: '',
+      artisanName: '',
+      artisanStory: '',
+      artisanLocation: '',
+      handmade: false,
+      customizable: false,
+      featured: false,
+      tags: [],
+      metaTitle: '',
+      metaDescription: ''
+    };
+    this.tagsInput = '';
+    this.materialsInput = '';
+    this.activeTab = 'basic';
+  }
+
+  loadCategories() {
+    this.loadingCategories = true;
+    console.log('🔄 Chargement des catégories...');
+    this.categoryService.getCategories(true, true).subscribe({
+      next: (response: any) => {
+        console.log('📦 Réponse API catégories:', response);
+        
+        // Extraire les catégories de la réponse
+        // La réponse peut être : { success: true, data: [...] } ou { data: { categories: [...] } } ou { categories: [...] } ou directement [...]
+        let categoriesData = [];
+        
+        if (response.success && response.data) {
+          // Format: { success: true, data: [...] }
+          if (Array.isArray(response.data)) {
+            categoriesData = response.data;
+          } else if (response.data.categories && Array.isArray(response.data.categories)) {
+            categoriesData = response.data.categories;
+          }
+        } else if (response.data?.categories && Array.isArray(response.data.categories)) {
+          categoriesData = response.data.categories;
+        } else if (response.categories && Array.isArray(response.categories)) {
+          categoriesData = response.categories;
+        } else if (Array.isArray(response)) {
+          categoriesData = response;
+        } else if (response.data && Array.isArray(response.data)) {
+          categoriesData = response.data;
+        }
+        
+        console.log('📋 Catégories extraites:', categoriesData.length, categoriesData);
+        
+        if (categoriesData.length > 0) {
+          this.categories = this.flattenCategories(categoriesData);
+          this.flatCategories = this.categories;
+          console.log('✅ Catégories chargées:', this.flatCategories.length);
+        } else {
+          console.warn('⚠️ Aucune catégorie trouvée dans la réponse');
+          this.categories = [];
+          this.flatCategories = [];
+        }
+        
+        this.loadingCategories = false;
+        
+        // Si on charge un produit existant, mapper la catégorie
+        if (this.productData && this.formData.category) {
+          this.mapCategoryToForm();
+        }
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement des catégories:', error);
+        console.error('Détails:', error.error || error.message);
+        this.loadingCategories = false;
+        // En cas d'erreur, utiliser les catégories par défaut
+        this.categories = [];
+        this.flatCategories = [];
+      }
+    });
+  }
+
+  // Mapper la catégorie du produit existant vers le formulaire
+  mapCategoryToForm() {
+    const categoryValue = this.formData.category;
+    if (!categoryValue) return;
+    
+    // Chercher la catégorie par ID, slug ou nom
+    const foundCategory = this.flatCategories.find(cat => 
+      cat.id === categoryValue || 
+      cat.slug === categoryValue || 
+      cat.name === categoryValue
+    );
+    
+    if (foundCategory) {
+      // Utiliser l'ID en priorité, sinon le slug, sinon le nom
+      this.formData.category = foundCategory.id || foundCategory.slug || foundCategory.name;
+    }
+  }
+
+  // Aplatir l'arbre de catégories en liste plate pour le select
+  flattenCategories(categories: any[], parentName: string = ''): CategoryOption[] {
+    let flat: CategoryOption[] = [];
+    categories.forEach(cat => {
+      const displayName = parentName ? `${parentName} > ${cat.name}` : cat.name;
+      flat.push({
+        id: cat.id,
+        name: displayName,
+        slug: cat.slug || '',
+        subcategories: cat.children || cat.subcategories
+      });
+      // Gérer à la fois 'children' (format API) et 'subcategories' (format alternatif)
+      const subcats = cat.children || cat.subcategories || [];
+      if (subcats.length > 0) {
+        flat = flat.concat(this.flattenCategories(subcats, displayName));
+      }
+    });
+    return flat;
+  }
+
   loadProductData(data: any) {
+    // Mapper la catégorie - peut être un ID, slug, nom ou objet
+    let categoryValue = '';
+    if (data.category) {
+      if (typeof data.category === 'object' && data.category.id) {
+        categoryValue = data.category.id;
+      } else if (typeof data.category === 'object' && data.category.slug) {
+        categoryValue = data.category.slug;
+      } else if (data.category_id) {
+        categoryValue = data.category_id;
+      } else {
+        categoryValue = data.category;
+      }
+    }
+    
     this.formData = {
       name: data.name || '',
       description: data.description || '',
@@ -1299,7 +1505,7 @@ export class ProductFormComponent implements OnInit {
       compareAtPrice: data.compareAtPrice || data.compare_at_price,
       sku: data.sku || '',
       status: data.status || 'draft',
-      category: data.category || '',
+      category: categoryValue,
       fabricType: data.fabricType || data.fabric_type,
       genderTarget: data.genderTarget || data.gender_target,
       ageGroup: data.ageGroup || data.age_group,
@@ -1328,13 +1534,23 @@ export class ProductFormComponent implements OnInit {
     this.tagsInput = this.formData.tags.join(', ');
     this.materialsInput = this.formData.materials.join(', ');
     
-    if (data.images && Array.isArray(data.images)) {
-      data.images.forEach((imageUrl: string) => {
+    // Réinitialiser les images avant de charger
+    this.selectedImages = [];
+    
+    // Normaliser et charger les images
+    const normalizedImages = this.normalizeProductImages(data);
+    normalizedImages.forEach((imageUrl: string) => {
+      if (imageUrl && imageUrl.trim() !== '') {
         this.selectedImages.push({
           file: null,
           preview: imageUrl
         });
-      });
+      }
+    });
+    
+    // Mapper la catégorie après le chargement si les catégories sont déjà chargées
+    if (this.flatCategories.length > 0) {
+      this.mapCategoryToForm();
     }
   }
 
@@ -1511,5 +1727,64 @@ export class ProductFormComponent implements OnInit {
 
   closeForm() {
     this.close.emit();
+  }
+
+  /**
+   * Normalise les images d'un produit pour le formulaire
+   */
+  private normalizeProductImages(data: any): string[] {
+    // Essayer différents champs possibles
+    let images = data.images;
+    
+    // Si pas d'images, essayer d'autres champs
+    if (!images || (Array.isArray(images) && images.length === 0)) {
+      if (data.primary_image) {
+        images = [data.primary_image];
+      } else if (data.image_url) {
+        images = [data.image_url];
+      } else if (data.image) {
+        images = Array.isArray(data.image) ? data.image : [data.image];
+      }
+    }
+    
+    if (!images) return [];
+    
+    // Si c'est un tableau
+    if (Array.isArray(images)) {
+      return images.map((img: any) => {
+        if (typeof img === 'string') return img;
+        if (img && typeof img === 'object') {
+          return img.url || img.path || img.image_url || img.src || img.primary_image || '';
+        }
+        return '';
+      }).filter((url: string) => url && url.trim() !== '');
+    }
+    
+    // Si c'est une chaîne JSON
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images);
+        if (Array.isArray(parsed)) {
+          return parsed.map((img: any) => {
+            if (typeof img === 'string') return img;
+            if (img && typeof img === 'object') {
+              return img.url || img.path || img.image_url || img.src || '';
+            }
+            return '';
+          }).filter((url: string) => url && url.trim() !== '');
+        }
+        return [images];
+      } catch {
+        return [images];
+      }
+    }
+    
+    // Si c'est un objet unique
+    if (typeof images === 'object') {
+      const url = images.url || images.path || images.image_url || images.src || images.primary_image || '';
+      return url ? [url] : [];
+    }
+    
+    return [];
   }
 }

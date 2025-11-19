@@ -1,7 +1,9 @@
 // src/app/features/admin/pages/dashboard/components/recent-orders/recent-orders.component.ts
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../../../environments/environment';
 
 interface Order {
   id: string;
@@ -19,55 +21,56 @@ interface Order {
   styleUrls: ['./recent-orders.component.scss']
 })
 export class RecentOrdersComponent implements OnInit {
-  orders: Order[] = [];
+  @Input() orders: Order[] = [];
   loading = true;
+  private apiUrl = `${environment.apiUrl}/admin`;
+
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    this.loadOrders();
+    // Si des orders sont passés en Input, les utiliser, sinon charger depuis l'API
+    if (this.orders && this.orders.length > 0) {
+      this.loading = false;
+    } else {
+      this.loadOrders();
+    }
   }
 
   loadOrders(): void {
-    // Simulation de données - À remplacer par un vrai service
-    setTimeout(() => {
-      this.orders = [
-        {
-          id: '#12345',
-          customer: 'Amina Touré',
-          amount: 45000,
-          status: 'processing',
-          date: new Date(Date.now() - 2 * 3600000)
-        },
-        {
-          id: '#12344',
-          customer: 'Kofi Mensah',
-          amount: 32500,
-          status: 'shipped',
-          date: new Date(Date.now() - 5 * 3600000)
-        },
-        {
-          id: '#12343',
-          customer: 'Fatou Diallo',
-          amount: 78000,
-          status: 'delivered',
-          date: new Date(Date.now() - 24 * 3600000)
-        },
-        {
-          id: '#12342',
-          customer: 'Ibrahim Kane',
-          amount: 25000,
-          status: 'pending',
-          date: new Date(Date.now() - 36 * 3600000)
-        },
-        {
-          id: '#12341',
-          customer: 'Awa Ndiaye',
-          amount: 56000,
-          status: 'delivered',
-          date: new Date(Date.now() - 48 * 3600000)
+    this.http.get(`${this.apiUrl}/dashboard/recent-activity?limit=5`).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data && response.data.recentOrders) {
+          this.orders = response.data.recentOrders.map((order: any) => ({
+            id: order.order_number || order.id || '',
+            customer: order.customer_name || order.customer_email || 'Client',
+            amount: parseFloat(order.total_amount || 0),
+            status: this.mapStatus(order.status),
+            date: new Date(order.created_at)
+          }));
+        } else {
+          this.orders = [];
         }
-      ];
-      this.loading = false;
-    }, 500);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des commandes récentes:', error);
+        this.orders = [];
+        this.loading = false;
+      }
+    });
+  }
+  
+  private mapStatus(status: string): 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' {
+    const statusMap: { [key: string]: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' } = {
+      'pending': 'pending',
+      'processing': 'processing',
+      'confirmed': 'processing',
+      'shipped': 'shipped',
+      'delivered': 'delivered',
+      'completed': 'delivered',
+      'cancelled': 'cancelled'
+    };
+    return statusMap[status] || 'pending';
   }
 
   getStatusLabel(status: string): string {

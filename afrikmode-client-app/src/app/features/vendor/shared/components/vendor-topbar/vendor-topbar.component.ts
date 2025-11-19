@@ -149,9 +149,21 @@ export class VendorTopbarComponent implements OnInit, OnDestroy {
     });
 
     // S'abonner aux conversations
-    const conversationsSub = this.messageService.getConversations().subscribe(conversations => {
+    const conversationsSub = this.messageService.getConversations().subscribe(response => {
+      // Gérer la réponse qui peut être un objet { success: true, data: [...] } ou directement un tableau
+      let conversations: Conversation[] = [];
+      if (Array.isArray(response)) {
+        conversations = response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        conversations = response.data;
+      } else if (response && response.conversations && Array.isArray(response.conversations)) {
+        conversations = response.conversations;
+      }
+      
       this.messages = conversations;
-      this.messageCount = conversations.reduce((sum: number, conv: any) => sum + conv.unreadCount, 0);
+      this.messageCount = conversations.reduce((sum: number, conv: any) => {
+        return sum + (conv.unreadCount || conv.unread_count || 0);
+      }, 0);
     });
 
     // S'abonner au compteur de messages non lus

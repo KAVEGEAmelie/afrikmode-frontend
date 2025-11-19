@@ -9,9 +9,8 @@ import { Observable } from 'rxjs';
   imports: [CommonModule],
   template: `
     <div class="toast-container">
-      <div *ngFor="let toast of toasts$ | async" 
-           class="toast toast-{{toast.type}}"
-           [@slideIn]>
+      <div *ngFor="let toast of toasts$ | async"
+           class="toast toast-{{toast.type}}">
         <div class="toast-icon">{{toast.icon}}</div>
         <div class="toast-message">{{toast.message}}</div>
         <button class="toast-close" (click)="close(toast.id)">&times;</button>

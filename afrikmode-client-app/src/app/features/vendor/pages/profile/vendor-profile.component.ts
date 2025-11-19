@@ -10,6 +10,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatChipsModule } from '@angular/material/chips';
+import { VendorService } from '../../core/services/vendor.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { StoreService } from '../../../../core/services/store.service';
+import { SafeImagePipe } from '../../../../core/pipes/safe-image.pipe';
 
 interface VendorProfile {
   firstName: string;
@@ -47,7 +51,8 @@ interface VendorProfile {
     MatSnackBarModule,
     MatTabsModule,
     MatDividerModule,
-    MatChipsModule
+    MatChipsModule,
+    SafeImagePipe
   ],
   template: `
     <div class="vendor-profile">
@@ -57,7 +62,7 @@ interface VendorProfile {
           <div class="avatar-section">
             <div class="avatar">
               @if (profile.avatar) {
-                <img [src]="profile.avatar" alt="Avatar">
+                <img [src]="profile.avatar | safeImage:'avatar'" alt="Avatar">
               } @else {
                 <i class="fas fa-user"></i>
               }
@@ -521,10 +526,14 @@ export class VendorProfileComponent implements OnInit {
   securityForm: FormGroup;
   selectedTabIndex = 0;
   saving = false;
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private vendorService: VendorService,
+    private authService: AuthService,
+    private storeService: StoreService
   ) {
     this.personalInfoForm = this.fb.group({
       firstName: [this.profile.firstName, [Validators.required]],
@@ -566,8 +575,61 @@ export class VendorProfileComponent implements OnInit {
   }
 
   loadProfile() {
-    // TODO: Charger depuis l'API
-    console.log('Chargement du profil vendor');
+    this.loading = true;
+    
+    // Charger les informations de l'utilisateur connecté
+    this.authService.currentUser$.subscribe({
+      next: (user) => {
+        if (user) {
+          console.log('✅ Utilisateur connecté chargé:', user);
+          
+          // Mettre à jour le profil avec les vraies données
+          this.profile = {
+            firstName: user.first_name || '',
+            lastName: user.last_name || '',
+            email: user.email || '',
+            phone: user.phone || '',
+            avatar: (user as any).avatar_url || (user as any).avatar || undefined,
+            bio: this.profile.bio, // Garder la bio mockée pour l'instant
+            address: this.profile.address, // Garder l'adresse mockée pour l'instant
+            companyInfo: this.profile.companyInfo // Garder les infos entreprise mockées
+          };
+          
+          // Mettre à jour les formulaires
+          this.personalInfoForm.patchValue({
+            firstName: this.profile.firstName,
+            lastName: this.profile.lastName,
+            email: this.profile.email,
+            phone: this.profile.phone,
+            bio: this.profile.bio
+          });
+          
+          // Charger les infos de la boutique si disponible
+          this.storeService.getMyStore().subscribe({
+            next: (store: any) => {
+              console.log('✅ Boutique chargée:', store);
+              if (store) {
+                this.profile.companyInfo.name = store.name || this.profile.companyInfo.name;
+                this.companyForm.patchValue({
+                  name: store.name
+                });
+              }
+              this.loading = false;
+            },
+            error: (error: any) => {
+              console.log('ℹ️ Pas de boutique trouvée:', error);
+              this.loading = false;
+            }
+          });
+        } else {
+          this.loading = false;
+        }
+      },
+      error: (error) => {
+        console.error('❌ Erreur chargement utilisateur:', error);
+        this.loading = false;
+      }
+    });
   }
 
   savePersonalInfo() {

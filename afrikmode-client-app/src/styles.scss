@@ -89,14 +89,14 @@ img {
 // Container principal des overlays
 .cdk-overlay-container {
   position: fixed !important;
-  z-index: 1000 !important;
+  z-index: 10000 !important; /* Bien au-dessus du vendor-fullscreen (999) */
   pointer-events: none !important;
 }
 
 // Position des overlays
 .cdk-overlay-connected-position-bounding-box {
   position: absolute !important;
-  z-index: 1000 !important;
+  z-index: 10000 !important;
 }
 
 // ============= BACKDROPS (FONDS SOMBRES) =============
@@ -110,22 +110,22 @@ img {
   width: 100vw !important;
   height: 100vh !important;
   pointer-events: auto !important;
-  
+
   // Backdrop transparent (pour les menus normaux)
   &.cdk-overlay-transparent-backdrop {
-    z-index: 1000 !important;
+    z-index: 10000 !important;
     background-color: transparent !important;
   }
-  
+
   // Backdrop sombre (pour les dialogs)
   &.cdk-overlay-dark-backdrop {
-    z-index: 1050 !important;
+    z-index: 10010 !important; /* Au-dessus du container */
     background-color: rgba(0, 0, 0, 0.5) !important;
   }
-  
+
   // Backdrop pour les dialogs de catégories
   &.category-dialog-backdrop {
-    z-index: 1050 !important;
+    z-index: 10010 !important; /* Même niveau que dark-backdrop */
     background-color: rgba(0, 0, 0, 0.6) !important;
     -webkit-backdrop-filter: blur(4px) !important;
     backdrop-filter: blur(4px) !important;
@@ -137,19 +137,19 @@ img {
 .cdk-overlay-pane {
   pointer-events: auto !important;
   position: absolute !important;
-  
+
   // Menus normaux (profile, notifications, etc.)
   &:not(:has(.category-dialog-panel)) {
-    z-index: 1001 !important;
+    z-index: 10001 !important; /* Au-dessus du container */
   }
-  
+
   // Dialogs de catégories - Z-INDEX CRITIQUE !
   &:has(.category-dialog-panel) {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
-    z-index: 1100 !important; // ← PLUS ÉLEVÉ QUE LE BACKDROP (1050)
+    z-index: 10020 !important; /* Au-dessus du backdrop (10010) */
   }
 }
 

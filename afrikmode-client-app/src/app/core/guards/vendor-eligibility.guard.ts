@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { CanActivate, Router } from '@angular/router';
+import { CanActivate, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
@@ -17,7 +17,7 @@ export class VendorEligibilityGuard implements CanActivate {
     private toastService: ToastService
   ) {}
 
-  canActivate(): Observable<boolean> | boolean {
+  canActivate(route: ActivatedRouteSnapshot): Observable<boolean> | boolean {
     // 1. Vérifier l'authentification
     if (!this.authService.isAuthenticated()) {
       this.router.navigate(['/login'], {
@@ -35,7 +35,14 @@ export class VendorEligibilityGuard implements CanActivate {
       return false;
     }
 
-    // 2. Vérifier le rôle
+    // Si on est en mode édition (query param edit=true), permettre l'accès
+    // (même pour les vendeurs, car ils peuvent modifier leur candidature)
+    if (route.queryParams['edit'] === 'true' || route.queryParams['edit'] === true) {
+      console.log('✅ Mode édition détecté - Accès autorisé');
+      return true;
+    }
+
+    // 2. Vérifier le rôle (seulement si pas en mode édition)
     if (user.role === 'vendor') {
       this.router.navigate(['/vendor']);
       this.toastService.info('Vous êtes déjà vendeur');
@@ -48,12 +55,20 @@ export class VendorEligibilityGuard implements CanActivate {
       return false;
     }
 
-    // 3. Seuls les clients peuvent devenir vendeurs
-    if (user.role !== 'customer') {
+    // 3. Seuls les clients peuvent devenir vendeurs (ou utilisateurs sans rôle défini)
+    // Si l'utilisateur n'a pas de rôle ou a un rôle invalide, on le considère comme client
+    if (user.role && user.role !== 'customer') {
+      // Si c'est un admin, on a déjà géré ça plus haut
+      if (user.role === 'admin' || user.role === 'super_admin') {
+        // Déjà géré plus haut
+        return false;
+      }
+      // Pour les autres rôles, on bloque
       this.router.navigate(['/']);
       this.toastService.error('Seuls les clients peuvent postuler pour devenir vendeurs');
       return false;
     }
+    // Si pas de rôle ou rôle null/undefined, on continue (sera traité comme client)
 
     // 4. Vérifier l'email vérifié
     if (!user.is_verified) {
@@ -105,8 +120,16 @@ export class VendorEligibilityGuard implements CanActivate {
             this.toastService.warning(response.message || 'Email non vérifié');
             return false;
 
+          case 'account_incomplete':
+            this.toastService.error(response.message || 'Votre compte n\'est pas complet');
+            this.router.navigate(['/']);
+            return false;
+
           default:
-            this.toastService.error(response.message || 'Vous n\'êtes pas éligible pour devenir vendeur');
+            // Afficher le message spécifique de l'API ou un message générique
+            const errorMessage = response.message || 'Vous n\'êtes pas éligible pour devenir vendeur';
+            this.toastService.error(errorMessage);
+            console.error('Raison de non-éligibilité:', response.reason, response);
             this.router.navigate(['/']);
             return false;
         }

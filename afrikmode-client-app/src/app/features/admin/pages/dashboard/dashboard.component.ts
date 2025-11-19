@@ -4,6 +4,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
+import { AdminService } from '../../../../core/services/admin.service';
 
 // Interfaces
 interface DashboardStats {
@@ -101,10 +104,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // Subject pour la gestion des subscriptions
   private destroy$ = new Subject<void>();
+  private apiUrl = `${environment.apiUrl}/admin`;
 
   constructor(
-    private router: Router
-    // Injectez ici vos services : DashboardService, etc.
+    private router: Router,
+    private http: HttpClient,
+    private adminService: AdminService
   ) {}
 
   ngOnInit(): void {
@@ -141,150 +146,316 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Charge les statistiques principales
+   * Charge les statistiques principales depuis l'API
    */
   private async loadStats(): Promise<void> {
-    // TODO: Remplacer par un vrai appel API
-    // const stats = await this.dashboardService.getStats(this.selectedPeriod);
-    
-    // Données mockées pour l'exemple
-    return new Promise((resolve) => {
-      setTimeout(() => {
+    return new Promise((resolve, reject) => {
+      this.adminService.getDashboardStats()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.success && response.data) {
+              const data = response.data;
+              
+              // Calculer le panier moyen
+              const avgOrderValue = data.totalOrders > 0 ? data.totalRevenue / data.totalOrders : 0;
+              
+              // Charger les graphiques pour calculer les trends
+              this.http.get(`${this.apiUrl}/dashboard/charts?period=${this.selectedPeriod}`)
+                .pipe(takeUntil(this.destroy$))
+                .subscribe({
+                  next: (chartsResponse: any) => {
+                    let ordersChange = 0;
+                    let revenueChange = 0;
+                    let customersChange = 0;
+                    let aovChange = 0;
+                    
+                    if (chartsResponse.success && chartsResponse.data) {
+                      const chartsData = chartsResponse.data;
+                      
+                      // Calculer les trends depuis les données mensuelles
+                      if (chartsData.ordersByMonth && chartsData.ordersByMonth.length >= 2) {
+                        const current = parseInt(chartsData.ordersByMonth[chartsData.ordersByMonth.length - 1]?.count || 0);
+                        const previous = parseInt(chartsData.ordersByMonth[chartsData.ordersByMonth.length - 2]?.count || 0);
+                        if (previous > 0) {
+                          ordersChange = ((current - previous) / previous) * 100;
+                        }
+                      }
+                      
+                      if (chartsData.revenueByMonth && chartsData.revenueByMonth.length >= 2) {
+                        const current = parseFloat(chartsData.revenueByMonth[chartsData.revenueByMonth.length - 1]?.revenue || 0);
+                        const previous = parseFloat(chartsData.revenueByMonth[chartsData.revenueByMonth.length - 2]?.revenue || 0);
+                        if (previous > 0) {
+                          revenueChange = ((current - previous) / previous) * 100;
+                        }
+                      }
+                    }
+                    
+                    // Charger les stats des commandes par statut
+                    this.http.get(`${this.apiUrl}/orders?limit=1`)
+                      .pipe(takeUntil(this.destroy$))
+                      .subscribe({
+                        next: (ordersResponse: any) => {
+                          let pendingOrders = 0;
+                          let shippingOrders = 0;
+                          let deliveredOrders = 0;
+                          
+                          if (ordersResponse.success && ordersResponse.data) {
+                            // Compter les commandes par statut
+                            ordersResponse.data.forEach((order: any) => {
+                              if (order.status === 'pending') pendingOrders++;
+                              else if (order.status === 'shipped' || order.status === 'processing') shippingOrders++;
+                              else if (order.status === 'delivered' || order.status === 'completed') deliveredOrders++;
+                            });
+                          }
+                          
+                          // Charger les stats des utilisateurs pour calculer les nouveaux clients
+                          this.http.get(`${this.apiUrl}/users/stats`)
+                            .pipe(takeUntil(this.destroy$))
+                            .subscribe({
+                              next: (usersResponse: any) => {
+                                let newCustomers = 0;
+                                let customersChange = 0;
+                                
+                                if (usersResponse.success && usersResponse.data) {
+                                  newCustomers = usersResponse.data.customers || 0;
+                                  // TODO: Calculer le changement depuis l'historique
+                                }
+                                
+                                this.stats = {
+                                  totalOrders: data.totalOrders || 0,
+                                  ordersChange: ordersChange,
+                                  totalRevenue: data.totalRevenue || 0,
+                                  revenueChange: revenueChange,
+                                  newCustomers: newCustomers,
+                                  customersChange: customersChange,
+                                  averageOrderValue: avgOrderValue,
+                                  aovChange: aovChange,
+                                  pendingOrders: pendingOrders,
+                                  shippingOrders: shippingOrders,
+                                  deliveredOrders: deliveredOrders,
+                                  activeProducts: data.totalProducts || 0,
+                                  activeShops: data.totalStores || 0,
+                                  averageRating: 0 // À charger depuis l'API si disponible
+                                };
+                                resolve();
+                              },
+                              error: (error) => {
+                                console.error('Erreur lors du chargement des stats utilisateurs:', error);
+                                this.stats = {
+                                  totalOrders: data.totalOrders || 0,
+                                  ordersChange: ordersChange,
+                                  totalRevenue: data.totalRevenue || 0,
+                                  revenueChange: revenueChange,
+                                  newCustomers: 0,
+                                  customersChange: 0,
+                                  averageOrderValue: avgOrderValue,
+                                  aovChange: 0,
+                                  pendingOrders: pendingOrders,
+                                  shippingOrders: shippingOrders,
+                                  deliveredOrders: deliveredOrders,
+                                  activeProducts: data.totalProducts || 0,
+                                  activeShops: data.totalStores || 0,
+                                  averageRating: 0
+                                };
+                                resolve();
+                              }
+                            });
+                        },
+                        error: (error) => {
+                          console.error('Erreur lors du chargement des commandes:', error);
+                          this.stats = {
+                            totalOrders: data.totalOrders || 0,
+                            ordersChange: ordersChange,
+                            totalRevenue: data.totalRevenue || 0,
+                            revenueChange: revenueChange,
+                            newCustomers: 0,
+                            customersChange: 0,
+                            averageOrderValue: avgOrderValue,
+                            aovChange: 0,
+                            pendingOrders: 0,
+                            shippingOrders: 0,
+                            deliveredOrders: 0,
+                            activeProducts: data.totalProducts || 0,
+                            activeShops: data.totalStores || 0,
+                            averageRating: 0
+                          };
+                          resolve();
+                        }
+                      });
+                  },
+                  error: (error) => {
+                    console.error('Erreur lors du chargement des graphiques:', error);
         this.stats = {
-          totalOrders: 1245,
-          ordersChange: 12.5,
-          totalRevenue: 15750000,
-          revenueChange: 8.3,
-          newCustomers: 156,
-          customersChange: 15.2,
-          averageOrderValue: 12650,
-          aovChange: -2.1,
-          pendingOrders: 23,
-          shippingOrders: 45,
-          deliveredOrders: 892,
-          activeProducts: 342,
-          activeShops: 78,
-          averageRating: 4.6
+                      totalOrders: data.totalOrders || 0,
+                      ordersChange: 0,
+                      totalRevenue: data.totalRevenue || 0,
+                      revenueChange: 0,
+                      newCustomers: 0,
+                      customersChange: 0,
+                      averageOrderValue: avgOrderValue,
+                      aovChange: 0,
+                      pendingOrders: 0,
+                      shippingOrders: 0,
+                      deliveredOrders: 0,
+                      activeProducts: data.totalProducts || 0,
+                      activeShops: data.totalStores || 0,
+                      averageRating: 0
         };
         resolve();
-      }, 1000);
+                  }
+                });
+            } else {
+              reject(new Error('Données invalides'));
+            }
+          },
+          error: (error) => {
+            console.error('Erreur lors du chargement des statistiques:', error);
+            reject(error);
+          }
+        });
     });
   }
 
   /**
-   * Charge les produits les plus vendus
+   * Charge les produits les plus vendus depuis l'API
    */
   private async loadTopProducts(): Promise<void> {
-    // TODO: Remplacer par un vrai appel API
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        this.topProducts = [
-          { id: '1', name: 'Robe Wax Africaine', sales: 145, revenue: 2900000 },
-          { id: '2', name: 'Boubou Brodé', sales: 132, revenue: 2640000 },
-          { id: '3', name: 'Dashiki Coloré', sales: 98, revenue: 1470000 },
-          { id: '4', name: 'Chemise Kente', sales: 87, revenue: 1305000 },
-          { id: '5', name: 'Pantalon Bogolan', sales: 76, revenue: 1140000 }
-        ];
+    return new Promise((resolve, reject) => {
+      this.http.get(`${this.apiUrl}/dashboard/charts`)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response: any) => {
+            if (response.success && response.data && response.data.topProducts) {
+              this.topProducts = response.data.topProducts.slice(0, 5).map((item: any, index: number) => ({
+                id: item.id || String(index + 1),
+                name: item.name || 'Produit sans nom',
+                sales: parseInt(item.total_sold || 0),
+                revenue: parseFloat(item.total_revenue || 0)
+              }));
+            } else {
+              this.topProducts = [];
+            }
         resolve();
-      }, 800);
+          },
+          error: (error) => {
+            console.error('Erreur lors du chargement des top produits:', error);
+            this.topProducts = [];
+            resolve(); // Ne pas rejeter pour ne pas bloquer le chargement
+          }
+        });
     });
   }
 
   /**
-   * Charge les commandes récentes
+   * Charge les commandes récentes depuis l'API
    */
   private async loadRecentOrders(): Promise<void> {
-    // TODO: Remplacer par un vrai appel API
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        this.recentOrders = [
-          {
-            id: '1',
-            orderNumber: 'ORD-2024-001',
-            customerName: 'Kouassi Yao',
-            createdAt: new Date('2024-10-02T10:30:00'),
-            totalAmount: 45000,
-            status: 'processing'
+    return new Promise((resolve, reject) => {
+      this.http.get(`${this.apiUrl}/dashboard/recent-activity?limit=5`)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response: any) => {
+            if (response.success && response.data && response.data.recentOrders) {
+              this.recentOrders = response.data.recentOrders.map((order: any) => ({
+                id: order.id || '',
+                orderNumber: order.order_number || order.id || '',
+                customerName: order.customer_name || order.customer_email || 'Client',
+                createdAt: new Date(order.created_at),
+                totalAmount: parseFloat(order.total_amount || 0),
+                status: this.mapOrderStatus(order.status)
+              }));
+            } else {
+              this.recentOrders = [];
+            }
+            resolve();
           },
-          {
-            id: '2',
-            orderNumber: 'ORD-2024-002',
-            customerName: 'Aminata Diallo',
-            createdAt: new Date('2024-10-02T09:15:00'),
-            totalAmount: 78000,
-            status: 'shipped'
-          },
-          {
-            id: '3',
-            orderNumber: 'ORD-2024-003',
-            customerName: 'Jean-Marc Kouadio',
-            createdAt: new Date('2024-10-01T16:45:00'),
-            totalAmount: 32000,
-            status: 'delivered'
-          },
-          {
-            id: '4',
-            orderNumber: 'ORD-2024-004',
-            customerName: 'Fatou Bamba',
-            createdAt: new Date('2024-10-01T14:20:00'),
-            totalAmount: 56000,
-            status: 'pending'
-          },
-          {
-            id: '5',
-            orderNumber: 'ORD-2024-005',
-            customerName: 'Ibrahim Touré',
-            createdAt: new Date('2024-10-01T11:00:00'),
-            totalAmount: 91000,
-            status: 'processing'
+          error: (error) => {
+            console.error('Erreur lors du chargement des commandes récentes:', error);
+            this.recentOrders = [];
+            resolve(); // Ne pas rejeter pour ne pas bloquer le chargement
           }
-        ];
-        resolve();
-      }, 600);
+        });
     });
+  }
+  
+  private mapOrderStatus(status: string): 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' {
+    const statusMap: { [key: string]: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' } = {
+      'pending': 'pending',
+      'processing': 'processing',
+      'confirmed': 'processing',
+      'shipped': 'shipped',
+      'delivered': 'delivered',
+      'completed': 'delivered',
+      'cancelled': 'cancelled',
+      'refunded': 'cancelled'
+    };
+    return statusMap[status] || 'pending';
   }
 
   /**
-   * Charge les activités récentes
+   * Charge les activités récentes depuis l'API
    */
   private async loadRecentActivities(): Promise<void> {
-    // TODO: Remplacer par un vrai appel API
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        this.recentActivities = [
-          {
-            id: '1',
+    return new Promise((resolve, reject) => {
+      this.http.get(`${this.apiUrl}/dashboard/recent-activity?limit=10`)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response: any) => {
+            if (response.success && response.data) {
+              const activities: Activity[] = [];
+              
+              // Commandes récentes
+              if (response.data.recentOrders && Array.isArray(response.data.recentOrders)) {
+                response.data.recentOrders.forEach((order: any) => {
+                  activities.push({
+                    id: order.id || '',
             type: 'order',
-            message: 'Nouvelle commande #ORD-2024-001 reçue',
-            timestamp: new Date('2024-10-02T10:30:00')
-          },
-          {
-            id: '2',
-            type: 'product',
-            message: 'Le produit "Robe Wax" a été mis à jour',
-            timestamp: new Date('2024-10-02T09:45:00')
-          },
-          {
-            id: '3',
+                    message: `Nouvelle commande #${order.order_number || order.id} reçue`,
+                    timestamp: new Date(order.created_at)
+                  });
+                });
+              }
+              
+              // Nouveaux utilisateurs
+              if (response.data.recentUsers && Array.isArray(response.data.recentUsers)) {
+                response.data.recentUsers.forEach((user: any) => {
+                  const userName = user.name || `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Utilisateur';
+                  activities.push({
+                    id: user.id || '',
             type: 'user',
-            message: 'Nouvel utilisateur inscrit: Aminata Diallo',
-            timestamp: new Date('2024-10-02T08:20:00')
+                    message: `Nouvel utilisateur inscrit: ${userName}`,
+                    timestamp: new Date(user.created_at)
+                  });
+                });
+              }
+              
+              // Nouvelles boutiques
+              if (response.data.recentStores && Array.isArray(response.data.recentStores)) {
+                response.data.recentStores.forEach((store: any) => {
+                  activities.push({
+                    id: store.id || '',
+                    type: 'product', // Utiliser 'product' comme type générique pour les boutiques
+                    message: `Nouvelle boutique créée: ${store.store_name || store.name || 'Sans nom'}`,
+                    timestamp: new Date(store.created_at)
+                  });
+                });
+              }
+              
+              // Trier par date (plus récent en premier) et prendre les 5 plus récentes
+              activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+              this.recentActivities = activities.slice(0, 5);
+            } else {
+              this.recentActivities = [];
+            }
+            resolve();
           },
-          {
-            id: '4',
-            type: 'review',
-            message: 'Nouvel avis 5★ sur "Boubou Brodé"',
-            timestamp: new Date('2024-10-01T18:15:00')
-          },
-          {
-            id: '5',
-            type: 'payment',
-            message: 'Paiement confirmé pour la commande #ORD-2024-003',
-            timestamp: new Date('2024-10-01T16:50:00')
+          error: (error) => {
+            console.error('Erreur lors du chargement des activités récentes:', error);
+            this.recentActivities = [];
+            resolve(); // Ne pas rejeter pour ne pas bloquer le chargement
           }
-        ];
-        resolve();
-      }, 500);
+        });
     });
   }
 

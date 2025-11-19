@@ -854,6 +854,16 @@ const routes: Routes = [
         }
       },
       {
+        path: 'shipping',
+        loadComponent: () => import('./pages/shipping/admin-shipping-zones.component').then(m => m.AdminShippingZonesComponent),
+        canActivate: [PermissionGuard],
+        data: { 
+          title: 'Zones de Livraison',
+          breadcrumb: 'Livraison',
+          permission: 'shipping.manage'
+        }
+      },
+      {
         path: 'test',
         loadComponent: () => import('./pages/test-functionality/test-functionality.component').then(m => m.TestFunctionalityComponent),
         data: { 

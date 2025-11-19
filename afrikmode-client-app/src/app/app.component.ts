@@ -63,7 +63,33 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Utiliser un scroll instantané pour garantir le retour en haut
+      // Utiliser setTimeout pour s'assurer que le DOM est prêt
+      setTimeout(() => {
+        // Méthode 1: window.scrollTo (scroll instantané sans animation)
+        window.scrollTo(0, 0);
+        
+        // Méthode 2: Fallback pour document.documentElement
+        if (document.documentElement) {
+          document.documentElement.scrollTop = 0;
+        }
+        
+        // Méthode 3: Fallback pour document.body (anciens navigateurs)
+        if (document.body) {
+          document.body.scrollTop = 0;
+        }
+        
+        // Méthode 4: window.scrollTo avec options (si supporté)
+        try {
+          window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'auto' // 'auto' = instantané
+          });
+        } catch (e) {
+          // Ignorer si non supporté
+        }
+      }, 0);
     });
   }
 

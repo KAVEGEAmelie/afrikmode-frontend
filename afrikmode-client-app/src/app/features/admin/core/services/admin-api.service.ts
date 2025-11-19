@@ -279,7 +279,7 @@ export class AdminApiService {
 
   constructor(private http: HttpClient) {}
 
-  private getHeaders(): HttpHeaders {
+  public getHeaders(): HttpHeaders {
     const token = localStorage.getItem('admin_token');
     return new HttpHeaders({
       'Content-Type': 'application/json',
@@ -287,7 +287,7 @@ export class AdminApiService {
     });
   }
 
-  private handleError(error: any): Observable<never> {
+  private handleError = (error: any): Observable<never> => {
     console.error('API Error:', error);
     this.loadingSubject.next(false);
     return throwError(() => error);
@@ -440,6 +440,81 @@ export class AdminApiService {
   updateProduct(id: string, productData: Partial<Product>): Observable<Product> {
     this.loadingSubject.next(true);
     return this.http.put<ApiResponse<Product>>(`${this.baseUrl}/admin/products/${id}`, productData, {
+      headers: this.getHeaders()
+    }).pipe(
+      map(response => response.data),
+      tap(() => this.loadingSubject.next(false)),
+      catchError(this.handleError)
+    );
+  }
+
+  deleteProduct(id: string): Observable<any> {
+    this.loadingSubject.next(true);
+    return this.http.delete<ApiResponse<any>>(`${this.baseUrl}/admin/products/${id}`, {
+      headers: this.getHeaders()
+    }).pipe(
+      map(response => response.data || response),
+      tap(() => this.loadingSubject.next(false)),
+      catchError(this.handleError)
+    );
+  }
+
+  getPendingProducts(params?: any): Observable<ApiResponse<Product[]>> {
+    this.loadingSubject.next(true);
+    let httpParams = new HttpParams();
+    
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+
+    return this.http.get<ApiResponse<Product[]>>(`${this.baseUrl}/admin/products/pending`, {
+      headers: this.getHeaders(),
+      params: httpParams
+    }).pipe(
+      tap(() => this.loadingSubject.next(false)),
+      catchError(this.handleError)
+    );
+  }
+
+  getOutOfStockProducts(params?: any): Observable<ApiResponse<Product[]>> {
+    this.loadingSubject.next(true);
+    let httpParams = new HttpParams();
+    
+    if (params) {
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+          httpParams = httpParams.set(key, params[key]);
+        }
+      });
+    }
+
+    return this.http.get<ApiResponse<Product[]>>(`${this.baseUrl}/admin/products/out-of-stock`, {
+      headers: this.getHeaders(),
+      params: httpParams
+    }).pipe(
+      tap(() => this.loadingSubject.next(false)),
+      catchError(this.handleError)
+    );
+  }
+
+  updateProductStatus(id: string, status: string): Observable<any> {
+    this.loadingSubject.next(true);
+    return this.http.patch<ApiResponse<any>>(`${this.baseUrl}/admin/products/${id}/status`, { status }, {
+      headers: this.getHeaders()
+    }).pipe(
+      map(response => response.data || response),
+      tap(() => this.loadingSubject.next(false)),
+      catchError(this.handleError)
+    );
+  }
+
+  createProduct(productData: Partial<Product> & { store_id: string }): Observable<Product> {
+    this.loadingSubject.next(true);
+    return this.http.post<ApiResponse<Product>>(`${this.baseUrl}/admin/products`, productData, {
       headers: this.getHeaders()
     }).pipe(
       map(response => response.data),

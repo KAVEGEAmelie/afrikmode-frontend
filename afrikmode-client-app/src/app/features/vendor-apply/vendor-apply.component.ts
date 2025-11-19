@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { StoreService } from '../../core/services/store.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -143,9 +143,14 @@ export class VendorApplyComponent implements OnInit {
     { code: 'FR', name: 'France', flag: '🇫🇷' }
   ];
 
+  isEditMode: boolean = false;
+  storeId: string | null = null;
+  applicationNumber: string | null = null;
+
   constructor(
     private storeService: StoreService,
     private router: Router,
+    private route: ActivatedRoute,
     private toastService: ToastService,
     private authService: AuthService
   ) {}
@@ -157,8 +162,104 @@ export class VendorApplyComponent implements OnInit {
       this.form.email = currentUser.email;
     }
 
+    // Vérifier si on est en mode édition (vérifier immédiatement et aussi via subscription)
+    const params = this.route.snapshot.queryParams;
+    if (params['edit'] === 'true' || params['edit'] === true) {
+      if (params['id']) {
+        this.isEditMode = true;
+        this.storeId = params['id'];
+        console.log('🔄 Mode édition détecté, chargement des données...');
+        this.loadStoreForEdit(params['id']);
+      } else {
+        console.warn('⚠️ Mode édition activé mais pas d\'ID fourni');
+        this.toastService.error('ID de candidature manquant');
+      }
+    }
+
+    // Écouter aussi les changements de query params (au cas où)
+    this.route.queryParams.subscribe(queryParams => {
+      if (queryParams['edit'] === 'true' || queryParams['edit'] === true) {
+        if (queryParams['id'] && queryParams['id'] !== this.storeId) {
+          this.isEditMode = true;
+          this.storeId = queryParams['id'];
+          console.log('🔄 Mode édition détecté via subscription, chargement des données...');
+          this.loadStoreForEdit(queryParams['id']);
+        }
+      }
+    });
+
     // Scroll to top
     window.scrollTo(0, 0);
+  }
+
+  /**
+   * Charger les données de la boutique pour édition
+   */
+  loadStoreForEdit(storeId: string): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    console.log('🔄 Chargement des données pour édition, storeId:', storeId);
+    
+    this.storeService.getStore(storeId).subscribe({
+      next: (response: any) => {
+        console.log('📥 Données boutique chargées pour édition:', response);
+        
+        // Extraire les données de la réponse (peut être directement store ou response.data)
+        const store = response.data || response;
+        
+        // Pré-remplir le formulaire avec toutes les données disponibles
+        this.form.name = store.name || '';
+        this.form.description = store.description || '';
+        this.form.shortDescription = store.shortDescription || store.short_description || '';
+        
+        // Contact - vérifier plusieurs emplacements possibles
+        this.form.email = store.email || store.contact?.email || this.form.email;
+        this.form.phone = store.phone || store.contact?.phone || '';
+        this.form.whatsapp = store.whatsapp || '';
+        this.form.website = store.website || '';
+        
+        // Localisation - vérifier plusieurs emplacements possibles
+        this.form.country = store.country || store.location?.country || '';
+        this.form.region = store.region || store.location?.region || '';
+        this.form.city = store.city || store.location?.city || '';
+        this.form.postalCode = store.postalCode || store.postal_code || store.location?.postalCode || '';
+        this.form.address = store.address || store.location?.address || '';
+        
+        // Informations business
+        this.form.businessType = store.businessType || store.business_type || store.businessInfo?.businessType || '';
+        this.form.returnPolicy = store.returnPolicy || store.return_policy || '';
+        this.form.shippingPolicy = store.shippingPolicy || store.shipping_policy || '';
+        
+        // Langues et devises
+        this.form.defaultLanguage = store.defaultLanguage || store.languages?.default || store.default_language || 'fr';
+        this.form.defaultCurrency = store.defaultCurrency || store.currencies?.default || store.default_currency || 'XOF';
+
+        // Sauvegarder le numéro de candidature
+        this.applicationNumber = store.applicationNumber || store.application_number || null;
+        console.log('📋 Numéro de candidature:', this.applicationNumber);
+
+        // Charger les documents si disponibles
+        if (store.documents) {
+          // Les documents sont des URLs, on ne peut pas les pré-charger comme fichiers
+          // Mais on peut afficher un message à l'utilisateur
+          console.log('📄 Documents existants:', store.documents);
+          this.toastService.info('Des documents existent déjà. Vous pouvez les remplacer si nécessaire.');
+        }
+
+        this.isLoading = false;
+        this.toastService.success('Données de la candidature chargées. Vous pouvez les modifier.');
+        console.log('✅ Formulaire pré-rempli avec les données de la boutique');
+      },
+      error: (error) => {
+        console.error('❌ Erreur lors du chargement de la boutique:', error);
+        this.isLoading = false;
+        this.toastService.error('Impossible de charger les données de la candidature');
+        // Rediriger vers la page de statut en cas d'erreur
+        this.router.navigate(['/vendor/application-status'], {
+          queryParams: { number: error.error?.data?.applicationNumber }
+        });
+      }
+    });
   }
 
   /**
@@ -368,16 +469,21 @@ export class VendorApplyComponent implements OnInit {
         formData.append('businessCertificate', this.documents.businessCertificate);
       }
 
-      // Add application status and metadata
-      formData.append('status', 'pending');
-      formData.append('applicationDate', new Date().toISOString());
+      // Add application status and metadata (seulement si création, pas en mode édition)
+      if (!this.isEditMode) {
+        formData.append('status', 'pending');
+        formData.append('applicationDate', new Date().toISOString());
+      }
 
-      // Envoyer tout en FormData pour inclure les documents
-      // Le storeService.createStore accepte maintenant FormData
-      this.storeService.createStore(formData).subscribe({
+      // Utiliser updateStore si on est en mode édition, sinon createStore
+      const request = this.isEditMode && this.storeId
+        ? this.storeService.updateStore(this.storeId, formData)
+        : this.storeService.createStore(formData);
+
+      request.subscribe({
         next: (response: any) => {
           // Si l'API retourne un ID de boutique, on peut uploader les documents après
-          const storeId = response?.data?.id || response?.id || response?.storeId;
+          const storeId = response?.data?.id || response?.id || response?.storeId || this.storeId;
           
           // Les documents sont déjà inclus dans le FormData initial
           // Si besoin d'un upload séparé, utiliser cette méthode :
@@ -386,23 +492,47 @@ export class VendorApplyComponent implements OnInit {
           // }
 
           this.isLoading = false;
-          const applicationNumber = response?.data?.applicationNumber || response?.applicationNumber || 
-                                  `VA-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getDate()).padStart(2, '0')}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
           
-          this.successMessage = 'Candidature soumise avec succès !';
-          this.toastService.success('Votre candidature a été soumise avec succès !');
+          // Récupérer le numéro de candidature depuis la réponse du backend
+          let applicationNumber = response?.data?.applicationNumber || response?.applicationNumber;
           
-          // Redirect to success page after 2 seconds
-          setTimeout(() => {
-            this.router.navigate(['/vendor-application-success'], {
-              queryParams: {
-                email: this.form.email,
-                shopName: this.form.name,
-                applicationNumber: applicationNumber,
-                id: storeId
-              }
-            });
-          }, 2000);
+          // Si en mode édition et pas de numéro dans la réponse, utiliser celui sauvegardé ou celui de la boutique
+          if (this.isEditMode && !applicationNumber) {
+            applicationNumber = this.applicationNumber || response?.data?.application_number;
+          }
+          
+          if (this.isEditMode) {
+            this.successMessage = 'Candidature modifiée avec succès !';
+            this.toastService.success('Votre candidature a été modifiée avec succès !');
+            
+            // Rediriger vers la page de statut après modification
+            setTimeout(() => {
+              this.router.navigate(['/vendor/application-status'], {
+                queryParams: {
+                  number: applicationNumber || ''
+                }
+              });
+            }, 2000);
+          } else {
+            if (!applicationNumber) {
+              console.warn('⚠️ Numéro de candidature non reçu du backend');
+            }
+            
+            this.successMessage = 'Candidature soumise avec succès !';
+            this.toastService.success('Votre candidature a été soumise avec succès !');
+            
+            // Redirect to success page after 2 seconds
+            setTimeout(() => {
+              this.router.navigate(['/vendor-application-success'], {
+                queryParams: {
+                  email: this.form.email || '',
+                  shopName: this.form.name || '',
+                  applicationNumber: applicationNumber || '',
+                  id: storeId || ''
+                }
+              });
+            }, 2000);
+          }
         },
         error: (error: any) => {
           this.isLoading = false;

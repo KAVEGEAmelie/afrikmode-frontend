@@ -10,9 +10,15 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AdminDataTableComponent, TableColumn, TableAction } from '../../../shared/components/admin-data-table/admin-data-table.component';
 import { AdminUsersService } from '../../../core/services/admin-users.service';
 import { AdminUser, UserListResponse } from '../../../core/models/admin-user.model';
+import { UserDetailsDialogComponent } from '../user-details-dialog/user-details-dialog.component';
+import { UserEditDialogComponent } from '../user-edit-dialog/user-edit-dialog.component';
+import { UserSuspendDialogComponent } from '../user-suspend-dialog/user-suspend-dialog.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 @Component({
   standalone: true,
@@ -29,6 +35,7 @@ import { AdminUser, UserListResponse } from '../../../core/models/admin-user.mod
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatSnackBarModule,
     AdminDataTableComponent
   ]
 })
@@ -97,16 +104,32 @@ export class UserListComponent implements OnInit {
       action: (user) => this.editUser(user)
     },
     {
+      label: 'Suspendre',
+      icon: 'block',
+      color: 'accent',
+      action: (user) => this.suspendUser(user),
+      visible: (user) => user.status === 'active' && user.role !== 'admin'
+    },
+    {
+      label: 'Réactiver',
+      icon: 'check_circle',
+      color: 'primary',
+      action: (user) => this.activateUser(user),
+      visible: (user) => user.status === 'suspended' || user.status === 'banned'
+    },
+    {
       label: 'Supprimer',
       icon: 'delete',
       color: 'warn',
       action: (user) => this.deleteUser(user),
-      visible: (user) => user.role !== 'super_admin'
+      visible: (user) => user.role !== 'admin'
     }
   ];
 
   constructor(
-    private usersService: AdminUsersService
+    private usersService: AdminUsersService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit() {
@@ -136,26 +159,181 @@ export class UserListComponent implements OnInit {
   }
 
   viewUser(user: AdminUser) {
-    // Navigation vers les détails de l'utilisateur
-    console.log('Voir utilisateur:', user);
+    const dialogRef = this.dialog.open(UserDetailsDialogComponent, {
+      width: '700px',
+      maxWidth: '90vw',
+      data: { user },
+      panelClass: 'custom-dialog-container',
+      autoFocus: true,
+      restoreFocus: true,
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.action === 'edit') {
+        this.editUser(result.user);
+      }
+    });
   }
 
   editUser(user: AdminUser) {
-    // Navigation vers l'édition de l'utilisateur
-    console.log('Modifier utilisateur:', user);
+    const dialogRef = this.dialog.open(UserEditDialogComponent, {
+      width: '750px',
+      maxWidth: '90vw',
+      data: { user },
+      panelClass: 'custom-dialog-container',
+      autoFocus: true,
+      restoreFocus: true,
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading = true;
+        this.usersService.updateUser(user.id, result).subscribe({
+          next: () => {
+            this.snackBar.open('Utilisateur modifié avec succès', 'Fermer', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loadUsers();
+          },
+          error: (error) => {
+            console.error('Erreur lors de la modification:', error);
+            this.snackBar.open('Erreur lors de la modification', 'Fermer', {
+              duration: 5000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loading = false;
+          }
+        });
+      }
+    });
+  }
+
+  suspendUser(user: AdminUser) {
+    const dialogRef = this.dialog.open(UserSuspendDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      data: { user, action: 'suspend' },
+      panelClass: 'custom-dialog-container',
+      autoFocus: true,
+      restoreFocus: true,
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.loading = true;
+        this.usersService.suspendUser(user.id, result.reason).subscribe({
+          next: () => {
+            this.snackBar.open('Utilisateur suspendu avec succès', 'Fermer', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loadUsers();
+          },
+          error: (error) => {
+            console.error('Erreur lors de la suspension:', error);
+            this.snackBar.open('Erreur lors de la suspension', 'Fermer', {
+              duration: 5000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loading = false;
+          }
+        });
+      }
+    });
+  }
+
+  activateUser(user: AdminUser) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '450px',
+      maxWidth: '90vw',
+      data: {
+        title: 'Réactiver l\'utilisateur',
+        message: `Voulez-vous réactiver ${user.first_name} ${user.last_name} (${user.email}) ?`,
+        confirmText: 'Réactiver',
+        cancelText: 'Annuler',
+        type: 'info',
+        icon: 'check_circle'
+      },
+      panelClass: 'custom-dialog-container',
+      autoFocus: true,
+      restoreFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.loading = true;
+        this.usersService.activateUser(user.id).subscribe({
+          next: () => {
+            this.snackBar.open('Utilisateur réactivé avec succès', 'Fermer', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loadUsers();
+          },
+          error: (error) => {
+            console.error('Erreur lors de la réactivation:', error);
+            this.snackBar.open('Erreur lors de la réactivation', 'Fermer', {
+              duration: 5000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loading = false;
+          }
+        });
+      }
+    });
   }
 
   deleteUser(user: AdminUser) {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.first_name} ${user.last_name} (${user.email}) ?`)) {
-      this.usersService.deleteUser(user.id).subscribe({
-        next: () => {
-          this.loadUsers();
-        },
-        error: (error) => {
-          console.error('Erreur lors de la suppression:', error);
-        }
-      });
-    }
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '450px',
+      maxWidth: '90vw',
+      data: {
+        title: 'Supprimer l\'utilisateur',
+        message: `Êtes-vous sûr de vouloir supprimer définitivement ${user.first_name} ${user.last_name} (${user.email}) ? Cette action est irréversible.`,
+        confirmText: 'Supprimer',
+        cancelText: 'Annuler',
+        type: 'danger',
+        icon: 'delete_forever'
+      },
+      panelClass: 'custom-dialog-container',
+      autoFocus: true,
+      restoreFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.loading = true;
+        this.usersService.deleteUser(user.id).subscribe({
+          next: () => {
+            this.snackBar.open('Utilisateur supprimé avec succès', 'Fermer', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loadUsers();
+          },
+          error: (error) => {
+            console.error('Erreur lors de la suppression:', error);
+            this.snackBar.open('Erreur lors de la suppression', 'Fermer', {
+              duration: 5000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loading = false;
+          }
+        });
+      }
+    });
   }
 
   exportUsers() {

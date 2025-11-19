@@ -44,9 +44,9 @@
                class="preset-card"
                (click)="applyPreset(preset)">
             <div class="preset-colors">
-              <div class="color-circle" [style.background]="preset.colors.primaryColor"></div>
-              <div class="color-circle" [style.background]="preset.colors.secondaryColor"></div>
-              <div class="color-circle" [style.background]="preset.colors.accentColor"></div>
+              <div class="color-circle" [style.background]="preset.colors.primary_color"></div>
+              <div class="color-circle" [style.background]="preset.colors.secondary_color"></div>
+              <div class="color-circle" [style.background]="preset.colors.accent_color"></div>
             </div>
             <p>{{ preset.name }}</p>
           </div>
@@ -64,10 +64,10 @@
           <label>Couleur Primaire</label>
           <div class="color-input">
             <input type="color"
-                   [(ngModel)]="theme.primaryColor"
-                   (change)="applyTheme()"
+                   [(ngModel)]="colors.primary_color"
+                   (change)="onColorChange()"
                    class="color-box">
-            <span>{{ theme.primaryColor }}</span>
+            <span>{{ colors.primary_color }}</span>
           </div>
         </div>
 
@@ -75,10 +75,10 @@
           <label>Couleur Secondaire</label>
           <div class="color-input">
             <input type="color"
-                   [(ngModel)]="theme.secondaryColor"
-                   (change)="applyTheme()"
+                   [(ngModel)]="colors.secondary_color"
+                   (change)="onColorChange()"
                    class="color-box">
-            <span>{{ theme.secondaryColor }}</span>
+            <span>{{ colors.secondary_color }}</span>
           </div>
         </div>
 
@@ -86,10 +86,10 @@
           <label>Couleur Accent</label>
           <div class="color-input">
             <input type="color"
-                   [(ngModel)]="theme.accentColor"
-                   (change)="applyTheme()"
+                   [(ngModel)]="colors.accent_color"
+                   (change)="onColorChange()"
                    class="color-box">
-            <span>{{ theme.accentColor }}</span>
+            <span>{{ colors.accent_color }}</span>
           </div>
         </div>
       </mat-card>
@@ -101,91 +101,34 @@
           Couleurs Système
         </h3>
         
-        <div class="color-row">
-          <label>Succès</label>
-          <div class="color-input">
-            <input type="color"
-                   [(ngModel)]="theme.successColor"
-                   (change)="applyTheme()"
-                   class="color-box">
-            <span>{{ theme.successColor }}</span>
-          </div>
-        </div>
-
-        <div class="color-row">
-          <label>Avertissement</label>
-          <div class="color-input">
-            <input type="color"
-                   [(ngModel)]="theme.warningColor"
-                   (change)="applyTheme()"
-                   class="color-box">
-            <span>{{ theme.warningColor }}</span>
-          </div>
-        </div>
-
-        <div class="color-row">
-          <label>Erreur</label>
-          <div class="color-input">
-            <input type="color"
-                   [(ngModel)]="theme.errorColor"
-                   (change)="applyTheme()"
-                   class="color-box">
-            <span>{{ theme.errorColor }}</span>
-          </div>
-        </div>
+        <!-- System colors are not editable in this version -->
+        <p style="color: #64748b; font-size: 14px; margin-top: 16px;">
+          Les couleurs système (succès, avertissement, erreur) seront disponibles dans une prochaine version.
+        </p>
       </mat-card>
 
-      <!-- Typography -->
+      <!-- Typography and Style options will be available in future versions -->
       <mat-card class="settings-card">
         <h3>
-          <mat-icon>text_fields</mat-icon>
-          Typographie
+          <mat-icon>info</mat-icon>
+          Fonctionnalités à venir
         </h3>
-        
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Police de caractères</mat-label>
-          <mat-select [(ngModel)]="theme.fontFamily" (selectionChange)="applyTheme()">
-            <mat-option *ngFor="let font of fontFamilies" [value]="font.value">
-              {{ font.label }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </mat-card>
-
-      <!-- Style -->
-      <mat-card class="settings-card">
-        <h3>
-          <mat-icon>tune</mat-icon>
-          Style
-        </h3>
-        
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Rayon des bordures</mat-label>
-          <mat-select [(ngModel)]="theme.borderRadius" (selectionChange)="applyTheme()">
-            <mat-option *ngFor="let radius of borderRadiusOptions" [value]="radius.value">
-              {{ radius.label }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <div class="toggle-row">
-          <label>Mode Sombre</label>
-          <mat-slide-toggle 
-            [(ngModel)]="theme.darkMode" 
-            (change)="toggleDarkMode()">
-          </mat-slide-toggle>
-        </div>
+        <p style="color: #64748b; font-size: 14px;">
+          Les options de typographie, style de bordures et mode sombre seront disponibles dans une prochaine version.
+        </p>
       </mat-card>
 
       <!-- Actions -->
       <div class="actions-row">
-        <button mat-stroked-button (click)="resetTheme()" class="reset-btn">
+        <button mat-stroked-button (click)="resetTheme()" class="reset-btn" [disabled]="isLoading">
           <mat-icon>refresh</mat-icon>
           Réinitialiser
         </button>
-        <button mat-raised-button color="primary" (click)="saveTheme()">
-          <mat-icon>save</mat-icon>
-          Enregistrer les modifications
+        <button mat-raised-button color="primary" (click)="saveTheme()" [disabled]="isSaving || isLoading">
+          <mat-spinner *ngIf="isSaving" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+          <mat-icon *ngIf="!isSaving">save</mat-icon>
+          <span *ngIf="!isSaving">Enregistrer les modifications</span>
+          <span *ngIf="isSaving">Enregistrement...</span>
         </button>
       </div>
     </div>
@@ -198,11 +141,11 @@
           Aperçu en temps réel
         </h3>
         
-        <div class="preview-content" [style.font-family]="theme.fontFamily">
+        <div class="preview-content">
           <!-- Header Preview -->
-          <div class="preview-header" [style.background]="theme.primaryColor">
+          <div class="preview-header" [style.background]="colors.primary_color">
             <h2 style="color: white;">AfrikMode</h2>
-            <button class="preview-btn" [style.background]="theme.secondaryColor">
+            <button class="preview-btn" [style.background]="colors.secondary_color">
               Explorer
             </button>
           </div>
@@ -211,13 +154,13 @@
           <div class="preview-section">
             <h4>Boutons</h4>
             <div class="buttons-row">
-              <button class="preview-button primary" [style.background]="theme.primaryColor">
+              <button class="preview-button primary" [style.background]="colors.primary_color">
                 Primaire
               </button>
-              <button class="preview-button secondary" [style.background]="theme.secondaryColor">
+              <button class="preview-button secondary" [style.background]="colors.secondary_color">
                 Secondaire
               </button>
-              <button class="preview-button accent" [style.background]="theme.accentColor">
+              <button class="preview-button accent" [style.background]="colors.accent_color">
                 Accent
               </button>
             </div>
@@ -227,12 +170,12 @@
           <div class="preview-section">
             <h4>Cartes</h4>
             <div class="preview-cards">
-              <div class="preview-product-card" [style.border-radius]="theme.borderRadius">
-                <div class="card-image" [style.background]="theme.primaryColor"></div>
+              <div class="preview-product-card">
+                <div class="card-image" [style.background]="colors.primary_color"></div>
                 <div class="card-content">
                   <h5>Produit Exemple</h5>
-                  <p class="price" [style.color]="theme.primaryColor">49,99 €</p>
-                  <button class="add-to-cart" [style.background]="theme.accentColor">
+                  <p class="price" [style.color]="colors.primary_color">49,99 €</p>
+                  <button class="add-to-cart" [style.background]="colors.accent_color">
                     Ajouter au panier
                   </button>
                 </div>
@@ -240,23 +183,10 @@
             </div>
           </div>
 
-          <!-- Status Preview -->
-          <div class="preview-section">
-            <h4>États & Messages</h4>
-            <div class="status-badges">
-              <span class="badge" [style.background]="theme.successColor">Succès</span>
-              <span class="badge" [style.background]="theme.warningColor">Attention</span>
-              <span class="badge" [style.background]="theme.errorColor">Erreur</span>
-            </div>
-          </div>
-
           <!-- Text Preview -->
           <div class="preview-section">
-            <h4>Typographie</h4>
-            <h1>Titre H1</h1>
-            <h2>Titre H2</h2>
-            <h3>Titre H3</h3>
-            <p>Texte de paragraphe normal avec la police {{ theme.fontFamily.split(',')[0] }}</p>
+            <h4>Aperçu des couleurs</h4>
+            <p>Visualisez en temps réel l'effet de vos modifications de couleur sur l'interface.</p>
           </div>
         </div>
       </mat-card>

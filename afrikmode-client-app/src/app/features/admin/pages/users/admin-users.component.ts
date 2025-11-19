@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../../core/services/admin.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 export interface User {
   id: string;
@@ -261,7 +262,10 @@ export class AdminUsersComponent implements OnInit {
   searchQuery = '';
   isLoading = false;
 
-  constructor(private adminService: AdminService) {}
+  constructor(
+    private adminService: AdminService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit() {
     this.loadUsers();
@@ -287,63 +291,12 @@ export class AdminUsersComponent implements OnInit {
       error: (error) => {
         console.error('❌ Erreur chargement users:', error);
         this.isLoading = false;
-        // Fallback vers mock data en cas d'erreur
-        this.loadMockData();
+        this.users = [];
+        this.filteredUsers = [];
+        // Afficher un message d'erreur au lieu d'utiliser des données mockées
+        this.toastService.error('Erreur lors du chargement des utilisateurs');
       }
     });
-  }
-
-  loadMockData() {
-    this.users = [
-      {
-        id: '1',
-        name: 'Fatou Diallo',
-        email: 'fatou.diallo@example.com',
-        role: 'vendor',
-        status: 'active',
-        created_at: '2025-01-15T10:30:00Z',
-        last_login: '2025-10-20T14:20:00Z'
-      },
-      {
-        id: '2',
-        name: 'Kofi Mensah',
-        email: 'kofi.mensah@example.com',
-        role: 'vendor',
-        status: 'active',
-        created_at: '2025-02-20T09:15:00Z',
-        last_login: '2025-10-19T11:45:00Z'
-      },
-      {
-        id: '3',
-        name: 'Aisha Njoroge',
-        email: 'aisha@example.com',
-        role: 'customer',
-        status: 'active',
-        created_at: '2025-03-10T16:20:00Z',
-        last_login: '2025-10-20T08:30:00Z'
-      },
-      {
-        id: '4',
-        name: 'Admin User',
-        email: 'admin@afrikmode.com',
-        role: 'super_admin',
-        status: 'active',
-        created_at: '2024-01-01T00:00:00Z',
-        last_login: '2025-10-20T15:00:00Z'
-      },
-      {
-        id: '5',
-        name: 'John Doe',
-        email: 'john@example.com',
-        role: 'customer',
-        status: 'inactive',
-        created_at: '2025-05-12T12:00:00Z'
-      }
-    ];
-    
-    this.applyFilters();
-    this.isLoading = false;
-    console.log('✅ Mock users loaded:', this.users.length);
   }
 
   applyFilters() {

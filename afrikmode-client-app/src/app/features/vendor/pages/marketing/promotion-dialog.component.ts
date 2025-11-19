@@ -18,7 +18,9 @@ export interface PromotionData {
   name: string;
   type: 'percentage' | 'fixed' | 'shipping' | 'bundle' | 'flash';
   value?: number;
+  discount?: number; // Alias pour value (pour compatibilité)
   code?: string;
+  description?: string;
   status: 'active' | 'scheduled' | 'expired' | 'paused';
   start_date: string;
   end_date: string;
@@ -181,11 +183,11 @@ export interface PromotionData {
 
     ::ng-deep .promotion-dialog-backdrop {
       background-color: rgba(0, 0, 0, 0.5) !important;
-      z-index: 9999 !important;
+      z-index: 10002 !important; /* Au-dessus du product-form (10001) */
     }
 
     ::ng-deep .promotion-dialog-panel {
-      z-index: 10000 !important;
+      z-index: 10003 !important; /* Au-dessus du backdrop */
       position: relative;
       background: white !important;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;

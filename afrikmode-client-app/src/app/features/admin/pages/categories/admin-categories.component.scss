@@ -248,12 +248,15 @@
 }
 
 .modal-content {
+  position: relative;
+  z-index: 1001;
   background: white;
   border-radius: 16px;
   max-width: 500px;
   width: 90%;
   max-height: 80vh;
   overflow: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 
   .modal-header {
     padding: 1.5rem;

@@ -167,16 +167,12 @@ export class VendorSidebarComponent implements OnInit {
       id: 'products',
       label: 'Produits',
       icon: 'inventory_2',
-      badge: 24,
-      badgeColor: 'info',
       route: '/vendor/products'
     },
     {
       id: 'orders',
       label: 'Commandes',
       icon: 'shopping_cart',
-      badge: 12,
-      badgeColor: 'error',
       route: '/vendor/orders'
     },
     {
@@ -201,16 +197,12 @@ export class VendorSidebarComponent implements OnInit {
       id: 'messages',
       label: 'Messages',
       icon: 'chat',
-      badge: 5,
-      badgeColor: 'warn',
       route: '/vendor/messages'
     },
     {
       id: 'reviews',
       label: 'Avis',
       icon: 'star',
-      badge: 3,
-      badgeColor: 'info',
       route: '/vendor/reviews'
     },
     {

@@ -11,6 +11,9 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatSelectModule } from '@angular/material/select';
+import { StoreService } from '../../../../core/services/store.service';
+import { AuthService } from '../../../../core/services/auth.service';
+import { SafeImagePipe } from '../../../../core/pipes/safe-image.pipe';
 
 interface StoreInfo {
   name: string;
@@ -58,7 +61,8 @@ interface StoreInfo {
     MatTabsModule,
     MatSlideToggleModule,
     MatChipsModule,
-    MatSelectModule
+    MatSelectModule,
+    SafeImagePipe
   ],
   template: `
     <div class="vendor-store">
@@ -86,7 +90,7 @@ interface StoreInfo {
             <i class="fas fa-eye"></i>
           </div>
           <div class="stat-content">
-            <span class="stat-number">1,234</span>
+            <span class="stat-number">{{ storeStats.views }}</span>
             <span class="stat-label">Vues cette semaine</span>
           </div>
         </div>
@@ -95,7 +99,7 @@ interface StoreInfo {
             <i class="fas fa-heart"></i>
           </div>
           <div class="stat-content">
-            <span class="stat-number">456</span>
+            <span class="stat-number">{{ storeStats.favorites }}</span>
             <span class="stat-label">Favoris</span>
           </div>
         </div>
@@ -104,7 +108,7 @@ interface StoreInfo {
             <i class="fas fa-star"></i>
           </div>
           <div class="stat-content">
-            <span class="stat-number">4.8</span>
+            <span class="stat-number">{{ storeStats.rating }}</span>
             <span class="stat-label">Note moyenne</span>
           </div>
         </div>
@@ -186,7 +190,7 @@ interface StoreInfo {
                   <div class="upload-box">
                     <div class="upload-preview">
                       @if (storeInfo.logo) {
-                        <img [src]="storeInfo.logo" alt="Logo">
+                        <img [src]="storeInfo.logo | safeImage:'store'" alt="Logo">
                       } @else {
                         <i class="fas fa-image"></i>
                       }
@@ -204,7 +208,7 @@ interface StoreInfo {
                   <div class="upload-box banner">
                     <div class="upload-preview banner">
                       @if (storeInfo.banner) {
-                        <img [src]="storeInfo.banner" alt="Bannière">
+                        <img [src]="storeInfo.banner | safeImage:'store'" alt="Bannière">
                       } @else {
                         <i class="fas fa-image"></i>
                       }
@@ -693,10 +697,19 @@ export class VendorStoreComponent implements OnInit {
   socialMediaForm: FormGroup;
   policiesForm: FormGroup;
   saving = false;
+  loading = false;
+  
+  storeStats = {
+    views: 0,
+    favorites: 0,
+    rating: 0
+  };
 
   constructor(
     private fb: FormBuilder,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private storeService: StoreService,
+    private authService: AuthService
   ) {
     this.storeInfoForm = this.fb.group({
       name: [this.storeInfo.name, [Validators.required]],
@@ -725,8 +738,81 @@ export class VendorStoreComponent implements OnInit {
   }
 
   loadStoreInfo() {
-    // TODO: Charger depuis l'API
-    console.log('Chargement des informations de la boutique');
+    this.loading = true;
+    
+    // Charger les informations de la boutique depuis l'API
+    this.storeService.getMyStore().subscribe({
+      next: (store: any) => {
+        if (store) {
+          console.log('✅ Boutique chargée:', store);
+          
+          // Mettre à jour storeInfo avec les vraies données
+          this.storeInfo.name = store.name || this.storeInfo.name;
+          this.storeInfo.description = store.description || this.storeInfo.description;
+          this.storeInfo.phone = store.phone || this.storeInfo.phone;
+          this.storeInfo.email = store.email || this.storeInfo.email;
+          this.storeInfo.website = store.website || this.storeInfo.website;
+          
+          // Charger les statistiques réelles
+          this.storeStats.views = store.views_count || 0;
+          this.storeStats.favorites = store.favorites_count || 0;
+          this.storeStats.rating = store.average_rating || 0;
+          
+          // Mettre à jour le formulaire
+          this.storeInfoForm.patchValue({
+            name: this.storeInfo.name,
+            description: this.storeInfo.description,
+            phone: this.storeInfo.phone,
+            email: this.storeInfo.email,
+            website: this.storeInfo.website
+          });
+          
+          // Charger les infos utilisateur pour email/phone si manquants
+          this.authService.currentUser$.subscribe(user => {
+            if (user) {
+              if (!this.storeInfo.phone && user.phone) {
+                this.storeInfo.phone = user.phone;
+                this.storeInfoForm.patchValue({ phone: user.phone });
+              }
+              if (!this.storeInfo.email && user.email) {
+                this.storeInfo.email = user.email;
+                this.storeInfoForm.patchValue({ email: user.email });
+              }
+            }
+          });
+        } else {
+          console.log('ℹ️ Aucune boutique trouvée - utilisation des valeurs par défaut');
+          
+          // Statistiques à 0 pour une nouvelle boutique
+          this.storeStats.views = 0;
+          this.storeStats.favorites = 0;
+          this.storeStats.rating = 0;
+          
+          // Charger au moins l'email/phone de l'utilisateur
+          this.authService.currentUser$.subscribe(user => {
+            if (user) {
+              if (user.phone) {
+                this.storeInfo.phone = user.phone;
+                this.storeInfoForm.patchValue({ phone: user.phone });
+              }
+              if (user.email) {
+                this.storeInfo.email = user.email;
+                this.storeInfoForm.patchValue({ email: user.email });
+              }
+            }
+          });
+        }
+        this.loading = false;
+      },
+      error: (error: any) => {
+        console.error('❌ Erreur chargement boutique:', error);
+        // Statistiques à 0 en cas d'erreur
+        this.storeStats.views = 0;
+        this.storeStats.favorites = 0;
+        this.storeStats.rating = 0;
+        this.loading = false;
+      }
+    });
   }
 
   saveStoreInfo() {

@@ -353,6 +353,689 @@ export class VendorService {
       );
   }
 
+  // ==================== MARKETING & PROMOTIONS ====================
+
+  /**
+   * Récupérer les campagnes marketing
+   */
+  getCampaigns(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key].toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/marketing/campaigns`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer une campagne marketing
+   */
+  createCampaign(campaignData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/marketing/campaigns`, campaignData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour une campagne marketing
+   */
+  updateCampaign(campaignId: string, campaignData: any): Observable<any> {
+    return this.http.put<{ success: boolean; data: any }>(`${this.apiUrl}/marketing/campaigns/${campaignId}`, campaignData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Supprimer une campagne marketing
+   */
+  deleteCampaign(campaignId: string): Observable<void> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/marketing/campaigns/${campaignId}`)
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les coupons de réduction
+   */
+  getCoupons(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key].toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/marketing/coupons`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer un coupon
+   */
+  createCoupon(couponData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/marketing/coupons`, couponData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour un coupon
+   */
+  updateCoupon(couponId: string, couponData: any): Observable<any> {
+    return this.http.patch<{ success: boolean; data: any }>(`${this.apiUrl}/marketing/coupons/${couponId}`, couponData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Activer/Désactiver un coupon
+   */
+  toggleCouponStatus(couponId: string): Observable<any> {
+    return this.http.patch<{ success: boolean; data: any }>(`${this.apiUrl}/marketing/coupons/${couponId}/toggle`, {})
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les statistiques marketing
+   */
+  getMarketingStats(period: string = '30d'): Observable<any> {
+    const params = new HttpParams().set('period', period);
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/marketing/stats`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  // ==================== MESSAGES & CONVERSATIONS ====================
+
+  /**
+   * Récupérer les conversations avec les clients
+   */
+  getConversations(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key].toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/messages/conversations`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les messages d'une conversation
+   */
+  getConversationMessages(conversationId: string): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/messages/conversations/${conversationId}`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Envoyer un message
+   */
+  sendMessage(conversationId: string, message: string, attachments?: File[]): Observable<any> {
+    const formData = new FormData();
+    formData.append('message', message);
+
+    if (attachments && attachments.length > 0) {
+      attachments.forEach(file => {
+        formData.append('attachments', file);
+      });
+    }
+
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/messages/conversations/${conversationId}`, formData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Marquer une conversation comme lue
+   */
+  markConversationAsRead(conversationId: string): Observable<void> {
+    return this.http.patch<{ success: boolean }>(`${this.apiUrl}/messages/conversations/${conversationId}`, { read: true })
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Fermer une conversation
+   */
+  closeConversation(conversationId: string): Observable<void> {
+    return this.http.patch<{ success: boolean }>(`${this.apiUrl}/messages/conversations/${conversationId}`, { status: 'closed' })
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer le nombre de messages non lus
+   */
+  getUnreadMessagesCount(): Observable<number> {
+    return this.http.get<{ success: boolean; data: { count: number } }>(`${this.apiUrl}/messages/unread-count`)
+      .pipe(
+        map(response => response.data.count),
+        catchError(this.handleError)
+      );
+  }
+
+  // ==================== AVIS & ÉVALUATIONS ====================
+
+  /**
+   * Récupérer les avis reçus sur les produits
+   */
+  getVendorReviews(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key].toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/reviews`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les statistiques des avis
+   */
+  getReviewStats(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/reviews/stats`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les avis en attente de réponse
+   */
+  getPendingResponses(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/reviews/pending`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Répondre à un avis
+   */
+  respondToReview(reviewId: string, response: string): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/reviews/${reviewId}/respond`, { response })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Supprimer une réponse à un avis
+   */
+  deleteReviewResponse(reviewId: string): Observable<void> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/reviews/${reviewId}/response`)
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  // ==================== GESTION STOCK/INVENTAIRE ====================
+
+  /**
+   * Récupérer l'inventaire complet
+   */
+  getInventory(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key].toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/inventory`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les alertes de stock faible
+   */
+  getLowStockAlerts(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/inventory/alerts`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les statistiques d'inventaire
+   */
+  getInventoryStats(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/inventory/stats`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer l'historique des mouvements de stock
+   */
+  getStockHistory(productId: string): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/inventory/history`, {
+      params: new HttpParams().set('productId', productId)
+    })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour le stock d'un produit
+   */
+  updateStock(productId: string, quantity: number, reason?: string): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/inventory/${productId}/update-stock`, {
+      quantity,
+      reason
+    })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mise à jour en masse du stock
+   */
+  bulkUpdateStock(updates: Array<{ productId: string; quantity: number }>): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/inventory/bulk-update`, { updates })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  // ==================== LIVRAISON ====================
+
+  /**
+   * Récupérer les zones de livraison
+   */
+  getShippingZones(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/shipping/zones`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer une zone de livraison
+   */
+  createShippingZone(zoneData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/shipping/zones`, zoneData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour une zone de livraison
+   */
+  updateShippingZone(zoneId: string, zoneData: any): Observable<any> {
+    return this.http.put<{ success: boolean; data: any }>(`${this.apiUrl}/shipping/zones/${zoneId}`, zoneData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Supprimer une zone de livraison
+   */
+  deleteShippingZone(zoneId: string): Observable<void> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/shipping/zones/${zoneId}`)
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les tarifs de livraison
+   */
+  getShippingRates(zoneId?: string): Observable<any> {
+    let params = new HttpParams();
+    if (zoneId) {
+      params = params.set('zoneId', zoneId);
+    }
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/shipping/rates`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer un tarif de livraison
+   */
+  createShippingRate(rateData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/shipping/rates`, rateData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour un tarif de livraison
+   */
+  updateShippingRate(rateId: string, rateData: any): Observable<any> {
+    return this.http.put<{ success: boolean; data: any }>(`${this.apiUrl}/shipping/rates/${rateId}`, rateData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Supprimer un tarif de livraison
+   */
+  deleteShippingRate(rateId: string): Observable<void> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/shipping/rates/${rateId}`)
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les transporteurs disponibles
+   */
+  getCarriers(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/shipping/carriers`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  // ==================== PROGRAMME DE FIDÉLITÉ ====================
+
+  /**
+   * Récupérer le programme de fidélité
+   */
+  getLoyaltyProgram(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/loyalty/program`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer un programme de fidélité
+   */
+  createLoyaltyProgram(programData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/loyalty/program`, programData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour le programme de fidélité
+   */
+  updateLoyaltyProgram(programData: any): Observable<any> {
+    return this.http.put<{ success: boolean; data: any }>(`${this.apiUrl}/loyalty/program`, programData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer un niveau de fidélité (tier)
+   */
+  createLoyaltyTier(tierData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/loyalty/tiers`, tierData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour un niveau de fidélité
+   */
+  updateLoyaltyTier(tierId: string, tierData: any): Observable<any> {
+    return this.http.put<{ success: boolean; data: any }>(`${this.apiUrl}/loyalty/tiers/${tierId}`, tierData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Supprimer un niveau de fidélité
+   */
+  deleteLoyaltyTier(tierId: string): Observable<void> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/loyalty/tiers/${tierId}`)
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer une récompense de fidélité
+   */
+  createLoyaltyReward(rewardData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/loyalty/rewards`, rewardData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour une récompense de fidélité
+   */
+  updateLoyaltyReward(rewardId: string, rewardData: any): Observable<any> {
+    return this.http.put<{ success: boolean; data: any }>(`${this.apiUrl}/loyalty/rewards/${rewardId}`, rewardData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Supprimer une récompense de fidélité
+   */
+  deleteLoyaltyReward(rewardId: string): Observable<void> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/loyalty/rewards/${rewardId}`)
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les statistiques du programme de fidélité
+   */
+  getLoyaltyStats(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/loyalty/stats`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  // ==================== EMAIL MARKETING ====================
+
+  /**
+   * Récupérer les campagnes email
+   */
+  getEmailCampaigns(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key].toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/email-marketing/campaigns`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer une campagne email
+   */
+  createEmailCampaign(campaignData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/email-marketing/campaigns`, campaignData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Mettre à jour une campagne email
+   */
+  updateEmailCampaign(campaignId: string, campaignData: any): Observable<any> {
+    return this.http.put<{ success: boolean; data: any }>(`${this.apiUrl}/email-marketing/campaigns/${campaignId}`, campaignData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Supprimer une campagne email
+   */
+  deleteEmailCampaign(campaignId: string): Observable<void> {
+    return this.http.delete<{ success: boolean }>(`${this.apiUrl}/email-marketing/campaigns/${campaignId}`)
+      .pipe(
+        map(() => undefined),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Envoyer une campagne email
+   */
+  sendEmailCampaign(campaignId: string): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/email-marketing/campaigns/${campaignId}/send`, {})
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les templates email
+   */
+  getEmailTemplates(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/email-marketing/templates`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Créer un template email
+   */
+  createEmailTemplate(templateData: any): Observable<any> {
+    return this.http.post<{ success: boolean; data: any }>(`${this.apiUrl}/email-marketing/templates`, templateData)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les abonnés
+   */
+  getSubscribers(filters?: any): Observable<any> {
+    let params = new HttpParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== undefined && filters[key] !== null) {
+          params = params.set(key, filters[key].toString());
+        }
+      });
+    }
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/email-marketing/subscribers`, { params })
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
+  /**
+   * Récupérer les statistiques d'email marketing
+   */
+  getEmailMarketingStats(): Observable<any> {
+    return this.http.get<{ success: boolean; data: any }>(`${this.apiUrl}/email-marketing/stats`)
+      .pipe(
+        map(response => response.data),
+        catchError(this.handleError)
+      );
+  }
+
   // ==================== UTILITAIRES ====================
 
   /**

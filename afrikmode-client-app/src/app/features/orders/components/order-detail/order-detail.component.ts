@@ -20,8 +20,11 @@ export class OrderDetailComponent implements OnInit {
   error: string | null = null;
   showCancelModal = false;
   showReturnModal = false;
+  showConfirmModal = false;
   cancelReason = '';
+  deliveryNotes = '';
   isCancelling = false;
+  isConfirming = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -109,18 +112,33 @@ export class OrderDetailComponent implements OnInit {
   confirmDelivery(): void {
     if (!this.order) return;
 
-    if (confirm('Confirmez-vous la réception de cette commande ?')) {
-      this.orderService.confirmDelivery(this.order.id).subscribe({
-        next: (updatedOrder) => {
-          this.order = updatedOrder;
-          alert('Livraison confirmée avec succès');
-        },
-        error: (err) => {
-          console.error('Error confirming delivery:', err);
-          alert('Erreur lors de la confirmation');
-        }
-      });
-    }
+    this.showConfirmModal = true;
+  }
+
+  closeConfirmModal(): void {
+    this.showConfirmModal = false;
+    this.deliveryNotes = '';
+  }
+
+  submitConfirmDelivery(): void {
+    if (!this.order) return;
+
+    this.isConfirming = true;
+
+    this.orderService.confirmDelivery(this.order.id, { notes: this.deliveryNotes }).subscribe({
+      next: (response) => {
+        this.isConfirming = false;
+        this.closeConfirmModal();
+        alert('✅ Livraison confirmée avec succès !\n\nLe paiement au vendeur a été initié. Les fonds seront disponibles pour retrait après 7 jours.');
+        this.loadOrder(this.order!.id);
+      },
+      error: (err) => {
+        console.error('Error confirming delivery:', err);
+        this.isConfirming = false;
+        const errorMsg = err.error?.message || 'Erreur lors de la confirmation';
+        alert('❌ ' + errorMsg);
+      }
+    });
   }
 
   downloadInvoice(): void {
@@ -209,7 +227,7 @@ export class OrderDetailComponent implements OnInit {
 
   canConfirmDelivery(): boolean {
     if (!this.order) return false;
-    return this.order.status === 'shipped';
+    return this.order.status === 'delivered' && !this.order.confirmed_at;
   }
 
   canTrack(): boolean {

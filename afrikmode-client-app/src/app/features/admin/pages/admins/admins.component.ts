@@ -102,17 +102,32 @@ export class AdminsComponent implements OnInit {
           ['super_admin', 'admin', 'moderator'].includes(user.role)
         );
         
-        this.admins = adminUsers.map((user: any) => ({
-          id: parseInt(user.id) || user.id,
-          name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name || 'N/A',
-          email: user.email || '',
-          role: user.role || 'admin',
-          permissions: user.permissions || [],
-          status: user.status === 'active' ? 'active' : 'inactive',
-          lastLogin: user.last_login ? new Date(user.last_login) : new Date(),
-          createdAt: user.created_at ? new Date(user.created_at) : new Date(),
-          avatar: user.avatar_url || user.profile_picture
-        }));
+        this.admins = adminUsers.map((user: any) => {
+          // Fonction helper pour parser une date de manière sécurisée
+          const parseDate = (dateValue: any): Date => {
+            if (!dateValue) return new Date();
+            if (dateValue instanceof Date) {
+              return isNaN(dateValue.getTime()) ? new Date() : dateValue;
+            }
+            if (typeof dateValue === 'string') {
+              const date = new Date(dateValue);
+              return isNaN(date.getTime()) ? new Date() : date;
+            }
+            return new Date();
+          };
+
+          return {
+            id: parseInt(user.id) || user.id,
+            name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name || 'N/A',
+            email: user.email || '',
+            role: user.role || 'admin',
+            permissions: user.permissions || [],
+            status: user.status === 'active' ? 'active' : 'inactive',
+            lastLogin: parseDate(user.last_login),
+            createdAt: parseDate(user.created_at),
+            avatar: user.avatar_url || user.profile_picture
+          };
+        });
 
         // Calculer les stats
         this.stats.total = this.admins.length;

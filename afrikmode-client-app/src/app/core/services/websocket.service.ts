@@ -33,6 +33,12 @@ export class WebsocketService {
 
     const token = localStorage.getItem('auth_token');
     
+    // Ne pas se connecter si pas de token
+    if (!token) {
+      console.warn('⚠️ Pas de token d\'authentification, WebSocket non connecté');
+      return;
+    }
+    
     this.socket = io(this.baseUrl, {
       auth: {
         token: token
@@ -168,20 +174,76 @@ export class WebsocketService {
    */
   on(event: string): Observable<any> {
     return new Observable(observer => {
-      if (this.socket) {
-        this.socket.on(event, (data: any) => {
-          observer.next(data);
+      // Si le socket n'est pas encore initialisé, essayer de se connecter
+      if (!this.socket) {
+        this.connect();
+      }
+
+      let cleanup: (() => void) | null = null;
+      let connectionSub: any = null;
+      let timeout: any = null;
+
+      // Fonction pour configurer l'écouteur
+      const setupListener = (): (() => void) => {
+        if (this.socket) {
+          const handler = (data: any) => {
+            observer.next(data);
+          };
+          
+          this.socket.on(event, handler);
+
+          return () => {
+            if (this.socket) {
+              this.socket.off(event, handler);
+            }
+          };
+        }
+        return () => {};
+      };
+
+      // Si le socket est déjà connecté, configurer immédiatement
+      if (this.socket?.connected) {
+        cleanup = setupListener();
+      } else {
+        // Sinon, attendre la connexion
+        connectionSub = this.connectionStatus$.subscribe(connected => {
+          if (connected && this.socket) {
+            cleanup = setupListener();
+            if (connectionSub) {
+              connectionSub.unsubscribe();
+              connectionSub = null;
+            }
+            if (timeout) {
+              clearTimeout(timeout);
+              timeout = null;
+            }
+          }
         });
 
-        return () => {
-          if (this.socket) {
-            this.socket.off(event);
+        // Timeout pour éviter une attente infinie
+        timeout = setTimeout(() => {
+          if (connectionSub) {
+            connectionSub.unsubscribe();
+            connectionSub = null;
           }
-        };
-      } else {
-        observer.error('WebSocket non initialisé');
-        return () => {}; // Retourner une fonction vide pour la teardown
+          if (!this.socket?.connected) {
+            console.warn(`WebSocket non connecté pour l'événement ${event}. L'écouteur sera configuré lors de la connexion.`);
+          }
+        }, 5000);
       }
+
+      // Fonction de cleanup
+      return () => {
+        if (cleanup) {
+          cleanup();
+        }
+        if (connectionSub) {
+          connectionSub.unsubscribe();
+        }
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+      };
     });
   }
 

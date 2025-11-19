@@ -37,7 +37,9 @@
             "styles": [
               "./node_modules/@angular/material/prebuilt-themes/indigo-pink.css",
               "src/styles.scss"
-            ]
+            ],
+            "outputPath": "dist/afrikmode-client-app",
+            "index": "src/index.html"
           },
           "configurations": {
             "production": {
@@ -58,7 +60,7 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true,
+              "sourceMap": false,
               "namedChunks": true
             }
           },
@@ -66,6 +68,12 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "buildTarget": "afrikmode-client-app:build:development",
+            "port": 4200,
+            "host": "0.0.0.0",
+            "poll": 2000
+          },
           "configurations": {
             "production": {
               "buildTarget": "afrikmode-client-app:build:production"

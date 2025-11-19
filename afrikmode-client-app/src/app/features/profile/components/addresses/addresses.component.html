@@ -143,11 +143,11 @@
       </button>
     </div>
     
-    <form class="address-form" (ngSubmit)="saveNewAddress()">
+    <form class="address-form" (ngSubmit)="saveNewAddress()" #addressForm="ngForm">
       <div class="form-row">
         <div class="form-group">
           <label for="type">Type d'adresse *</label>
-          <select id="type" name="type" [(ngModel)]="newAddress.type" required>
+          <select id="type" name="type" [(ngModel)]="newAddress.type">
             <option value="shipping">Livraison</option>
             <option value="billing">Facturation</option>
           </select>
@@ -161,17 +161,17 @@
       <div class="form-row">
         <div class="form-group">
           <label for="first_name">Prénom *</label>
-          <input type="text" id="first_name" name="first_name" [(ngModel)]="newAddress.first_name" required>
+          <input type="text" id="first_name" name="first_name" [(ngModel)]="newAddress.first_name">
         </div>
         <div class="form-group">
           <label for="last_name">Nom *</label>
-          <input type="text" id="last_name" name="last_name" [(ngModel)]="newAddress.last_name" required>
+          <input type="text" id="last_name" name="last_name" [(ngModel)]="newAddress.last_name">
         </div>
       </div>
       
       <div class="form-group">
         <label for="address_line_1">Adresse *</label>
-        <input type="text" id="address_line_1" name="address_line_1" [(ngModel)]="newAddress.address_line_1" required>
+        <input type="text" id="address_line_1" name="address_line_1" [(ngModel)]="newAddress.address_line_1">
       </div>
       
       <div class="form-group">
@@ -182,18 +182,18 @@
       <div class="form-row">
         <div class="form-group">
           <label for="city">Ville *</label>
-          <input type="text" id="city" name="city" [(ngModel)]="newAddress.city" required>
+          <input type="text" id="city" name="city" [(ngModel)]="newAddress.city">
         </div>
         <div class="form-group">
           <label for="postal_code">Code postal *</label>
-          <input type="text" id="postal_code" name="postal_code" [(ngModel)]="newAddress.postal_code" required>
+          <input type="text" id="postal_code" name="postal_code" [(ngModel)]="newAddress.postal_code">
         </div>
       </div>
       
       <div class="form-row">
         <div class="form-group">
           <label for="country">Pays *</label>
-          <select id="country" name="country" [(ngModel)]="newAddress.country" required>
+          <select id="country" name="country" [(ngModel)]="newAddress.country">
             <option value="CI">Côte d'Ivoire</option>
             <option value="SN">Sénégal</option>
             <option value="ML">Mali</option>
@@ -208,7 +208,7 @@
         </div>
         <div class="form-group">
           <label for="phone">Téléphone *</label>
-          <input type="tel" id="phone" name="phone" [(ngModel)]="newAddress.phone" required>
+          <input type="tel" id="phone" name="phone" [(ngModel)]="newAddress.phone">
         </div>
       </div>
       

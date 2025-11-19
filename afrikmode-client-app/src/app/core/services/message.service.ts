@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { WebsocketService } from './websocket.service';
 import { ApiService } from './api.service';
 
@@ -75,21 +76,41 @@ export class MessageService {
 
   private initializeWebSocketListeners(): void {
     // Écouter les nouveaux messages
-    this.websocketService.on('chat_message').subscribe((data: any) => {
+    this.websocketService.on('chat_message').pipe(
+      catchError(error => {
+        console.warn('WebSocket chat_message error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.handleNewMessage(data);
     });
 
     // Écouter les mises à jour de statut de lecture
-    this.websocketService.on('message_read').subscribe((data: any) => {
+    this.websocketService.on('message_read').pipe(
+      catchError(error => {
+        console.warn('WebSocket message_read error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.handleMessageRead(data);
     });
 
     // Écouter les statuts en ligne
-    this.websocketService.on('user_online').subscribe((data: any) => {
+    this.websocketService.on('user_online').pipe(
+      catchError(error => {
+        console.warn('WebSocket user_online error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.handleUserOnline(data);
     });
 
-    this.websocketService.on('user_offline').subscribe((data: any) => {
+    this.websocketService.on('user_offline').pipe(
+      catchError(error => {
+        console.warn('WebSocket user_offline error:', error);
+        return new Observable(subscriber => subscriber.complete());
+      })
+    ).subscribe((data: any) => {
       this.handleUserOffline(data);
     });
   }

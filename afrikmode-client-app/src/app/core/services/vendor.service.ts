@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { ApiService } from './api.service';
@@ -91,8 +92,28 @@ export class VendorService {
   }
 
   // Produits
-  getProducts(params?: any): Observable<{ products: VendorProduct[], total: number }> {
-    return this.apiService.get<{ products: VendorProduct[], total: number }>('vendor/products', params);
+  getProducts(params?: { page?: number; limit?: number; status?: string; category?: string; search?: string }): Observable<{ products: VendorProduct[], total: number }> {
+    // Par défaut, charger 50 produits par page pour de meilleures performances
+    const queryParams = {
+      page: params?.page || 1,
+      limit: params?.limit || 50,
+      ...(params?.status && { status: params.status }),
+      ...(params?.category && { category: params.category }),
+      ...(params?.search && { search: params.search })
+    };
+    
+    return this.apiService.get<any>('vendor/products', queryParams).pipe(
+      map((response: any) => {
+        // Adapter la réponse du backend à la structure attendue par le frontend
+        if (response.success && response.data) {
+          return {
+            products: response.data.products || [],
+            total: response.data.pagination?.total || 0
+          };
+        }
+        return { products: [], total: 0 };
+      })
+    );
   }
 
   getProduct(id: string): Observable<VendorProduct> {
@@ -111,6 +132,35 @@ export class VendorService {
     return this.apiService.delete<any>(`vendor/products/${id}`);
   }
 
+  uploadProductImages(productId: string, files: File[]): Observable<any> {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('product_images', file);
+    });
+
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+    const headers = new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+
+    return this.http.post<any>(`${environment.apiUrl}/vendor/products/${productId}/images`, formData, {
+      headers
+    });
+  }
+
+  exportProducts(params?: any): Observable<Blob> {
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+    const headers = new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+
+    return this.http.get(`${environment.apiUrl}/vendor/products/export`, {
+      headers,
+      params: { ...params, format: 'csv' },
+      responseType: 'blob'
+    });
+  }
+
   // Commandes
   getOrders(params?: any): Observable<{ orders: VendorOrder[], total: number }> {
     return this.apiService.get<{ orders: VendorOrder[], total: number }>('vendor/orders', params);
@@ -124,13 +174,55 @@ export class VendorService {
     return this.apiService.put<VendorOrder>(`vendor/orders/${id}/status`, { status });
   }
 
+  exportOrders(params?: any): Observable<Blob> {
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+    const headers = new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+
+    return this.http.get(`${environment.apiUrl}/vendor/orders/export`, {
+      headers,
+      params: { ...params, format: params?.format || 'csv' },
+      responseType: 'blob'
+    });
+  }
+
   // Finances
   getFinances(params?: any): Observable<any> {
-    return this.apiService.get<any>('vendor/finances', params);
+    return this.apiService.get<any>('vendor/finances/revenue', params);
+  }
+
+  getBalance(): Observable<any> {
+    return this.apiService.get<any>('vendor/finances/balance');
   }
 
   getTransactions(params?: any): Observable<any> {
-    return this.apiService.get<any>('vendor/transactions', params);
+    return this.apiService.get<any>('vendor/finances/transactions', params);
+  }
+
+  getPayouts(params?: any): Observable<any> {
+    return this.apiService.get<any>('vendor/finances/payouts', params);
+  }
+
+  requestPayout(data: any): Observable<any> {
+    return this.apiService.post<any>('vendor/finances/payouts/request', data);
+  }
+
+  exportFinancialData(params?: any): Observable<Blob> {
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('access_token');
+    const headers = new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+
+    return this.http.get(`${environment.apiUrl}/vendor/finances/export`, {
+      headers,
+      params: { ...params, format: 'csv' },
+      responseType: 'blob'
+    });
+  }
+
+  getRevenueChart(params?: any): Observable<any> {
+    return this.apiService.get<any>('vendor/finances/revenue-chart', params);
   }
 
   // Analytics
@@ -202,6 +294,40 @@ export class VendorService {
 
   updateLoyaltyProgram(data: any): Observable<any> {
     return this.apiService.put<any>('vendor/loyalty', data);
+  }
+
+  // Marketing Campaigns
+  getMarketingCampaigns(params?: any): Observable<any> {
+    return this.apiService.get<any>('vendor/marketing/campaigns', params);
+  }
+
+  createMarketingCampaign(campaign: any): Observable<any> {
+    return this.apiService.post<any>('vendor/marketing/campaigns', campaign);
+  }
+
+  updateMarketingCampaign(id: string, campaign: any): Observable<any> {
+    return this.apiService.put<any>(`vendor/marketing/campaigns/${id}`, campaign);
+  }
+
+  deleteMarketingCampaign(id: string): Observable<any> {
+    return this.apiService.delete<any>(`vendor/marketing/campaigns/${id}`);
+  }
+
+  // Coupons
+  getCoupons(params?: any): Observable<any> {
+    return this.apiService.get<any>('vendor/marketing/coupons', params);
+  }
+
+  createCoupon(coupon: any): Observable<any> {
+    return this.apiService.post<any>('vendor/marketing/coupons', coupon);
+  }
+
+  toggleCouponStatus(id: string): Observable<any> {
+    return this.apiService.patch<any>(`vendor/marketing/coupons/${id}/toggle`, {});
+  }
+
+  getMarketingStats(): Observable<any> {
+    return this.apiService.get<any>('vendor/marketing/stats');
   }
 
   // Email Marketing

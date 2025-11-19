@@ -14,6 +14,9 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
+import { AdminService } from '../../../../core/services/admin.service';
 
 export interface AnalyticsData {
   overview: {
@@ -125,9 +128,9 @@ export interface AnalyticsData {
             <div class="card-info">
               <div class="card-value">{{ analyticsData.overview.totalOrders }}</div>
               <div class="card-label">Commandes</div>
-              <div class="card-change positive">
-                <mat-icon>trending_up</mat-icon>
-                +12.5%
+              <div class="card-change" [ngClass]="analyticsData.overview.growthRate >= 0 ? 'positive' : 'negative'" *ngIf="analyticsData.overview.growthRate !== 0">
+                <mat-icon>{{ analyticsData.overview.growthRate >= 0 ? 'trending_up' : 'trending_down' }}</mat-icon>
+                {{ analyticsData.overview.growthRate >= 0 ? '+' : '' }}{{ analyticsData.overview.growthRate.toFixed(1) }}%
               </div>
             </div>
           </div>
@@ -141,10 +144,7 @@ export interface AnalyticsData {
             <div class="card-info">
               <div class="card-value">{{ analyticsData.overview.totalCustomers }}</div>
               <div class="card-label">Clients</div>
-              <div class="card-change positive">
-                <mat-icon>trending_up</mat-icon>
-                +8.3%
-              </div>
+              <!-- Trends calculés depuis les données réelles -->
             </div>
           </div>
         </mat-card>
@@ -157,10 +157,7 @@ export interface AnalyticsData {
             <div class="card-info">
               <div class="card-value">{{ analyticsData.overview.totalProducts }}</div>
               <div class="card-label">Produits</div>
-              <div class="card-change positive">
-                <mat-icon>trending_up</mat-icon>
-                +15.2%
-              </div>
+              <!-- Trends calculés depuis les données réelles -->
             </div>
           </div>
         </mat-card>
@@ -173,10 +170,7 @@ export interface AnalyticsData {
             <div class="card-info">
               <div class="card-value">{{ formatCurrency(analyticsData.overview.averageOrderValue) }}</div>
               <div class="card-label">Panier moyen</div>
-              <div class="card-change positive">
-                <mat-icon>trending_up</mat-icon>
-                +5.7%
-              </div>
+              <!-- Trends calculés depuis les données réelles -->
             </div>
           </div>
         </mat-card>
@@ -189,10 +183,7 @@ export interface AnalyticsData {
             <div class="card-info">
               <div class="card-value">{{ analyticsData.overview.conversionRate }}%</div>
               <div class="card-label">Taux de conversion</div>
-              <div class="card-change positive">
-                <mat-icon>trending_up</mat-icon>
-                +2.1%
-              </div>
+              <!-- Trends calculés depuis les données réelles -->
             </div>
           </div>
         </mat-card>
@@ -452,8 +443,13 @@ export class AdminAnalyticsComponent implements OnInit {
   };
 
   loading = true;
+  private apiUrl = `${environment.apiUrl}/admin`;
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private http: HttpClient,
+    private adminService: AdminService
+  ) {}
 
   ngOnInit(): void {
     this.loadAnalytics();
@@ -462,130 +458,169 @@ export class AdminAnalyticsComponent implements OnInit {
   loadAnalytics(): void {
     this.loading = true;
     
-    setTimeout(() => {
-      this.analyticsData = this.generateMockAnalytics();
-      this.loading = false;
-    }, 1000);
-  }
-
-  private generateMockAnalytics(): AnalyticsData {
-    return {
-      overview: {
-        totalRevenue: 1250000,
-        totalOrders: 3456,
-        totalCustomers: 1234,
-        totalProducts: 567,
-        averageOrderValue: 36200,
-        conversionRate: 3.2,
-        growthRate: 15.7
+    // Charger les données depuis l'API
+    this.adminService.getDashboardStats().subscribe({
+      next: (dashboardResponse) => {
+        if (dashboardResponse.success && dashboardResponse.data) {
+          const stats = dashboardResponse.data;
+          
+          // Charger les graphiques pour avoir plus de détails
+          this.http.get(`${this.apiUrl}/dashboard/charts?period=${this.selectedPeriod}days`).subscribe({
+            next: (chartsResponse: any) => {
+              if (chartsResponse.success && chartsResponse.data) {
+                const chartsData = chartsResponse.data;
+                this.updateAnalyticsData(stats, chartsData);
+              } else {
+                this.updateAnalyticsData(stats, null);
+              }
+              this.loading = false;
+            },
+            error: (error) => {
+              console.error('Erreur lors du chargement des graphiques:', error);
+              this.updateAnalyticsData(stats, null);
+              this.loading = false;
+            }
+          });
+        } else {
+          this.loading = false;
+        }
       },
-      sales: {
-        daily: this.generateDailySales(),
-        monthly: this.generateMonthlySales(),
-        byCategory: [
-          { category: 'Femmes', revenue: 450000, percentage: 36 },
-          { category: 'Hommes', revenue: 320000, percentage: 25.6 },
-          { category: 'Enfants', revenue: 280000, percentage: 22.4 },
-          { category: 'Accessoires', revenue: 200000, percentage: 16 }
-        ],
-        byStore: [
-          { store: 'Boutique Afrique', revenue: 300000, percentage: 24 },
-          { store: 'Mode Ghana', revenue: 250000, percentage: 20 },
-          { store: 'Traditions Sénégal', revenue: 200000, percentage: 16 },
-          { store: 'Artisanat Togo', revenue: 180000, percentage: 14.4 },
-          { store: 'Créations Mali', revenue: 150000, percentage: 12 },
-          { store: 'Autres', revenue: 170000, percentage: 13.6 }
-        ]
-      },
-      customers: {
-        newCustomers: 234,
-        returningCustomers: 1000,
-        customerLifetimeValue: 125000,
-        retentionRate: 78.5,
-        byRegion: [
-          { region: 'Lomé', count: 456, percentage: 37 },
-          { region: 'Kara', count: 234, percentage: 19 },
-          { region: 'Sokodé', count: 189, percentage: 15.3 },
-          { region: 'Kpalimé', count: 156, percentage: 12.6 },
-          { region: 'Autres', count: 199, percentage: 16.1 }
-        ],
-        byAge: [
-          { ageGroup: '18-25', count: 345, percentage: 28 },
-          { ageGroup: '26-35', count: 456, percentage: 37 },
-          { ageGroup: '36-45', count: 234, percentage: 19 },
-          { ageGroup: '46+', count: 199, percentage: 16 }
-        ]
-      },
-      products: {
-        topSelling: [
-          { name: 'Robe Wax Africaine', sales: 156, revenue: 14040000 },
-          { name: 'Chemise Kente', sales: 134, revenue: 10115000 },
-          { name: 'Boubou Brodé', sales: 98, revenue: 14700000 },
-          { name: 'Ensemble Enfant', sales: 87, revenue: 3915000 },
-          { name: 'Sac à Main Cuir', sales: 76, revenue: 9500000 }
-        ],
-        lowStock: [
-          { name: 'Robe Wax Rouge', stock: 2, category: 'Femmes' },
-          { name: 'Chemise Kente Bleue', stock: 1, category: 'Hommes' },
-          { name: 'Sac Cuir Noir', stock: 0, category: 'Accessoires' },
-          { name: 'Boubou Vert', stock: 3, category: 'Femmes' },
-          { name: 'Pantalon Wax', stock: 1, category: 'Hommes' }
-        ],
-        byCategory: [
-          { category: 'Femmes', count: 234, revenue: 450000 },
-          { category: 'Hommes', count: 189, revenue: 320000 },
-          { category: 'Enfants', count: 98, revenue: 280000 },
-          { category: 'Accessoires', count: 46, revenue: 200000 }
-        ],
-        performance: [
-          { name: 'Robe Wax', views: 1234, sales: 156, conversion: 12.6 },
-          { name: 'Chemise Kente', views: 987, sales: 134, conversion: 13.6 },
-          { name: 'Boubou Brodé', views: 756, sales: 98, conversion: 13.0 },
-          { name: 'Ensemble Enfant', views: 543, sales: 87, conversion: 16.0 }
-        ]
-      },
-      trends: {
-        revenue: [
-          { period: 'Cette semaine', current: 125000, previous: 98000, change: 27.6 },
-          { period: 'Ce mois', current: 450000, previous: 380000, change: 18.4 },
-          { period: 'Ce trimestre', current: 1250000, previous: 1050000, change: 19.0 }
-        ],
-        orders: [
-          { period: 'Cette semaine', current: 234, previous: 189, change: 23.8 },
-          { period: 'Ce mois', current: 1234, previous: 1056, change: 16.9 },
-          { period: 'Ce trimestre', current: 3456, previous: 2890, change: 19.6 }
-        ],
-        customers: [
-          { period: 'Cette semaine', current: 45, previous: 38, change: 18.4 },
-          { period: 'Ce mois', current: 234, previous: 198, change: 18.2 },
-          { period: 'Ce trimestre', current: 567, previous: 456, change: 24.3 }
-        ]
+      error: (error) => {
+        console.error('Erreur lors du chargement des statistiques:', error);
+        this.loading = false;
       }
-    };
+    });
   }
 
-  private generateDailySales(): { date: string; revenue: number; orders: number }[] {
-    const sales = [];
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      sales.push({
-        date: date.toISOString().split('T')[0],
-        revenue: Math.floor(Math.random() * 50000) + 10000,
-        orders: Math.floor(Math.random() * 50) + 10
-      });
+  private updateAnalyticsData(stats: any, chartsData: any): void {
+    // Calculer le panier moyen et le taux de conversion
+    const avgOrderValue = stats.totalOrders > 0 ? stats.totalRevenue / stats.totalOrders : 0;
+    const conversionRate = 0; // À calculer depuis les données de visites si disponible
+    
+    // Calculer le taux de croissance depuis les données mensuelles
+    let growthRate = 0;
+    if (chartsData && chartsData.revenueByMonth && chartsData.revenueByMonth.length >= 2) {
+      const currentMonth = parseFloat(chartsData.revenueByMonth[chartsData.revenueByMonth.length - 1]?.revenue || 0);
+      const previousMonth = parseFloat(chartsData.revenueByMonth[chartsData.revenueByMonth.length - 2]?.revenue || 0);
+      if (previousMonth > 0) {
+        growthRate = ((currentMonth - previousMonth) / previousMonth) * 100;
+      }
     }
-    return sales;
+    
+    // Overview
+    this.analyticsData.overview = {
+      totalRevenue: stats.totalRevenue || 0,
+      totalOrders: stats.totalOrders || 0,
+      totalCustomers: stats.totalUsers || 0,
+      totalProducts: stats.totalProducts || 0,
+      averageOrderValue: avgOrderValue,
+      conversionRate: conversionRate,
+      growthRate: growthRate
+    };
+
+    // Sales data
+    if (chartsData) {
+      // Ventes par mois depuis revenueByMonth
+      if (chartsData.revenueByMonth && chartsData.ordersByMonth) {
+        this.analyticsData.sales.monthly = chartsData.revenueByMonth.map((item: any, index: number) => ({
+          month: this.formatMonth(item.month),
+          revenue: parseFloat(item.revenue || 0),
+          orders: parseInt(chartsData.ordersByMonth[index]?.count || 0)
+        }));
+      }
+
+      // Top produits
+      if (chartsData.topProducts) {
+        this.analyticsData.products.topSelling = chartsData.topProducts.slice(0, 5).map((item: any) => ({
+          name: item.name || 'Produit sans nom',
+          sales: parseInt(item.total_sold || 0),
+          revenue: parseFloat(item.total_revenue || 0)
+        }));
+      }
+    }
+
+    // Sales by category - À charger depuis l'API si disponible
+    this.analyticsData.sales.byCategory = [];
+    
+    // Sales by store - À charger depuis l'API si disponible
+    this.analyticsData.sales.byStore = [];
+
+    // Customers - Utiliser les données du dashboard
+    this.analyticsData.customers = {
+      newCustomers: 0, // À calculer depuis les nouveaux utilisateurs de la période
+      returningCustomers: 0, // À calculer
+      customerLifetimeValue: 0, // À calculer
+      retentionRate: 0, // À calculer
+      byRegion: [], // À charger depuis l'API
+      byAge: [] // À charger depuis l'API
+    };
+
+    // Products
+    this.analyticsData.products.byCategory = [];
+    this.analyticsData.products.lowStock = []; // À charger depuis /api/admin/products/out-of-stock
+    this.analyticsData.products.performance = [];
+
+    // Trends - Calculer depuis les données mensuelles
+    if (chartsData && chartsData.revenueByMonth && chartsData.ordersByMonth) {
+      this.calculateTrends(chartsData);
+    }
   }
 
-  private generateMonthlySales(): { month: string; revenue: number; orders: number }[] {
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-    return months.map(month => ({
-      month,
-      revenue: Math.floor(Math.random() * 200000) + 50000,
-      orders: Math.floor(Math.random() * 300) + 100
-    }));
+  private calculateTrends(chartsData: any): void {
+    const revenueByMonth = chartsData.revenueByMonth || [];
+    const ordersByMonth = chartsData.ordersByMonth || [];
+    
+    if (revenueByMonth.length >= 2) {
+      const currentMonth = revenueByMonth[revenueByMonth.length - 1];
+      const previousMonth = revenueByMonth[revenueByMonth.length - 2];
+      const currentQuarter = revenueByMonth.slice(-3).reduce((sum: number, item: any) => sum + parseFloat(item.revenue || 0), 0);
+      const previousQuarter = revenueByMonth.slice(-6, -3).reduce((sum: number, item: any) => sum + parseFloat(item.revenue || 0), 0);
+      
+      this.analyticsData.trends.revenue = [
+        {
+          period: 'Ce mois',
+          current: parseFloat(currentMonth.revenue || 0),
+          previous: parseFloat(previousMonth.revenue || 0),
+          change: previousMonth.revenue > 0 ? ((currentMonth.revenue - previousMonth.revenue) / previousMonth.revenue) * 100 : 0
+        },
+        {
+          period: 'Ce trimestre',
+          current: currentQuarter,
+          previous: previousQuarter,
+          change: previousQuarter > 0 ? ((currentQuarter - previousQuarter) / previousQuarter) * 100 : 0
+        }
+      ];
+    }
+
+    if (ordersByMonth.length >= 2) {
+      const currentMonth = ordersByMonth[ordersByMonth.length - 1];
+      const previousMonth = ordersByMonth[ordersByMonth.length - 2];
+      const currentQuarter = ordersByMonth.slice(-3).reduce((sum: number, item: any) => sum + parseInt(item.count || 0), 0);
+      const previousQuarter = ordersByMonth.slice(-6, -3).reduce((sum: number, item: any) => sum + parseInt(item.count || 0), 0);
+      
+      this.analyticsData.trends.orders = [
+        {
+          period: 'Ce mois',
+          current: parseInt(currentMonth.count || 0),
+          previous: parseInt(previousMonth.count || 0),
+          change: previousMonth.count > 0 ? ((currentMonth.count - previousMonth.count) / previousMonth.count) * 100 : 0
+        },
+        {
+          period: 'Ce trimestre',
+          current: currentQuarter,
+          previous: previousQuarter,
+          change: previousQuarter > 0 ? ((currentQuarter - previousQuarter) / previousQuarter) * 100 : 0
+        }
+      ];
+    }
   }
+
+  private formatMonth(monthStr: string): string {
+    const [year, month] = monthStr.split('-');
+    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    return months[parseInt(month) - 1] || monthStr;
+  }
+
 
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('fr-FR', {

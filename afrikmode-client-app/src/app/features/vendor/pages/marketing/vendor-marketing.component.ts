@@ -622,49 +622,39 @@ export class VendorMarketingComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPromotions();
+    this.loadMarketingStats();
   }
 
   loadPromotions(): void {
-    // Charger depuis l'API si disponible
-    // Pour l'instant, utiliser des données de démonstration
-    this.promotions = [
-      {
-        id: '1',
-        name: 'Soldes de Janvier',
-        type: 'percentage',
-        value: 20,
-        code: 'JANVIER20',
-        status: 'active',
-        start_date: '2025-01-01',
-        end_date: '2025-01-31',
-        usage_count: 45,
-        usage_limit: 100
+    this.vendorService.getMarketingCampaigns().subscribe({
+      next: (response: any) => {
+        this.promotions = response.data || response.campaigns || [];
+        this.updateStats();
       },
-      {
-        id: '2',
-        name: 'Livraison Offerte',
-        type: 'shipping',
-        value: 0,
-        code: 'FREESHIPJAN',
-        status: 'active',
-        start_date: '2025-01-15',
-        end_date: '2025-02-15',
-        usage_count: 32
-      },
-      {
-        id: '3',
-        name: 'Vente Flash Février',
-        type: 'flash',
-        value: 30,
-        code: 'FLASH30',
-        status: 'scheduled',
-        start_date: '2025-02-01',
-        end_date: '2025-02-03',
-        usage_count: 0,
-        usage_limit: 50
+      error: (error: any) => {
+        console.error('Erreur lors du chargement des promotions:', error);
+        this.snackBar.open('Erreur lors du chargement des promotions', 'Fermer', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
       }
-    ];
-    this.updateStats();
+    });
+  }
+
+  loadMarketingStats(): void {
+    this.vendorService.getMarketingStats().subscribe({
+      next: (response: any) => {
+        const stats = response.data || response;
+        this.activePromotions = stats.active_campaigns || 0;
+        this.totalUses = stats.total_uses || 0;
+        this.revenueFromPromos = stats.revenue_from_promos || 0;
+        this.conversionRate = stats.conversion_rate || 0;
+      },
+      error: (error: any) => {
+        console.error('Erreur lors du chargement des statistiques:', error);
+      }
+    });
   }
 
   getPromotionsByStatus(status: string): Promotion[] {
@@ -807,19 +797,24 @@ export class VendorMarketingComponent implements OnInit {
   }
 
   addPromotion(promoData: PromotionData): void {
-    const newPromo: Promotion = {
-      ...promoData,
-      id: Date.now().toString(),
-      usage_count: 0
-    };
-    
-    this.promotions.push(newPromo);
-    this.updateStats();
-    
-    this.snackBar.open(`Promotion "${newPromo.name}" créée avec succès`, 'Fermer', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+    this.vendorService.createMarketingCampaign(promoData).subscribe({
+      next: (response: any) => {
+        const newPromo = response.data || response.campaign;
+        this.snackBar.open(`Promotion "${promoData.name}" créée avec succès`, 'Fermer', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+        this.loadPromotions(); // Recharger la liste
+      },
+      error: (error: any) => {
+        console.error('Erreur lors de la création de la promotion:', error);
+        this.snackBar.open('Erreur lors de la création de la promotion', 'Fermer', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+      }
     });
   }
 
@@ -873,50 +868,82 @@ export class VendorMarketingComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const index = this.promotions.findIndex(p => p.id === promo.id);
-        if (index > -1) {
-          this.promotions[index] = { ...result, id: promo.id, usage_count: promo.usage_count };
-          this.updateStats();
-          this.snackBar.open(`Promotion "${result.name}" modifiée avec succès`, 'Fermer', {
-            duration: 3000,
-            horizontalPosition: 'end',
-            verticalPosition: 'top'
-          });
-        }
+      if (result && promo.id) {
+        this.vendorService.updateMarketingCampaign(promo.id, result).subscribe({
+          next: () => {
+            this.snackBar.open(`Promotion "${result.name}" modifiée avec succès`, 'Fermer', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+            this.loadPromotions(); // Recharger la liste
+          },
+          error: (error: any) => {
+            console.error('Erreur lors de la modification:', error);
+            this.snackBar.open('Erreur lors de la modification', 'Fermer', {
+              duration: 3000,
+              horizontalPosition: 'end',
+              verticalPosition: 'top'
+            });
+          }
+        });
       }
     });
   }
 
   pausePromo(promo: Promotion): void {
-    if (promo.status === 'active') {
-      promo.status = 'paused';
-      this.updateStats();
-      this.snackBar.open(`Promotion "${promo.name}" mise en pause`, 'Fermer', {
-        duration: 3000,
-        horizontalPosition: 'end',
-        verticalPosition: 'top'
+    if (promo.status === 'active' && promo.id) {
+      this.vendorService.updateMarketingCampaign(promo.id, { status: 'paused' }).subscribe({
+        next: () => {
+          this.snackBar.open(`Promotion "${promo.name}" mise en pause`, 'Fermer', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+          this.loadPromotions(); // Recharger la liste
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de la mise en pause:', error);
+          this.snackBar.open('Erreur lors de la mise en pause', 'Fermer', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        }
       });
     }
   }
 
   duplicatePromo(promo: Promotion): void {
-    const duplicatedPromo: Promotion = {
-      ...promo,
-      id: Date.now().toString(),
+    const duplicatedPromoData = {
       name: `${promo.name} (Copie)`,
       code: promo.code ? `${promo.code}-COPY` : undefined,
-      status: 'scheduled',
-      usage_count: 0
+      type: promo.type,
+      value: promo.value || promo.discount,
+      discount: promo.discount || promo.value,
+      start_date: promo.start_date,
+      end_date: promo.end_date,
+      description: promo.description || '',
+      status: 'scheduled' as const
     };
-    
-    this.promotions.push(duplicatedPromo);
-    this.updateStats();
-    
-    this.snackBar.open(`Promotion "${promo.name}" dupliquée`, 'Fermer', {
-      duration: 3000,
-      horizontalPosition: 'end',
-      verticalPosition: 'top'
+
+    this.vendorService.createMarketingCampaign(duplicatedPromoData).subscribe({
+      next: () => {
+        this.snackBar.open(`Promotion "${promo.name}" dupliquée avec succès`, 'Fermer', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+        this.loadPromotions(); // Recharger la liste
+      },
+      error: (error: any) => {
+        console.error('Erreur lors de la duplication:', error);
+        this.snackBar.open('Erreur lors de la duplication', 'Fermer', {
+          duration: 3000,
+          horizontalPosition: 'end',
+          verticalPosition: 'top'
+        });
+      }
     });
   }
 
@@ -939,28 +966,47 @@ export class VendorMarketingComponent implements OnInit {
   }
 
   deletePromo(promo: Promotion): void {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer la promotion "${promo.name}" ?`)) {
-      const index = this.promotions.findIndex(p => p.id === promo.id);
-      if (index > -1) {
-        this.promotions.splice(index, 1);
-        this.updateStats();
-        this.snackBar.open(`Promotion "${promo.name}" supprimée`, 'Fermer', {
-          duration: 3000,
-          horizontalPosition: 'end',
-          verticalPosition: 'top'
-        });
-      }
+    if (confirm(`Êtes-vous sûr de vouloir supprimer la promotion "${promo.name}" ?`) && promo.id) {
+      this.vendorService.deleteMarketingCampaign(promo.id).subscribe({
+        next: () => {
+          this.snackBar.open(`Promotion "${promo.name}" supprimée`, 'Fermer', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+          this.loadPromotions(); // Recharger la liste
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de la suppression:', error);
+          this.snackBar.open('Erreur lors de la suppression', 'Fermer', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        }
+      });
     }
   }
 
   activateNow(promo: Promotion): void {
-    if (promo.status === 'scheduled') {
-      promo.status = 'active';
-      this.updateStats();
-      this.snackBar.open(`Promotion "${promo.name}" activée maintenant`, 'Fermer', {
-        duration: 3000,
-        horizontalPosition: 'end',
-        verticalPosition: 'top'
+    if (promo.status === 'scheduled' && promo.id) {
+      this.vendorService.updateMarketingCampaign(promo.id, { status: 'active' }).subscribe({
+        next: () => {
+          this.snackBar.open(`Promotion "${promo.name}" activée maintenant`, 'Fermer', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+          this.loadPromotions(); // Recharger la liste
+        },
+        error: (error: any) => {
+          console.error('Erreur lors de l\'activation:', error);
+          this.snackBar.open('Erreur lors de l\'activation', 'Fermer', {
+            duration: 3000,
+            horizontalPosition: 'end',
+            verticalPosition: 'top'
+          });
+        }
       });
     }
   }

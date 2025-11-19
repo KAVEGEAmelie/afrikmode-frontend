@@ -71,6 +71,22 @@ export class ClientsComponent implements OnInit {
 
   constructor(private adminService: AdminService) {}
 
+  /**
+   * Parse une date de manière sécurisée
+   * Retourne undefined si la date est invalide ou null
+   */
+  private parseDate(dateValue: any): Date | undefined {
+    if (!dateValue) return undefined;
+    
+    const date = new Date(dateValue);
+    // Vérifier si la date est valide
+    if (isNaN(date.getTime())) {
+      return undefined;
+    }
+    
+    return date;
+  }
+
   ngOnInit(): void {
     this.loadClients();
   }
@@ -95,17 +111,22 @@ export class ClientsComponent implements OnInit {
     this.adminService.getUsers(params).subscribe({
       next: (response: any) => {
         const usersData = response.data || [];
-        this.clients = usersData.map((user: any) => ({
-          id: parseInt(user.id) || user.id,
-          name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name || 'N/A',
-          email: user.email || '',
-          phone: user.phone || '',
-          status: user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : 'inactive',
-          orders: user.stats?.total_orders || 0,
-          totalSpent: user.stats?.total_spent || 0,
-          registeredAt: user.created_at ? new Date(user.created_at) : new Date(),
-          avatar: user.avatar_url || user.profile_picture
-        }));
+        this.clients = usersData.map((user: any) => {
+          // Parser la date de manière sécurisée
+          const registeredAt = this.parseDate(user.created_at) || new Date();
+          
+          return {
+            id: parseInt(user.id) || user.id,
+            name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name || 'N/A',
+            email: user.email || '',
+            phone: user.phone || '',
+            status: user.status === 'active' ? 'active' : user.status === 'suspended' ? 'suspended' : 'inactive',
+            orders: user.stats?.total_orders || 0,
+            totalSpent: user.stats?.total_spent || 0,
+            registeredAt: registeredAt,
+            avatar: user.avatar_url || user.profile_picture
+          };
+        });
 
         // Calculer les stats
         this.stats.total = this.clients.length;

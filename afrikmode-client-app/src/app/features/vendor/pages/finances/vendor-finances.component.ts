@@ -76,7 +76,18 @@ interface PayoutRequest {
           <div class="stat-content">
             <p class="stat-label">Solde Disponible</p>
             <h3>{{ availableBalance | number:'1.0-0' }} FCFA</h3>
-            <span class="stat-subtitle">Prêt à retirer</span>
+            <span class="stat-subtitle">Prêt à retirer maintenant</span>
+          </div>
+        </div>
+
+        <div class="stat-card pending-balance">
+          <div class="stat-icon">
+            <mat-icon>hourglass_empty</mat-icon>
+          </div>
+          <div class="stat-content">
+            <p class="stat-label">Solde en Attente</p>
+            <h3>{{ pendingBalance | number:'1.0-0' }} FCFA</h3>
+            <span class="stat-subtitle">Disponible après 7 jours</span>
           </div>
         </div>
 
@@ -110,9 +121,9 @@ interface PayoutRequest {
             <mat-icon>schedule</mat-icon>
           </div>
           <div class="stat-content">
-            <p class="stat-label">En Attente</p>
+            <p class="stat-label">Ventes en Traitement</p>
             <h3>{{ pendingAmount | number:'1.0-0' }} FCFA</h3>
-            <span class="stat-subtitle">Ventes en traitement</span>
+            <span class="stat-subtitle">Commandes en cours</span>
           </div>
         </div>
 
@@ -791,6 +802,7 @@ interface PayoutRequest {
 export class VendorFinancesComponent implements OnInit {
   // Statistiques
   availableBalance = 0;
+  pendingBalance = 0;
   monthlyRevenue = 0;
   totalCommissions = 0;
   pendingAmount = 0;
@@ -823,22 +835,33 @@ export class VendorFinancesComponent implements OnInit {
   loadFinances(): void {
     this.isLoading = true;
     
-    this.vendorService.getFinances().subscribe({
-      next: (data: any) => {
-        this.availableBalance = data.availableBalance || 0;
-        this.monthlyRevenue = data.monthlyRevenue || 0;
-        this.totalCommissions = data.totalCommissions || 0;
-        this.pendingAmount = data.pendingAmount || 0;
-        this.totalPayouts = data.totalPayouts || 0;
-        this.payoutCount = data.payoutCount || 0;
-        this.totalRefunds = data.totalRefunds || 0;
-        this.refundCount = data.refundCount || 0;
-        this.commissionRate = data.commissionRate || 10;
-        this.isLoading = false;
+    // Charger d'abord le balance pour avoir pending_balance et available_balance
+    this.vendorService.getBalance().subscribe({
+      next: (balanceData: any) => {
+        this.availableBalance = balanceData.available_balance || balanceData.availableBalance || 0;
+        this.pendingBalance = balanceData.pending_balance || balanceData.pendingBalance || 0;
+        this.totalCommissions = balanceData.total_commission_paid || balanceData.totalCommissions || 0;
+        
+        // Ensuite charger les autres finances
+        this.vendorService.getFinances().subscribe({
+          next: (data: any) => {
+            this.monthlyRevenue = data.monthlyRevenue || 0;
+            this.pendingAmount = data.pendingAmount || 0;
+            this.totalPayouts = data.totalPayouts || 0;
+            this.payoutCount = data.payoutCount || 0;
+            this.totalRefunds = data.totalRefunds || 0;
+            this.refundCount = data.refundCount || 0;
+            this.commissionRate = data.commissionRate || 10;
+            this.isLoading = false;
+          },
+          error: (error: any) => {
+            console.error('Erreur lors du chargement des finances:', error);
+            this.isLoading = false;
+          }
+        });
       },
       error: (error: any) => {
-        console.error('Erreur lors du chargement des finances:', error);
-        // Ne pas charger de données mockées en production
+        console.error('Erreur lors du chargement du solde:', error);
         this.errorMessage = 'Erreur lors du chargement des données financières. Veuillez réessayer.';
         this.isLoading = false;
       }
@@ -869,25 +892,15 @@ export class VendorFinancesComponent implements OnInit {
   // Supprimé loadMockTransactions() - utiliser uniquement l'API
 
   loadPayoutRequests(): void {
-    this.payoutRequests = [
-      {
-        id: '1',
-        amount: 850000,
-        method: 'Mobile Money (TMoney)',
-        account_details: '+228 90 12 34 56',
-        status: 'pending',
-        requested_at: '2025-01-16T08:00:00'
+    this.vendorService.getPayouts().subscribe({
+      next: (response: any) => {
+        this.payoutRequests = response.data || response.payouts || [];
       },
-      {
-        id: '2',
-        amount: 500000,
-        method: 'Virement bancaire',
-        account_details: 'TG** **** **** 5678',
-        status: 'completed',
-        requested_at: '2025-01-10T10:30:00',
-        processed_at: '2025-01-12T15:45:00'
+      error: (error: any) => {
+        console.error('Erreur lors du chargement des payouts:', error);
+        this.payoutRequests = [];
       }
-    ];
+    });
   }
 
   filterTransactions(): void {
@@ -950,13 +963,43 @@ export class VendorFinancesComponent implements OnInit {
   }
 
   requestPayout(): void {
-    const amount = prompt('Montant à retirer (FCFA) :');
+    if (this.availableBalance <= 0) {
+      alert('❌ Solde disponible insuffisant pour effectuer un retrait !');
+      return;
+    }
+
+    const maxAmount = this.availableBalance;
+    const amount = prompt(`Montant à retirer (FCFA) :\n\nSolde disponible : ${maxAmount.toLocaleString('fr-FR')} FCFA`);
+    
     if (amount && parseInt(amount) > 0) {
-      if (parseInt(amount) <= this.availableBalance) {
-        console.log('💰 Demande de retrait de', amount, 'FCFA');
-        alert(`Demande de retrait de ${amount} FCFA créée avec succès !`);
+      const requestedAmount = parseInt(amount);
+      
+      if (requestedAmount <= maxAmount) {
+        const method = prompt('Méthode de paiement (TMoney, Flooz, Orange Money, Virement) :');
+        
+        if (method) {
+          const accountDetails = prompt('Numéro de compte ou téléphone :');
+          
+          if (accountDetails) {
+            this.vendorService.requestPayout({
+              amount: requestedAmount,
+              method: method,
+              account_details: accountDetails
+            }).subscribe({
+              next: (response: any) => {
+                alert(`✅ Demande de retrait de ${requestedAmount.toLocaleString('fr-FR')} FCFA créée avec succès !\n\nVotre demande sera traitée sous 24-48h.`);
+                this.loadFinances();
+                this.loadPayoutRequests();
+              },
+              error: (error: any) => {
+                console.error('Erreur lors de la demande de retrait:', error);
+                alert('❌ Erreur lors de la création de la demande de retrait. Veuillez réessayer.');
+              }
+            });
+          }
+        }
       } else {
-        alert('Solde insuffisant !');
+        alert(`❌ Solde insuffisant !\n\nMontant demandé : ${requestedAmount.toLocaleString('fr-FR')} FCFA\nSolde disponible : ${maxAmount.toLocaleString('fr-FR')} FCFA`);
       }
     }
   }

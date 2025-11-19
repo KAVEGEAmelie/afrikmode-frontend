@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { AdminService, VendorRequest } from '../../../../core/services/admin.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-admin-vendor-requests',
@@ -306,7 +307,10 @@ export class AdminVendorRequestsComponent implements OnInit {
   // Loading state
   isLoading = false;
 
-  constructor(private adminService: AdminService) {}
+  constructor(
+    private adminService: AdminService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit() {
     this.loadRequests();
@@ -330,84 +334,14 @@ export class AdminVendorRequestsComponent implements OnInit {
       error: (error) => {
         console.error('Erreur chargement demandes:', error);
         this.isLoading = false;
-        // Fallback to mock data for demo
-        this.loadMockData();
+        this.requests = [];
+        this.filteredRequests = [];
+        const errorMessage = error.error?.message || error.message || 'Erreur lors du chargement des candidatures. Veuillez réessayer.';
+        this.toastService.error(errorMessage);
       }
     });
   }
 
-  loadMockData() {
-    // Données de démonstration (fallback)
-    this.requests = [
-      {
-        id: '1',
-        vendor_name: 'Fatou Diallo',
-        email: 'fatou.diallo@example.com',
-        phone: '+221 77 123 45 67',
-        business_name: 'Boutique Diallo Mode',
-        business_type: 'Entreprise individuelle',
-        tax_id: 'SN-2024-00123',
-        address: '123 Rue de la République',
-        city: 'Dakar',
-        country: 'Sénégal',
-        website: 'https://diallomode.sn',
-        description: 'Spécialisée dans les vêtements traditionnels africains de haute qualité avec des tissus locaux.',
-        documents: {
-          business_registration: 'doc_123.pdf',
-          tax_certificate: 'tax_123.pdf',
-          id_card: 'id_123.pdf',
-          product_samples: ['sample1.jpg', 'sample2.jpg', 'sample3.jpg']
-        },
-        status: 'pending',
-        submitted_at: '2025-10-15T10:30:00Z'
-      },
-      {
-        id: '2',
-        vendor_name: 'Kofi Mensah',
-        email: 'kofi.mensah@example.com',
-        phone: '+233 24 987 65 43',
-        business_name: 'Kente Royale',
-        business_type: 'SARL',
-        tax_id: 'GH-2024-00456',
-        address: '45 Independence Avenue',
-        city: 'Accra',
-        country: 'Ghana',
-        description: 'Production et vente de tissus Kente authentiques, fabriqués de manière artisanale.',
-        documents: {
-          business_registration: 'doc_456.pdf',
-          tax_certificate: 'tax_456.pdf',
-          product_samples: ['kente1.jpg', 'kente2.jpg']
-        },
-        status: 'under_review',
-        submitted_at: '2025-10-18T14:20:00Z'
-      },
-      {
-        id: '3',
-        vendor_name: 'Aisha Njoroge',
-        email: 'aisha@maasaistyle.com',
-        phone: '+254 71 234 56 78',
-        business_name: 'Maasai Style Collective',
-        business_type: 'Coopérative',
-        tax_id: 'KE-2024-00789',
-        address: '78 Kenyatta Street',
-        city: 'Nairobi',
-        country: 'Kenya',
-        website: 'https://maasaistyle.co.ke',
-        description: 'Coopérative de femmes artisanes Maasai spécialisées dans les bijoux et accessoires traditionnels.',
-        documents: {
-          business_registration: 'doc_789.pdf',
-          tax_certificate: 'tax_789.pdf',
-          id_card: 'id_789.pdf',
-          product_samples: ['jewelry1.jpg', 'jewelry2.jpg', 'jewelry3.jpg', 'jewelry4.jpg']
-        },
-        status: 'additional_info_required',
-        submitted_at: '2025-10-12T09:15:00Z',
-        notes: 'Documents incomplets - certificat sanitaire manquant pour les produits cosmétiques'
-      }
-    ];
-
-    this.applyFilters();
-  }
 
   applyFilters() {
     let filtered = [...this.requests];
@@ -521,7 +455,7 @@ export class AdminVendorRequestsComponent implements OnInit {
           }
           
           // Afficher un message de succès
-          alert('✅ Boutique approuvée avec succès ! Le vendeur a reçu un email de confirmation.');
+          this.toastService.success('Boutique approuvée avec succès ! Le vendeur a reçu un email de confirmation.');
           
           this.closeModals();
           this.applyFilters();
@@ -529,7 +463,8 @@ export class AdminVendorRequestsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Erreur approbation:', error);
-          alert('❌ Erreur lors de l\'approbation: ' + (error.error?.message || error.message));
+          const errorMessage = error.error?.message || error.message || 'Erreur lors de l\'approbation';
+          this.toastService.error(errorMessage);
           this.isLoading = false;
         }
       });
@@ -552,7 +487,7 @@ export class AdminVendorRequestsComponent implements OnInit {
           }
           
           // Afficher un message de succès
-          alert('❌ Boutique rejetée. Le vendeur a reçu un email avec la raison du rejet.');
+          this.toastService.success('Boutique rejetée. Le vendeur a reçu un email avec la raison du rejet.');
           
           this.closeModals();
           this.applyFilters();
@@ -560,7 +495,8 @@ export class AdminVendorRequestsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Erreur rejet:', error);
-          alert('❌ Erreur lors du rejet: ' + (error.error?.message || error.message));
+          const errorMessage = error.error?.message || error.message || 'Erreur lors du rejet';
+          this.toastService.error(errorMessage);
           this.isLoading = false;
         }
       });
@@ -583,7 +519,7 @@ export class AdminVendorRequestsComponent implements OnInit {
           }
           
           // Afficher un message de succès
-          alert('📝 Demande d\'informations envoyée. Le vendeur a reçu un email.');
+          this.toastService.success('Demande d\'informations envoyée. Le vendeur a reçu un email.');
           
           this.closeModals();
           this.applyFilters();
@@ -591,7 +527,8 @@ export class AdminVendorRequestsComponent implements OnInit {
         },
         error: (error) => {
           console.error('Erreur demande info:', error);
-          alert('❌ Erreur lors de l\'envoi: ' + (error.error?.message || error.message));
+          const errorMessage = error.error?.message || error.message || 'Erreur lors de l\'envoi';
+          this.toastService.error(errorMessage);
           this.isLoading = false;
         }
       });

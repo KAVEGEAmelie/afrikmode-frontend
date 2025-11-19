@@ -55,16 +55,25 @@ export class VendorApplicationSuccessComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.email = params['email'] || '';
       this.shopName = params['shopName'] || '';
+      // Utiliser le numéro de candidature du backend (généré côté serveur)
+      this.applicationNumber = params['applicationNumber'] || '';
+      
+      // Si pas de numéro dans les params, générer un fallback (ne devrait pas arriver)
+      if (!this.applicationNumber) {
+        console.warn('⚠️ Numéro de candidature non trouvé dans les query params, génération fallback');
+        this.applicationNumber = this.generateApplicationNumber();
+      }
     });
-
-    // Generate application number
-    this.applicationNumber = this.generateApplicationNumber();
 
     // Scroll to top
     window.scrollTo(0, 0);
   }
 
-  generateApplicationNumber(): string {
+  /**
+   * Génère un numéro de candidature (fallback uniquement, ne devrait pas être utilisé)
+   * Le vrai numéro vient du backend
+   */
+  private generateApplicationNumber(): string {
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -74,9 +83,9 @@ export class VendorApplicationSuccessComponent implements OnInit {
   }
 
   goToStatusPage(): void {
-    this.router.navigate(['/vendor/application-status'], {
-      queryParams: { applicationNumber: this.applicationNumber }
-    });
+    // Ne pas passer de paramètres - le composant chargera automatiquement
+    // la candidature de l'utilisateur connecté
+    this.router.navigate(['/vendor/application-status']);
   }
 
   goToHome(): void {

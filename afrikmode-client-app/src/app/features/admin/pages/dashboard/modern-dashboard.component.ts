@@ -4,6 +4,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
+import { AdminService } from '../../../../core/services/admin.service';
 
 // Import des composants
 import { KPICardComponent, KPIData } from './components/kpi-card/kpi-card.component';
@@ -11,9 +14,6 @@ import { DonutChartComponent, DonutData } from './components/donut-chart/donut-c
 import { BarChartComponent, BarChartData } from './components/bar-chart/bar-chart.component';
 import { TopProductsComponent, TopProduct } from './components/top-products/top-products.component';
 import { DashboardFiltersComponent, FilterOption } from './components/dashboard-filters/dashboard-filters.component';
-
-// Import du service
-import { DashboardDataService, CategoryData, MonthlyData } from '../../core/services/dashboard-data.service';
 
 @Component({
   selector: 'app-modern-dashboard',
@@ -81,40 +81,13 @@ import { DashboardDataService, CategoryData, MonthlyData } from '../../core/serv
       <!-- Donut Charts Row -->
       <div class="donut-charts-row">
         <app-donut-chart
-          title="Stock par catégorie"
+                    title="Utilisateurs par rôle"
           [data]="stockByCategory"
-          totalValue="366">
+                    [totalValue]="stockByCategoryTotal">
         </app-donut-chart>
         
-        <app-donut-chart
-          title="Valeur par catégorie"
-          [data]="valueByCategory"
-          totalValue="54 852€">
-        </app-donut-chart>
-        
-        <app-donut-chart
-          title="Total des entrées par catégorie"
-          [data]="entriesByCategory"
-          totalValue="992">
-        </app-donut-chart>
-        
-        <app-donut-chart
-          title="Valeur des entrées par catégorie"
-          [data]="entriesValueByCategory"
-          totalValue="291 429€">
-        </app-donut-chart>
-        
-        <app-donut-chart
-          title="Total des sorties par catégorie"
-          [data]="exitsByCategory"
-          totalValue="702">
-        </app-donut-chart>
-        
-        <app-donut-chart
-          title="Valeur des sorties par catégorie"
-          [data]="exitsValueByCategory"
-          totalValue="297 931€">
-        </app-donut-chart>
+                  <!-- Les autres graphiques donut sont spécifiques à la gestion de stock -->
+                  <!-- Ils peuvent être supprimés ou remplis depuis une API spécifique si nécessaire -->
       </div>
 
       <!-- Bottom Grid -->
@@ -125,41 +98,26 @@ import { DashboardDataService, CategoryData, MonthlyData } from '../../core/serv
           [products]="topProducts">
         </app-top-products>
 
-        <!-- Monthly Entries Chart -->
+        <!-- Commandes par mois -->
         <app-bar-chart
-          title="Total des entrées par mois"
+          title="Commandes par mois"
           [data]="monthlyEntries"
-          [maxValue]="450">
+          [maxValue]="monthlyEntriesMax">
         </app-bar-chart>
 
-        <!-- Monthly Entries Value Chart -->
+        <!-- Revenus par mois -->
         <app-bar-chart
-          title="Valeur des entrées par mois"
+          title="Revenus par mois"
           [data]="monthlyEntriesValue"
-          [maxValue]="80000"
+          [maxValue]="monthlyEntriesValueMax"
           [valueFormatter]="formatCurrency">
         </app-bar-chart>
 
         <!-- Products to Replenish -->
         <app-top-products
-          title="Marchandises à approvisionner"
+          title="Produits en rupture de stock"
           [products]="productsToReplenish">
         </app-top-products>
-
-        <!-- Monthly Exits Chart -->
-        <app-bar-chart
-          title="Total des sorties par mois"
-          [data]="monthlyExits"
-          [maxValue]="300">
-        </app-bar-chart>
-
-        <!-- Monthly Exits Value Chart -->
-        <app-bar-chart
-          title="Valeur des sorties par mois"
-          [data]="monthlyExitsValue"
-          [maxValue]="80000"
-          [valueFormatter]="formatCurrency">
-        </app-bar-chart>
       </div>
         </div>
       }
@@ -168,54 +126,11 @@ import { DashboardDataService, CategoryData, MonthlyData } from '../../core/serv
   styleUrls: ['./modern-dashboard.component.scss']
 })
 export class ModernDashboardComponent implements OnInit {
-  lastUpdate = '29/05/2022';
+  lastUpdate = new Date().toLocaleDateString('fr-FR');
   loading = true;
 
-  // KPI Data
-  kpiData: KPIData[] = [
-    {
-      title: 'Stock total',
-      value: '366',
-      icon: 'inventory',
-      color: '#5B5FED',
-      trend: { value: 12, percentage: 12.5, direction: 'up' }
-    },
-    {
-      title: 'Valeur de stock',
-      value: '54 852,09 €',
-      icon: 'account_balance_wallet',
-      color: '#7C3AED',
-      trend: { value: 8, percentage: 8.3, direction: 'up' }
-    },
-    {
-      title: 'Total des entrées',
-      value: '992',
-      icon: 'shopping_cart',
-      color: '#EC4899',
-      trend: { value: -3, percentage: -3.2, direction: 'down' }
-    },
-    {
-      title: 'Valeur des entrées',
-      value: '291 428,95 €',
-      icon: 'trending_up',
-      color: '#06B6D4',
-      trend: { value: 5, percentage: 5.7, direction: 'up' }
-    },
-    {
-      title: 'Total des sorties',
-      value: '702',
-      icon: 'exit_to_app',
-      color: '#F59E0B',
-      trend: { value: 15, percentage: 15.2, direction: 'up' }
-    },
-    {
-      title: 'Valeur des sorties',
-      value: '297 931,00 €',
-      icon: 'money_off',
-      color: '#10B981',
-      trend: { value: 7, percentage: 7.1, direction: 'up' }
-    }
-  ];
+  // KPI Data - Sera rempli depuis l'API
+  kpiData: KPIData[] = [];
 
   // Filter Data
   months: FilterOption[] = [
@@ -247,96 +162,44 @@ export class ModernDashboardComponent implements OnInit {
     { value: 'S2', label: 'S2' }
   ];
 
-  // Donut Charts Data
-  stockByCategory: DonutData[] = [
-    { label: 'Biscuits', value: 254, color: '#5B5FED' },
-    { label: 'Consoles', value: 70, color: '#7C3AED' },
-    { label: 'Electro', value: 27, color: '#EC4899' },
-    { label: 'SmartPhone', value: 15, color: '#06B6D4' }
-  ];
+  // Donut Charts Data - Sera rempli depuis l'API
+  stockByCategory: DonutData[] = [];
+  valueByCategory: DonutData[] = [];
+  entriesByCategory: DonutData[] = [];
+  entriesValueByCategory: DonutData[] = [];
+  exitsByCategory: DonutData[] = [];
+  exitsValueByCategory: DonutData[] = [];
+  
+  // Totaux pour les donut charts
+  stockByCategoryTotal: string = '0';
+  valueByCategoryTotal: string = '0';
+  entriesByCategoryTotal: string = '0';
+  entriesValueByCategoryTotal: string = '0';
+  exitsByCategoryTotal: string = '0';
+  exitsValueByCategoryTotal: string = '0';
 
-  valueByCategory: DonutData[] = [
-    { label: 'Biscuits', value: 17750, color: '#5B5FED' },
-    { label: 'Consoles', value: 25792, color: '#7C3AED' },
-    { label: 'Electro', value: 10589, color: '#EC4899' },
-    { label: 'SmartPhone', value: 721, color: '#06B6D4' }
-  ];
+  // Bar Charts Data - Sera rempli depuis l'API
+  monthlyEntries: BarChartData[] = [];
+  monthlyEntriesValue: BarChartData[] = [];
+  monthlyExits: BarChartData[] = [];
+  monthlyExitsValue: BarChartData[] = [];
+  
+  // Max values pour les bar charts
+  monthlyEntriesMax: number = 100;
+  monthlyEntriesValueMax: number = 100000;
+  monthlyExitsMax: number = 100;
+  monthlyExitsValueMax: number = 100000;
 
-  entriesByCategory: DonutData[] = [
-    { label: 'Biscuits', value: 562, color: '#5B5FED' },
-    { label: 'Consoles', value: 189, color: '#7C3AED' },
-    { label: 'Electro', value: 151, color: '#EC4899' },
-    { label: 'SmartPhone', value: 90, color: '#06B6D4' }
-  ];
+  // Top Products Data - Sera rempli depuis l'API
+  topProducts: TopProduct[] = [];
+  productsToReplenish: TopProduct[] = [];
 
-  entriesValueByCategory: DonutData[] = [
-    { label: 'Biscuits', value: 167360, color: '#5B5FED' },
-    { label: 'Consoles', value: 68550, color: '#7C3AED' },
-    { label: 'Electro', value: 53925, color: '#EC4899' },
-    { label: 'SmartPhone', value: 1594, color: '#06B6D4' }
-  ];
+  private apiUrl = `${environment.apiUrl}/admin`;
 
-  exitsByCategory: DonutData[] = [
-    { label: 'Biscuits', value: 338, color: '#5B5FED' },
-    { label: 'Consoles', value: 147, color: '#7C3AED' },
-    { label: 'Electro', value: 133, color: '#EC4899' },
-    { label: 'SmartPhone', value: 84, color: '#06B6D4' }
-  ];
-
-  exitsValueByCategory: DonutData[] = [
-    { label: 'Biscuits', value: 171550, color: '#5B5FED' },
-    { label: 'Consoles', value: 67960, color: '#7C3AED' },
-    { label: 'Electro', value: 57320, color: '#EC4899' },
-    { label: 'SmartPhone', value: 1141, color: '#06B6D4' }
-  ];
-
-  // Bar Charts Data
-  monthlyEntries: BarChartData[] = [
-    { label: 'janv', value: 137, color: '#5B5FED' },
-    { label: 'févr', value: 184, color: '#7C3AED' },
-    { label: 'mars', value: 142, color: '#EC4899' },
-    { label: 'avr', value: 106, color: '#06B6D4' },
-    { label: 'mai', value: 423, color: '#F59E0B' }
-  ];
-
-  monthlyEntriesValue: BarChartData[] = [
-    { label: 'janv', value: 51548, color: '#5B5FED' },
-    { label: 'févr', value: 76664, color: '#7C3AED' },
-    { label: 'mars', value: 38248, color: '#EC4899' },
-    { label: 'avr', value: 48081, color: '#06B6D4' },
-    { label: 'mai', value: 76047, color: '#F59E0B' }
-  ];
-
-  monthlyExits: BarChartData[] = [
-    { label: 'janv', value: 71, color: '#5B5FED' },
-    { label: 'févr', value: 100, color: '#7C3AED' },
-    { label: 'mars', value: 187, color: '#EC4899' },
-    { label: 'avr', value: 253, color: '#06B6D4' },
-    { label: 'mai', value: 91, color: '#F59E0B' }
-  ];
-
-  monthlyExitsValue: BarChartData[] = [
-    { label: 'janv', value: 38305, color: '#5B5FED' },
-    { label: 'févr', value: 60320, color: '#7C3AED' },
-    { label: 'mars', value: 69065, color: '#EC4899' },
-    { label: 'avr', value: 74985, color: '#06B6D4' },
-    { label: 'mai', value: 55176, color: '#F59E0B' }
-  ];
-
-  // Top Products Data
-  topProducts: TopProduct[] = [
-    { name: 'IPHONE 13 PRO', value: '129 500€', trend: 'up' },
-    { name: 'GOOGLE PIXEL S', value: '42 010€', trend: 'up' },
-    { name: 'Cuisinière CANDY', value: '35 400€', trend: 'stable' }
-  ];
-
-  productsToReplenish: TopProduct[] = [
-    { name: 'Cuisinière CANDY', value: '', status: 'out-of-stock' },
-    { name: 'NINTENDO SWITCH', value: '', status: 'low-stock' },
-    { name: 'Réfrigérateur WHIRLPOOL', value: '', status: 'low-stock' }
-  ];
-
-  constructor(private dashboardDataService: DashboardDataService) {}
+  constructor(
+    private http: HttpClient,
+    private adminService: AdminService
+  ) {}
 
   ngOnInit(): void {
     this.loadDashboardData();
@@ -345,180 +208,183 @@ export class ModernDashboardComponent implements OnInit {
   private loadDashboardData(): void {
     this.loading = true;
     
-    // Charger les données KPI
-    this.dashboardDataService.getKPIData().subscribe(data => {
-      this.updateKPIData(data);
-    });
-
-    // Charger les données par catégorie
-    this.dashboardDataService.getCategoryData().subscribe(data => {
-      this.updateCategoryData(data);
-    });
-
-    // Charger les données mensuelles
-    this.dashboardDataService.getMonthlyData().subscribe(data => {
-      this.updateMonthlyData(data);
-    });
-
-    // Charger les top produits
-    this.dashboardDataService.getTopProducts().subscribe(data => {
-      this.updateTopProducts(data);
-    });
-
-    // Charger les produits à réapprovisionner
-    this.dashboardDataService.getProductsToReplenish().subscribe(data => {
-      this.updateProductsToReplenish(data);
-      this.loading = false;
-    });
-  }
-
-  private updateKPIData(data: any): void {
+    // Charger les statistiques du dashboard depuis l'API
+    this.adminService.getDashboardStats().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const stats = response.data;
+          
+          // Mettre à jour les KPIs avec les vraies données
     this.kpiData = [
       {
-        title: 'Stock total',
-        value: data.stockTotal.toString(),
+              title: 'Utilisateurs totaux',
+              value: this.formatNumber(stats.totalUsers || 0),
         icon: 'inventory',
         color: '#5B5FED',
-        trend: { value: 12, percentage: 12.5, direction: 'up' }
+              trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
-        title: 'Valeur de stock',
-        value: this.formatCurrency(data.stockValue),
+              title: 'Revenus totaux',
+              value: this.formatCurrency(stats.totalRevenue || 0),
         icon: 'account_balance_wallet',
         color: '#7C3AED',
-        trend: { value: 8, percentage: 8.3, direction: 'up' }
+              trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
-        title: 'Total des entrées',
-        value: data.totalEntries.toString(),
+              title: 'Commandes totales',
+              value: this.formatNumber(stats.totalOrders || 0),
         icon: 'shopping_cart',
         color: '#EC4899',
-        trend: { value: -3, percentage: -3.2, direction: 'down' }
+              trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
-        title: 'Valeur des entrées',
-        value: this.formatCurrency(data.entriesValue),
+              title: 'Produits actifs',
+              value: this.formatNumber(stats.totalProducts || 0),
         icon: 'trending_up',
         color: '#06B6D4',
-        trend: { value: 5, percentage: 5.7, direction: 'up' }
+              trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
-        title: 'Total des sorties',
-        value: data.totalExits.toString(),
+              title: 'Boutiques actives',
+              value: this.formatNumber(stats.totalStores || 0),
         icon: 'exit_to_app',
         color: '#F59E0B',
-        trend: { value: 15, percentage: 15.2, direction: 'up' }
+              trend: { value: 0, percentage: 0, direction: 'stable' }
       },
       {
-        title: 'Valeur des sorties',
-        value: this.formatCurrency(data.exitsValue),
+              title: 'Boutiques en attente',
+              value: this.formatNumber(stats.pendingStores || 0),
         icon: 'money_off',
         color: '#10B981',
-        trend: { value: 7, percentage: 7.1, direction: 'up' }
+              trend: { value: 0, percentage: 0, direction: 'stable' }
+            }
+          ];
+          
+          // Charger les graphiques
+          this.loadChartsData();
+        } else {
+          this.loading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des statistiques:', error);
+        this.loading = false;
       }
-    ];
+    });
   }
-
-  private updateCategoryData(data: CategoryData[]): void {
-    this.stockByCategory = data.map(item => ({
-      label: item.name,
-      value: item.stock,
-      color: this.getCategoryColor(item.name)
-    }));
-
-    this.valueByCategory = data.map(item => ({
-      label: item.name,
-      value: item.value,
-      color: this.getCategoryColor(item.name)
-    }));
-
-    this.entriesByCategory = data.map(item => ({
-      label: item.name,
-      value: item.entries,
-      color: this.getCategoryColor(item.name)
-    }));
-
-    this.entriesValueByCategory = data.map(item => ({
-      label: item.name,
-      value: item.entriesValue,
-      color: this.getCategoryColor(item.name)
-    }));
-
-    this.exitsByCategory = data.map(item => ({
-      label: item.name,
-      value: item.exits,
-      color: this.getCategoryColor(item.name)
-    }));
-
-    this.exitsValueByCategory = data.map(item => ({
-      label: item.name,
-      value: item.exitsValue,
-      color: this.getCategoryColor(item.name)
+  
+  private loadChartsData(): void {
+    // Charger les graphiques depuis l'API
+    this.http.get(`${this.apiUrl}/dashboard/charts`).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          const chartsData = response.data;
+          
+          // Top produits
+          if (chartsData.topProducts) {
+            this.topProducts = chartsData.topProducts.slice(0, 3).map((item: any) => ({
+              name: item.name || 'Produit sans nom',
+              value: this.formatCurrency(parseFloat(item.total_revenue || 0)),
+              trend: 'up' as const
     }));
   }
 
-  private updateMonthlyData(data: MonthlyData[]): void {
-    this.monthlyEntries = data.map(item => ({
-      label: item.month,
-      value: item.entries,
-      color: this.getMonthColor(item.month)
-    }));
-
-    this.monthlyEntriesValue = data.map(item => ({
-      label: item.month,
-      value: item.entriesValue,
-      color: this.getMonthColor(item.month)
-    }));
-
-    this.monthlyExits = data.map(item => ({
-      label: item.month,
-      value: item.exits,
-      color: this.getMonthColor(item.month)
-    }));
-
-    this.monthlyExitsValue = data.map(item => ({
-      label: item.month,
-      value: item.exitsValue,
-      color: this.getMonthColor(item.month)
-    }));
+          // Commandes par mois
+          if (chartsData.ordersByMonth) {
+            this.monthlyEntries = chartsData.ordersByMonth.map((item: any, index: number) => ({
+              label: this.formatMonth(item.month),
+              value: parseInt(item.count || 0),
+              color: this.getMonthColor(index)
+            }));
+            const maxEntries = Math.max(...this.monthlyEntries.map(item => item.value), 1);
+            this.monthlyEntriesMax = Math.ceil(maxEntries * 1.1);
+          }
+          
+          // Revenus par mois
+          if (chartsData.revenueByMonth) {
+            this.monthlyEntriesValue = chartsData.revenueByMonth.map((item: any, index: number) => ({
+              label: this.formatMonth(item.month),
+              value: parseFloat(item.revenue || 0),
+              color: this.getMonthColor(index)
+            }));
+            const maxRevenue = Math.max(...this.monthlyEntriesValue.map(item => item.value), 1);
+            this.monthlyEntriesValueMax = Math.ceil(maxRevenue * 1.1);
+          }
+          
+          // Utilisateurs par rôle (pour stockByCategory)
+          if (chartsData.usersByRole) {
+            this.stockByCategory = chartsData.usersByRole.map((item: any, index: number) => ({
+              label: this.getRoleLabel(item.role),
+              value: parseInt(item.count || 0),
+              color: this.getCategoryColor(index)
+            }));
+            const total = this.stockByCategory.reduce((sum, item) => sum + item.value, 0);
+            this.stockByCategoryTotal = this.formatNumber(total);
+          }
+        }
+        
+        // Charger les produits en rupture de stock
+        this.loadProductsToReplenish();
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des graphiques:', error);
+        this.loadProductsToReplenish();
+      }
+    });
   }
-
-  private updateTopProducts(data: TopProduct[]): void {
-    this.topProducts = data.map(item => ({
-      name: item.name,
-      value: typeof item.value === 'number' ? this.formatCurrency(item.value) : item.value.toString(),
-      trend: 'up' as const
-    }));
+  
+  private loadProductsToReplenish(): void {
+    this.http.get(`${this.apiUrl}/products/out-of-stock?limit=3`).subscribe({
+      next: (response: any) => {
+        if (response.success && response.data) {
+          this.productsToReplenish = response.data.slice(0, 3).map((item: any) => ({
+            name: item.name || 'Produit sans nom',
+            value: '',
+            status: (item.stock || 0) === 0 ? 'out-of-stock' : 'low-stock'
+          }));
+        } else {
+          this.productsToReplenish = [];
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Erreur lors du chargement des produits en rupture:', error);
+        this.productsToReplenish = [];
+        this.loading = false;
+      }
+    });
   }
-
-  private updateProductsToReplenish(data: TopProduct[]): void {
-    this.productsToReplenish = data.map(item => ({
-      name: item.name,
-      value: '',
-      status: item.status
-    }));
+  
+  private formatMonth(monthStr: string): string {
+    const [year, month] = monthStr.split('-');
+    const months = ['janv', 'févr', 'mars', 'avr', 'mai', 'jun', 'jul', 'aoû', 'sep', 'oct', 'nov', 'déc'];
+    return months[parseInt(month) - 1] || monthStr;
   }
-
-  private getCategoryColor(category: string): string {
-    const colors: { [key: string]: string } = {
-      'Biscuits': '#5B5FED',
-      'Consoles': '#7C3AED',
-      'Electro': '#EC4899',
-      'SmartPhone': '#06B6D4'
+  
+  private getRoleLabel(role: string): string {
+    const labels: { [key: string]: string } = {
+      'customer': 'Clients',
+      'vendor': 'Vendeurs',
+      'admin': 'Admins',
+      'super_admin': 'Super Admins'
     };
-    return colors[category] || '#6b7280';
+    return labels[role] || role;
+  }
+  
+  private getCategoryColor(index: number): string {
+    const colors = ['#5B5FED', '#7C3AED', '#EC4899', '#06B6D4', '#F59E0B', '#10B981'];
+    return colors[index % colors.length];
+  }
+  
+  private getMonthColor(index: number): string {
+    const colors = ['#5B5FED', '#7C3AED', '#EC4899', '#06B6D4', '#F59E0B', '#10B981'];
+    return colors[index % colors.length];
+  }
+  
+  private formatNumber(value: number): string {
+    return new Intl.NumberFormat('fr-FR').format(value);
   }
 
-  private getMonthColor(month: string): string {
-    const colors: { [key: string]: string } = {
-      'janv': '#5B5FED',
-      'févr': '#7C3AED',
-      'mars': '#EC4899',
-      'avr': '#06B6D4',
-      'mai': '#F59E0B'
-    };
-    return colors[month] || '#6b7280';
-  }
 
   onFiltersChanged(filters: any): void {
     console.log('Filters changed:', filters);

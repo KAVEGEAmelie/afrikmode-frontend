@@ -21,6 +21,7 @@ import {
 })
 export class AuthService {
   private baseUrl = environment.apiUrl;
+  private isLoggingOut = false; // Flag pour éviter les appels multiples
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
@@ -112,6 +113,19 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
+    // Éviter les appels multiples
+    if (this.isLoggingOut) {
+      console.log('⚠️ Logout déjà en cours, nettoyage local uniquement');
+      this.clearAuthData();
+      this.router.navigate(['/']);
+      return new Observable(observer => {
+        observer.next({ success: true, message: 'Déconnexion locale' });
+        observer.complete();
+      });
+    }
+
+    this.isLoggingOut = true;
+    
     return this.http.post(`${this.baseUrl}/auth/logout`, {}, {
       headers: this.getHeaders()
     }).pipe(
@@ -119,12 +133,14 @@ export class AuthService {
         next: () => {
           console.log('✅ Logout réussi côté serveur');
           this.clearAuthData();
+          this.isLoggingOut = false;
           this.router.navigate(['/']);
         },
         error: (error) => {
           console.log('⚠️ Erreur logout serveur, déconnexion côté client');
           // Même en cas d'erreur serveur, on nettoie côté client
           this.clearAuthData();
+          this.isLoggingOut = false;
           this.router.navigate(['/']);
         }
       })

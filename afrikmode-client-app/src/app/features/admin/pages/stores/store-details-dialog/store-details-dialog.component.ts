@@ -7,6 +7,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../../environments/environment';
 
 export interface StoreDetailsData {
   store: any;
@@ -23,7 +26,8 @@ export interface StoreDetailsData {
     MatCardModule,
     MatChipsModule,
     MatDividerModule,
-    MatTabsModule
+    MatTabsModule,
+    MatProgressSpinnerModule
   ],
   template: `
     <div class="store-details-dialog">
@@ -184,6 +188,144 @@ export interface StoreDetailsData {
                   </div>
                 </mat-card-content>
               </mat-card>
+            </div>
+          </mat-tab>
+
+          <!-- Produits -->
+          <mat-tab label="Produits">
+            <div class="tab-content">
+              <div class="tab-header">
+                <h3>Produits de la boutique</h3>
+                <button mat-raised-button color="primary" (click)="loadProducts()">
+                  <mat-icon>refresh</mat-icon>
+                  Actualiser
+                </button>
+              </div>
+              @if (loadingProducts) {
+                <div class="loading-state">
+                  <mat-spinner diameter="40"></mat-spinner>
+                  <p>Chargement des produits...</p>
+                </div>
+              } @else {
+                <div class="products-list">
+                  @if (products.length === 0) {
+                    <div class="empty-state">
+                      <mat-icon>inventory_2</mat-icon>
+                      <p>Aucun produit pour cette boutique</p>
+                    </div>
+                  } @else {
+                    <div class="products-grid">
+                      @for (product of products; track product.id) {
+                        <mat-card class="product-card">
+                          <img *ngIf="product.primary_image" [src]="product.primary_image" [alt]="product.name" class="product-image">
+                          <mat-icon *ngIf="!product.primary_image" class="product-icon">image</mat-icon>
+                          <mat-card-content>
+                            <h4>{{ product.name }}</h4>
+                            <p class="product-price">{{ formatCurrency(product.price) }}</p>
+                            <div class="product-stats">
+                              <span><mat-icon>inventory</mat-icon> Stock: {{ product.stock_quantity }}</span>
+                              <span><mat-icon>star</mat-icon> {{ product.average_rating || 0 }}/5</span>
+                            </div>
+                          </mat-card-content>
+                        </mat-card>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Commandes -->
+          <mat-tab label="Commandes">
+            <div class="tab-content">
+              <div class="tab-header">
+                <h3>Commandes de la boutique</h3>
+                <button mat-raised-button color="primary" (click)="loadOrders()">
+                  <mat-icon>refresh</mat-icon>
+                  Actualiser
+                </button>
+              </div>
+              @if (loadingOrders) {
+                <div class="loading-state">
+                  <mat-spinner diameter="40"></mat-spinner>
+                  <p>Chargement des commandes...</p>
+                </div>
+              } @else {
+                <div class="orders-list">
+                  @if (orders.length === 0) {
+                    <div class="empty-state">
+                      <mat-icon>shopping_cart</mat-icon>
+                      <p>Aucune commande pour cette boutique</p>
+                    </div>
+                  } @else {
+                    <table class="orders-table">
+                      <thead>
+                        <tr>
+                          <th>N° Commande</th>
+                          <th>Client</th>
+                          <th>Montant</th>
+                          <th>Statut</th>
+                          <th>Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (order of orders; track order.id) {
+                          <tr>
+                            <td>{{ order.order_number }}</td>
+                            <td>{{ order.first_name }} {{ order.last_name }}</td>
+                            <td>{{ formatCurrency(order.total_amount) }}</td>
+                            <td><mat-chip [ngClass]="'status-' + order.status">{{ getStatusLabel(order.status) }}</mat-chip></td>
+                            <td>{{ formatDate(order.created_at) }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  }
+                </div>
+              }
+            </div>
+          </mat-tab>
+
+          <!-- Historique -->
+          <mat-tab label="Historique">
+            <div class="tab-content">
+              <div class="tab-header">
+                <h3>Historique de la boutique</h3>
+                <button mat-raised-button color="primary" (click)="loadHistory()">
+                  <mat-icon>refresh</mat-icon>
+                  Actualiser
+                </button>
+              </div>
+              @if (loadingHistory) {
+                <div class="loading-state">
+                  <mat-spinner diameter="40"></mat-spinner>
+                  <p>Chargement de l'historique...</p>
+                </div>
+              } @else {
+                <div class="history-list">
+                  @if (history.length === 0) {
+                    <div class="empty-state">
+                      <mat-icon>history</mat-icon>
+                      <p>Aucun historique disponible</p>
+                    </div>
+                  } @else {
+                    <div class="history-timeline">
+                      @for (item of history; track item.date) {
+                        <div class="history-item">
+                          <div class="history-icon">
+                            <mat-icon>{{ getHistoryIcon(item.type) }}</mat-icon>
+                          </div>
+                          <div class="history-content">
+                            <p class="history-description">{{ item.description }}</p>
+                            <span class="history-date">{{ formatDate(item.date) }}</span>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              }
             </div>
           </mat-tab>
 
@@ -435,6 +577,142 @@ export interface StoreDetailsData {
       }
     }
 
+    .tab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 16px;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .product-card {
+      cursor: pointer;
+      transition: transform 0.2s;
+
+      &:hover {
+        transform: translateY(-4px);
+      }
+    }
+
+    .product-image {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+    }
+
+    .product-icon {
+      width: 100%;
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+      color: #ccc;
+    }
+
+    .product-price {
+      font-size: 18px;
+      font-weight: 600;
+      color: #10b981;
+      margin: 8px 0;
+    }
+
+    .product-stats {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: #666;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      th {
+        background: #f8f9fa;
+        font-weight: 600;
+      }
+    }
+
+    .history-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .history-item {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .history-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #10b981;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .history-content {
+      flex: 1;
+    }
+
+    .history-description {
+      margin: 0 0 4px 0;
+      font-weight: 500;
+    }
+
+    .history-date {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+
+      mat-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+      }
+    }
+
     mat-dialog-actions {
       padding: 16px 0 0 0;
       margin: 0;
@@ -473,10 +751,19 @@ export interface StoreDetailsData {
 })
 export class StoreDetailsDialogComponent {
   store: any;
+  products: any[] = [];
+  orders: any[] = [];
+  history: any[] = [];
+  loadingProducts = false;
+  loadingOrders = false;
+  loadingHistory = false;
+
+  private apiUrl = `${environment.apiUrl}/admin/stores`;
 
   constructor(
     private dialogRef: MatDialogRef<StoreDetailsDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: StoreDetailsData
+    @Inject(MAT_DIALOG_DATA) public data: StoreDetailsData,
+    private http: HttpClient
   ) {
     this.store = data.store;
   }
@@ -529,6 +816,68 @@ export class StoreDetailsDialogComponent {
   viewSamples(samples: string[]): void {
     // TODO: Ouvrir une galerie d'images
     console.log('Échantillons:', samples);
+  }
+
+  loadProducts(): void {
+    if (!this.store.id) return;
+    this.loadingProducts = true;
+    this.http.get<{ success: boolean; data: any[] }>(`${this.apiUrl}/${this.store.id}/products`).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.products = response.data;
+        }
+        this.loadingProducts = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement produits:', error);
+        this.loadingProducts = false;
+      }
+    });
+  }
+
+  loadOrders(): void {
+    if (!this.store.id) return;
+    this.loadingOrders = true;
+    this.http.get<{ success: boolean; data: any[] }>(`${this.apiUrl}/${this.store.id}/orders`).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.orders = response.data;
+        }
+        this.loadingOrders = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement commandes:', error);
+        this.loadingOrders = false;
+      }
+    });
+  }
+
+  loadHistory(): void {
+    if (!this.store.id) return;
+    this.loadingHistory = true;
+    this.http.get<{ success: boolean; data: { store_info: any; history: any[] } }>(`${this.apiUrl}/${this.store.id}/history`).subscribe({
+      next: (response) => {
+        if (response.success && response.data.history) {
+          this.history = response.data.history;
+        }
+        this.loadingHistory = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement historique:', error);
+        this.loadingHistory = false;
+      }
+    });
+  }
+
+  getHistoryIcon(type: string): string {
+    const icons: { [key: string]: string } = {
+      'status_change': 'swap_horiz',
+      'product_added': 'add_circle',
+      'order_received': 'shopping_cart',
+      'verification': 'verified',
+      'suspension': 'block'
+    };
+    return icons[type] || 'info';
   }
 
   onClose(): void {

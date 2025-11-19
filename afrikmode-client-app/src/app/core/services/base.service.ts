@@ -45,42 +45,47 @@ export class BaseService {
       });
     }
 
-    return this.http.get<T>(`${this.baseUrl}${endpoint}`, {
+    return this.http.get<any>(`${this.baseUrl}${endpoint}`, {
       headers: this.getHeaders(),
       params: httpParams
     }).pipe(
+      map(response => response?.data || response),
       catchError(this.handleError)
     );
   }
 
   protected post<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.post<T>(`${this.baseUrl}${endpoint}`, body, {
+    return this.http.post<any>(`${this.baseUrl}${endpoint}`, body, {
       headers: this.getHeaders()
     }).pipe(
+      map(response => response?.data || response),
       catchError(this.handleError)
     );
   }
 
   protected put<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.put<T>(`${this.baseUrl}${endpoint}`, body, {
+    return this.http.put<any>(`${this.baseUrl}${endpoint}`, body, {
       headers: this.getHeaders()
     }).pipe(
+      map(response => response?.data || response),
       catchError(this.handleError)
     );
   }
 
   protected patch<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.patch<T>(`${this.baseUrl}${endpoint}`, body, {
+    return this.http.patch<any>(`${this.baseUrl}${endpoint}`, body, {
       headers: this.getHeaders()
     }).pipe(
+      map(response => response?.data || response),
       catchError(this.handleError)
     );
   }
 
   protected delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.baseUrl}${endpoint}`, {
+    return this.http.delete<any>(`${this.baseUrl}${endpoint}`, {
       headers: this.getHeaders()
     }).pipe(
+      map(response => response?.data || response),
       catchError(this.handleError)
     );
   }

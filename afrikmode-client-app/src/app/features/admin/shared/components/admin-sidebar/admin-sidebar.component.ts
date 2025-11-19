@@ -2,7 +2,6 @@ import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@a
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -17,8 +16,6 @@ export interface AdminMenuItem {
   label: string;
   icon: string;
   route?: string;
-  badge?: number;
-  badgeColor?: 'primary' | 'success' | 'warning' | 'error' | 'info';
   children?: AdminMenuItem[];
   expanded?: boolean;
   hidden?: boolean;
@@ -32,7 +29,6 @@ export interface AdminMenuItem {
     CommonModule,
     MatIconModule,
     MatListModule,
-    MatBadgeModule,
     MatButtonModule,
     MatDividerModule,
     MatTooltipModule,
@@ -100,12 +96,6 @@ export interface AdminMenuItem {
 
                 @if (!collapsed) {
                   <div class="menu-item-meta">
-                    @if (item.badge && !hasChildren(item)) {
-                      <span class="badge" [class]="'badge-' + (item.badgeColor || 'primary')">
-                        {{ item.badge }}
-                      </span>
-                    }
-                    
                     @if (hasChildren(item)) {
                       <i 
                         class="arrow-icon fas fa-chevron-down"
@@ -128,12 +118,6 @@ export interface AdminMenuItem {
                       
                       <i class="submenu-icon fas {{ child.icon }}"></i>
                       <span class="submenu-label">{{ child.label }}</span>
-                      
-                      @if (child.badge) {
-                        <span class="badge badge-sm" [class]="'badge-' + (child.badgeColor || 'primary')">
-                          {{ child.badge }}
-                        </span>
-                      }
                     </div>
                   }
                 </div>
@@ -482,48 +466,6 @@ export interface AdminMenuItem {
           transition: all 0.2s ease;
         }
 
-        .badge {
-          &.badge-sm {
-            font-size: 10px;
-            padding: 2px 6px;
-          }
-        }
-      }
-    }
-
-    // === BADGES ===
-    .badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 12px;
-      text-align: center;
-      min-width: 22px;
-      transition: all 0.2s ease;
-
-      &.badge-primary {
-        background: rgba(59, 130, 246, 0.2);
-        color: #60a5fa;
-      }
-
-      &.badge-success {
-        background: rgba(34, 197, 94, 0.2);
-        color: #4ade80;
-      }
-
-      &.badge-warning {
-        background: rgba(251, 191, 36, 0.2);
-        color: #fbbf24;
-      }
-
-      &.badge-error {
-        background: rgba(239, 68, 68, 0.2);
-        color: #f87171;
-      }
-
-      &.badge-info {
-        background: rgba(14, 165, 233, 0.2);
-        color: #38bdf8;
       }
     }
 
@@ -593,39 +535,38 @@ export class AdminSidebarComponent implements OnInit {
       id: 'users',
       label: 'Utilisateurs',
       icon: 'fa-users',
-      badge: 1234,
-      badgeColor: 'primary',
       expanded: false,
       children: [
         {
           id: 'users-all',
           label: 'Tous les utilisateurs',
           icon: 'fa-list',
-          route: '/admin/users',
-          badge: 1234
+          route: '/admin/users'
         },
         {
           id: 'users-customers',
           label: 'Clients',
           icon: 'fa-user',
           route: '/admin/users/clients',
-          badge: 856
+         
         },
         {
           id: 'users-vendors',
           label: 'Vendeurs',
           icon: 'fa-store',
-          route: '/admin/users/vendors',
-          badge: 234,
-          badgeColor: 'success'
+          route: '/admin/users/vendors'
+        },
+        {
+          id: 'vendor-requests',
+          label: 'Candidatures Vendeur',
+          icon: 'fa-user-check',
+          route: '/admin/vendor-requests'
         },
         {
           id: 'users-admins',
           label: 'Administrateurs',
           icon: 'fa-user-shield',
-          route: '/admin/users/admins',
-          badge: 8,
-          badgeColor: 'error'
+          route: '/admin/users/admins'
         }
       ],
       divider: true
@@ -636,8 +577,6 @@ export class AdminSidebarComponent implements OnInit {
       id: 'stores',
       label: 'Boutiques',
       icon: 'fa-store-alt',
-      badge: 234,
-      badgeColor: 'success',
       expanded: false,
       children: [
         {
@@ -645,31 +584,25 @@ export class AdminSidebarComponent implements OnInit {
           label: 'Toutes les boutiques',
           icon: 'fa-list',
           route: '/admin/stores/all',
-          badge: 234
+         
         },
         {
           id: 'stores-pending',
           label: 'En attente',
           icon: 'fa-clock',
-          route: '/admin/stores/pending',
-          badge: 12,
-          badgeColor: 'warning'
+          route: '/admin/stores/pending'
         },
         {
           id: 'stores-verified',
           label: 'Vérifiées',
           icon: 'fa-check-circle',
-          route: '/admin/stores/verified',
-          badge: 210,
-          badgeColor: 'success'
+          route: '/admin/stores/verified'
         },
         {
           id: 'stores-suspended',
           label: 'Suspendues',
           icon: 'fa-ban',
-          route: '/admin/stores/suspended',
-          badge: 12,
-          badgeColor: 'error'
+          route: '/admin/stores/suspended'
         }
       ]
     },
@@ -678,8 +611,6 @@ export class AdminSidebarComponent implements OnInit {
       id: 'products',
       label: 'Produits',
       icon: 'fa-boxes',
-      badge: 2456,
-      badgeColor: 'info',
       expanded: false,
       children: [
         {
@@ -687,30 +618,26 @@ export class AdminSidebarComponent implements OnInit {
           label: 'Tous les produits',
           icon: 'fa-list',
           route: '/admin/products/all',
-          badge: 2456
+        
         },
         {
           id: 'products-categories',
           label: 'Catégories',
           icon: 'fa-tags',
           route: '/admin/categories',
-          badge: 45
+        
         },
         {
           id: 'products-pending',
           label: 'En modération',
           icon: 'fa-clock',
-          route: '/admin/products/moderation',
-          badge: 23,
-          badgeColor: 'warning'
+          route: '/admin/products/moderation'
         },
         {
           id: 'products-out-stock',
           label: 'Rupture de stock',
           icon: 'fa-exclamation-triangle',
-          route: '/admin/products/out-of-stock',
-          badge: 56,
-          badgeColor: 'error'
+          route: '/admin/products/out-of-stock'
         }
       ]
     },
@@ -719,8 +646,6 @@ export class AdminSidebarComponent implements OnInit {
       id: 'orders',
       label: 'Commandes',
       icon: 'fa-shopping-cart',
-      badge: 456,
-      badgeColor: 'warning',
       expanded: false,
       children: [
         {
@@ -728,39 +653,31 @@ export class AdminSidebarComponent implements OnInit {
           label: 'Toutes les commandes',
           icon: 'fa-list',
           route: '/admin/orders/all',
-          badge: 456
+       
         },
         {
           id: 'orders-pending',
           label: 'En attente',
           icon: 'fa-hourglass-half',
-          route: '/admin/orders/pending',
-          badge: 34,
-          badgeColor: 'warning'
+          route: '/admin/orders/pending'
         },
         {
           id: 'orders-processing',
           label: 'En traitement',
           icon: 'fa-spinner',
-          route: '/admin/orders/processing',
-          badge: 67,
-          badgeColor: 'info'
+          route: '/admin/orders/processing'
         },
         {
           id: 'orders-shipped',
           label: 'Expédiées',
           icon: 'fa-shipping-fast',
-          route: '/admin/orders/shipped',
-          badge: 123,
-          badgeColor: 'primary'
+          route: '/admin/orders/shipped'
         },
         {
           id: 'orders-delivered',
           label: 'Livrées',
           icon: 'fa-check-circle',
-          route: '/admin/orders/delivered',
-          badge: 232,
-          badgeColor: 'success'
+          route: '/admin/orders/delivered'
         }
       ],
       divider: true
@@ -771,8 +688,6 @@ export class AdminSidebarComponent implements OnInit {
       id: 'payments',
       label: 'Paiements',
       icon: 'fa-money-bill-wave',
-      badge: 89,
-      badgeColor: 'success',
       expanded: false,
       children: [
         {
@@ -785,24 +700,19 @@ export class AdminSidebarComponent implements OnInit {
           id: 'payments-pending',
           label: 'En attente',
           icon: 'fa-clock',
-          route: '/admin/payments/pending',
-          badge: 12,
-          badgeColor: 'warning'
+          route: '/admin/payments/pending'
         },
         {
           id: 'payments-completed',
           label: 'Complétés',
           icon: 'fa-check',
-          route: '/admin/payments/completed',
-          badgeColor: 'success'
+          route: '/admin/payments/completed'
         },
         {
           id: 'payments-failed',
           label: 'Échoués',
           icon: 'fa-times-circle',
-          route: '/admin/payments/failed',
-          badge: 5,
-          badgeColor: 'error'
+          route: '/admin/payments/failed'
         }
       ]
     },
@@ -865,14 +775,14 @@ export class AdminSidebarComponent implements OnInit {
           label: 'Codes promo',
           icon: 'fa-ticket-alt',
           route: '/admin/marketing/coupons',
-          badge: 45
+          
         },
         {
           id: 'marketing-promotions',
           label: 'Promotions',
           icon: 'fa-percent',
           route: '/admin/marketing/promotions',
-          badge: 12
+        
         },
         {
           id: 'marketing-newsletter',
@@ -939,9 +849,7 @@ export class AdminSidebarComponent implements OnInit {
       id: 'media',
       label: 'Médiathèque',
       icon: 'fa-photo-video',
-      route: '/admin/media',
-      badge: 1567,
-      badgeColor: 'info'
+      route: '/admin/media'
     },
 
     {
@@ -972,8 +880,7 @@ export class AdminSidebarComponent implements OnInit {
           id: 'content-reviews',
           label: 'Avis clients',
           icon: 'fa-star',
-          route: '/admin/content/reviews',
-          badge: 234
+          route: '/admin/content/reviews'
         }
       ],
       divider: true
@@ -1058,18 +965,14 @@ export class AdminSidebarComponent implements OnInit {
       id: 'notifications',
       label: 'Notifications',
       icon: 'fa-bell',
-      route: '/admin/notifications',
-      badge: 45,
-      badgeColor: 'warning'
+      route: '/admin/notifications'
     },
 
     {
       id: 'messages',
       label: 'Messages',
       icon: 'fa-comments',
-      route: '/admin/messages',
-      badge: 12,
-      badgeColor: 'info'
+      route: '/admin/messages'
     },
 
     {
@@ -1082,17 +985,13 @@ export class AdminSidebarComponent implements OnInit {
           id: 'support-tickets',
           label: 'Tickets',
           icon: 'fa-ticket-alt',
-          route: '/admin/support/tickets',
-          badge: 23,
-          badgeColor: 'error'
+          route: '/admin/support/tickets'
         },
         {
           id: 'support-live-chat',
           label: 'Chat en direct',
           icon: 'fa-comment-dots',
-          route: '/admin/support/chat',
-          badge: 5,
-          badgeColor: 'success'
+          route: '/admin/support/chat'
         },
         {
           id: 'support-knowledge',
@@ -1176,8 +1075,6 @@ export class AdminSidebarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Charger les statistiques depuis le backend
-    this.loadUserStats();
     this.currentRoute = this.router.url;
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -1197,49 +1094,6 @@ export class AdminSidebarComponent implements OnInit {
     this.isMobile = window.innerWidth < 768;
   }
 
-  private loadUserStats(): void {
-    this.adminService.getUserStats().subscribe({
-      next: (response: any) => {
-        if (response.success && response.data) {
-          this.updateUserBadges(response.data);
-        }
-      },
-      error: (error: any) => {
-        console.error('Erreur chargement stats utilisateurs:', error);
-        // En cas d'erreur, on garde les valeurs par défaut
-      }
-    });
-  }
-
-  private updateUserBadges(stats: any): void {
-    // Trouver le menu "Utilisateurs"
-    const usersMenu = this.menuItems.find(item => item.id === 'users');
-    if (usersMenu && usersMenu.children) {
-      // Mettre à jour le badge principal
-      usersMenu.badge = stats.total || 0;
-      
-      // Mettre à jour les badges des sous-menus
-      const allUsersItem = usersMenu.children.find(child => child.id === 'users-all');
-      if (allUsersItem) {
-        allUsersItem.badge = stats.total || 0;
-      }
-      
-      const customersItem = usersMenu.children.find(child => child.id === 'users-customers');
-      if (customersItem) {
-        customersItem.badge = stats.customers || 0;
-      }
-      
-      const vendorsItem = usersMenu.children.find(child => child.id === 'users-vendors');
-      if (vendorsItem) {
-        vendorsItem.badge = stats.vendors || 0;
-      }
-      
-      const adminsItem = usersMenu.children.find(child => child.id === 'users-admins');
-      if (adminsItem) {
-        adminsItem.badge = stats.admins || 0;
-      }
-    }
-  }
 
   toggleSidebar() {
     this.collapsed = !this.collapsed;

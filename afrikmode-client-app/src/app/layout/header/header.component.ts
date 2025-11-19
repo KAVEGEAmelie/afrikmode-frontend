@@ -3,11 +3,14 @@ import { CommonModule, NgIf, NgFor } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, filter, take } from 'rxjs/operators';
+import { NavigationEnd } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CartService } from '../../core/services/cart.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { ProductService } from '../../core/services/product.service';
+import { VendorApplicationService } from '../../core/services/vendor-application.service';
+import { StoreService } from '../../core/services/store.service';
 import { Cart, Product } from '../../core/models';
 
 @Component({
@@ -24,6 +27,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
   wishlistCount$!: Observable<number>;
   showUserMenu = false; // Pour afficher/masquer le menu utilisateur
   
+  // Variables pour le bouton vendeur intelligent
+  vendorApplicationStatus: 'none' | 'pending' | 'approved' | 'rejected' = 'none';
+  vendorButtonText: string = 'Devenir vendeur';
+  vendorButtonRoute: string = '/vendor/apply';
+  vendorButtonQueryParams: any = {};
+  isCheckingVendorStatus = false;
+  
   // Variables pour la recherche
   searchQuery = '';
   searchResults: Product[] = [];
@@ -39,9 +49,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
+    private storeService: StoreService,
     private cartService: CartService,
     private wishlistService: WishlistService,
     private productService: ProductService,
+    private vendorApplicationService: VendorApplicationService,
     private router: Router,
     private elementRef: ElementRef
   ) {}
@@ -57,6 +69,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
       if (isAuth) {
         this.cartService.loadCartData();
         this.wishlistService.loadWishlistData();
+        // Vérifier le statut de la candidature vendeur
+        this.checkVendorStatus();
+      } else {
+        // Réinitialiser le statut vendeur si déconnecté
+        this.resetVendorStatus();
       }
     });
     this.subscriptions.add(authSub);
@@ -89,6 +106,32 @@ export class HeaderComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions.add(searchSub);
+
+    // Écouter les changements de route pour re-vérifier le statut
+    const routeSub = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      debounceTime(500) // Attendre 500ms après la navigation
+    ).subscribe(() => {
+      // Re-vérifier le statut après chaque navigation
+      // Utiliser take(1) pour prendre une seule valeur et se désabonner automatiquement
+      this.authService.isAuthenticated$.pipe(
+        take(1),
+        filter(isAuth => isAuth === true)
+      ).subscribe(() => {
+        this.checkVendorStatus();
+      });
+    });
+    this.subscriptions.add(routeSub);
+
+    // Écouter les événements de création de boutique
+    const storeCreatedSub = this.storeService.storeCreated$.subscribe(() => {
+      console.log('🔄 Boutique créée - Mise à jour du statut...');
+      // Re-vérifier le statut après création d'une boutique
+      setTimeout(() => {
+        this.checkVendorStatus();
+      }, 1000);
+    });
+    this.subscriptions.add(storeCreatedSub);
   }
 
   ngOnDestroy(): void {
@@ -175,11 +218,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
     // Ne déclencher l'animation que si le scroll dépasse le seuil
     if (scrollDifference > this.scrollThreshold) {
       if (scrollTop > this.lastScrollTop) {
-        // Scroll vers le bas - CACHER le header (utilisateur scrolle vers le bas)
+        // Scroll vers le bas - CACHER le header
         this.isHeaderVisible = false;
-        this.showUserMenu = false; // Fermer le menu aussi
+        this.showUserMenu = false;
       } else {
-        // Scroll vers le haut - MONTRER le header (utilisateur remonte)
+        // Scroll vers le haut - MONTRER le header
         this.isHeaderVisible = true;
       }
       this.lastScrollTop = scrollTop;
@@ -213,5 +256,79 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.router.navigate(['/']);
       }
     });
+  }
+
+  /**
+   * Vérifier le statut des boutiques de l'utilisateur
+   * Utilise le nouvel endpoint /api/stores/my/status qui vérifie les boutiques réelles
+   */
+  private checkVendorStatus(): void {
+    this.isCheckingVendorStatus = true;
+    console.log('🔍 Vérification du statut des boutiques...');
+    
+    this.storeService.getMyStoresStatus().subscribe({
+      next: (response) => {
+        this.isCheckingVendorStatus = false;
+        console.log('📥 Statut boutiques reçu:', response);
+        
+        if (response.success && response.data) {
+          const { buttonStatus, buttonText, buttonRoute } = response.data;
+          
+          // Mapper le buttonStatus vers vendorApplicationStatus
+          if (buttonStatus === 'active') {
+            this.vendorApplicationStatus = 'approved';
+            this.vendorButtonText = buttonText || 'Mon Dashboard';
+            this.vendorButtonRoute = buttonRoute || '/vendor/dashboard';
+            this.vendorButtonQueryParams = {};
+            console.log('✅ Boutique active - Dashboard disponible');
+          } else if (buttonStatus === 'pending') {
+            this.vendorApplicationStatus = 'pending';
+            this.vendorButtonText = buttonText || 'Suivre ma candidature';
+            // Parser la route pour extraire le path et les query params
+            const routeParts = (buttonRoute || '/vendor/application-status').split('?');
+            this.vendorButtonRoute = routeParts[0];
+            // Extraire les query params
+            if (routeParts.length > 1) {
+              const params = new URLSearchParams(routeParts[1]);
+              this.vendorButtonQueryParams = {};
+              params.forEach((value, key) => {
+                this.vendorButtonQueryParams[key] = value;
+              });
+            } else {
+              // Si pas de query params dans buttonRoute, essayer de les récupérer depuis latestStore
+              if (response.data.latestStore?.applicationNumber) {
+                this.vendorButtonQueryParams = { number: response.data.latestStore.applicationNumber };
+              } else {
+                this.vendorButtonQueryParams = {};
+              }
+            }
+            console.log('⏳ Boutique en attente - Suivi disponible', this.vendorButtonQueryParams);
+          } else {
+            // Aucune boutique (buttonStatus === 'none')
+            this.resetVendorStatus();
+            console.log('ℹ️ Aucune boutique - affichage bouton par défaut');
+          }
+        } else {
+          this.resetVendorStatus();
+        }
+      },
+      error: (error) => {
+        this.isCheckingVendorStatus = false;
+        console.error('❌ Erreur checkVendorStatus:', error);
+        // En cas d'erreur, afficher le bouton par défaut
+        this.resetVendorStatus();
+        console.log('ℹ️ Erreur ou aucune boutique trouvée');
+      }
+    });
+  }
+
+  /**
+   * Réinitialiser le statut vendeur aux valeurs par défaut
+   */
+  private resetVendorStatus(): void {
+    this.vendorApplicationStatus = 'none';
+    this.vendorButtonText = 'Devenir vendeur';
+    this.vendorButtonRoute = '/vendor/apply';
+    this.vendorButtonQueryParams = {};
   }
 }

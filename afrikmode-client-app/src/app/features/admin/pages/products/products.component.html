@@ -307,4 +307,14 @@
       </div>
     </mat-card-content>
   </mat-card>
+
+  <!-- Product Form Modal -->
+  @if (showProductForm) {
+    <app-product-form 
+      [isVisible]="showProductForm"
+      [isEditMode]="false"
+      (close)="closeProductForm()"
+      (save)="saveProduct($event)">
+    </app-product-form>
+  }
 </div>

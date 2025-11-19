@@ -102,6 +102,8 @@ export class AddressesComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
+    console.log('🚀 Envoi création adresse vers API:', this.newAddress);
+
     this.addressService.createAddress(this.newAddress as Address).subscribe({
       next: (address) => {
         console.log('✅ Adresse créée:', address);

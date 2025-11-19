@@ -164,9 +164,30 @@ export class UsersComponent implements OnInit {
     });
   }
 
+  /**
+   * Parse une date de manière sécurisée
+   * Retourne undefined si la date est invalide ou null
+   */
+  private parseDate(dateValue: any): Date | undefined {
+    if (!dateValue) return undefined;
+    
+    const date = new Date(dateValue);
+    // Vérifier si la date est valide
+    if (isNaN(date.getTime())) {
+      return undefined;
+    }
+    
+    return date;
+  }
+
   private mapBackendUserToUser(backendUser: any): User {
     // Mapper les données du backend vers le format User
     const nameParts = (backendUser.name || '').split(' ');
+    
+    // Parser les dates de manière sécurisée
+    const createdAt = this.parseDate(backendUser.created_at) || new Date();
+    const lastLogin = this.parseDate(backendUser.last_login);
+    
     return {
       id: backendUser.id,
       firstName: nameParts[0] || '',
@@ -174,8 +195,8 @@ export class UsersComponent implements OnInit {
       email: backendUser.email || '',
       role: backendUser.role || 'customer',
       status: this.mapBackendStatusToStatus(backendUser.status || backendUser.is_active),
-      createdAt: new Date(backendUser.created_at || Date.now()),
-      lastLogin: backendUser.last_login ? new Date(backendUser.last_login) : undefined,
+      createdAt: createdAt,
+      lastLogin: lastLogin,
       totalOrders: backendUser.total_orders || 0,
       totalSpent: backendUser.total_spent || 0
     };
@@ -194,8 +215,9 @@ export class UsersComponent implements OnInit {
     return 'inactive';
   }
 
-  // Méthode pour charger les données mockées (fallback - à supprimer en production)
-  private loadMockUsers(): void {
+  // Méthode supprimée - les données sont maintenant chargées uniquement depuis l'API
+  // Cette méthode n'est plus utilisée
+  private loadMockUsers_DEPRECATED(): void {
     const mockUsers: User[] = [
       // Clients
       {

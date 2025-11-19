@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environment';
 
 export interface Category {
@@ -47,7 +48,9 @@ export class CategoryService {
    * Récupérer toutes les catégories (arborescence)
    */
   getCategories(): Observable<CategoryTree[]> {
-    return this.http.get<CategoryTree[]>(this.apiUrl);
+    return this.http.get<{ success: boolean; data: { categories: CategoryTree[] } }>(this.apiUrl).pipe(
+      map(response => response.data?.categories || [])
+    );
   }
 
   /**
@@ -61,14 +64,18 @@ export class CategoryService {
    * Créer une nouvelle catégorie
    */
   createCategory(data: CreateCategoryDto): Observable<Category> {
-    return this.http.post<Category>(this.apiUrl, data);
+    return this.http.post<{ success: boolean; data: { category: Category } }>(this.apiUrl, data).pipe(
+      map(response => response.data?.category || response.data as any)
+    );
   }
 
   /**
    * Mettre à jour une catégorie
    */
   updateCategory(id: string, data: UpdateCategoryDto): Observable<Category> {
-    return this.http.put<Category>(`${this.apiUrl}/${id}`, data);
+    return this.http.put<{ success: boolean; data: { category: Category } }>(`${this.apiUrl}/${id}`, data).pipe(
+      map(response => response.data?.category || response.data as any)
+    );
   }
 
   /**
