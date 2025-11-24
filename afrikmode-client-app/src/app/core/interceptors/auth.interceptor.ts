@@ -40,36 +40,54 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error) => {
+      // Ignorer les erreurs de connexion (backend non disponible)
+      if (error.status === 0 || error.status === null || error.status === undefined) {
+        console.warn('Backend non disponible, requête annulée:', req.url);
+        return throwError(() => error);
+      }
+
       if (error.status === 401) {
         // Token expiré ou invalide - essayer de rafraîchir
-        return authService.refreshToken().pipe(
-          switchMap((authResponse) => {
-            // Token rafraîchi avec succès, retry la requête
-            const headers: any = {
-              'Authorization': `Bearer ${authResponse.token}`,
-              'Accept': 'application/json',
-              'Accept-Language': localStorage.getItem('language') || 'fr',
-              'X-Currency': localStorage.getItem('currency') || 'XOF'
-            };
-            
-            // Ne pas définir Content-Type pour FormData
-            if (!isFormData) {
-              headers['Content-Type'] = 'application/json';
-            }
-            
-            const newReq = req.clone({
-              setHeaders: headers
-            });
-            return next(newReq);
-          }),
-          catchError((refreshError) => {
-            // Impossible de rafraîchir le token, nettoyer et rediriger
-            // Ne pas appeler logout() pour éviter les boucles, juste nettoyer
-            authService.clearAuthData();
-            router.navigate(['/login']);
-            return throwError(() => refreshError);
-          })
-        );
+        try {
+          return authService.refreshToken().pipe(
+            switchMap((authResponse) => {
+              // Token rafraîchi avec succès, retry la requête
+              const headers: any = {
+                'Authorization': `Bearer ${authResponse.token}`,
+                'Accept': 'application/json',
+                'Accept-Language': localStorage.getItem('language') || 'fr',
+                'X-Currency': localStorage.getItem('currency') || 'XOF'
+              };
+              
+              // Ne pas définir Content-Type pour FormData
+              if (!isFormData) {
+                headers['Content-Type'] = 'application/json';
+              }
+              
+              const newReq = req.clone({
+                setHeaders: headers
+              });
+              return next(newReq);
+            }),
+            catchError((refreshError) => {
+              // Si le backend n'est pas disponible, ne pas nettoyer les données
+              if (refreshError.status === 0 || refreshError.status === null) {
+                console.warn('Backend non disponible, impossible de rafraîchir le token');
+                return throwError(() => refreshError);
+              }
+              
+              // Impossible de rafraîchir le token, nettoyer et rediriger
+              // Ne pas appeler logout() pour éviter les boucles, juste nettoyer
+              authService.clearAuthData();
+              router.navigate(['/login']);
+              return throwError(() => refreshError);
+            })
+          );
+        } catch (refreshError) {
+          // Erreur lors de l'appel refreshToken
+          console.warn('Erreur lors du rafraîchissement du token:', refreshError);
+          return throwError(() => error);
+        }
       } else if (error.status === 403) {
         // Accès refusé
         console.error('Accès refusé - Permissions insuffisantes');

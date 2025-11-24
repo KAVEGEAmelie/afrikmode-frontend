@@ -5,125 +5,55 @@ import { FormsModule } from '@angular/forms';
 import { CartService } from '../../../core/services/cart.service';
 import { WishlistService } from '../../../core/services/wishlist.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ProductService } from '../../../core/services/product.service';
+import { CategoryService } from '../../../core/services/category.service';
+import { ToastService } from '../../../core/services/toast.service';
+import { SafeImagePipe } from '../../../core/pipes/safe-image.pipe';
+import { environment } from '../../../../environments/environment';
+
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  oldPrice?: number;
+  image: string;
+  category: string;
+  rating?: number;
+  reviews?: number;
+  isPopular?: boolean;
+}
 
 @Component({
   selector: 'app-femmes',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, NgIf, NgFor],
+  imports: [CommonModule, RouterModule, FormsModule, NgIf, NgFor, SafeImagePipe],
   templateUrl: './femmes.component.html',
   styleUrls: ['./femmes.component.scss']
 })
 export class FemmesComponent implements OnInit {
   Math = Math;
-  categories = [
-    { name: 'Robes', count: 45, icon: '👗', path: '/femmes/robes' },
-    { name: 'Ensembles', count: 32, icon: '👚', path: '/femmes/ensembles' },
-    { name: 'Jupes', count: 28, icon: '🩱', path: '/femmes/jupes' },
-    { name: 'Blouses', count: 38, icon: '👔', path: '/femmes/blouses' },
-    { name: 'Caftans', count: 22, icon: '🥻', path: '/femmes/caftans' },
-    { name: 'Kimonos', count: 18, icon: '🥋', path: '/femmes/kimonos' }
-  ];
-
-  allProducts = [
-    {
-      id: 1,
-      name: 'Robe Ankara Élégante',
-      price: 149.99,
-      originalPrice: 199.99,
-      image: 'assets/images/femmes/robe-ankara-elegante.jpg',
-      category: 'Robes',
-      rating: 4.8,
-      reviews: 24,
-      colors: ['#FF6B6B', '#4ECDC4', '#45B7D1'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      isPopular: true
-    },
-    {
-      id: 2,
-      name: 'Ensemble Kente Royal',
-      price: 234.99,
-      originalPrice: 299.99,
-      image: 'assets/images/femmes/ensemble-kente.jpg',
-      category: 'Ensembles',
-      rating: 4.9,
-      reviews: 18,
-      colors: ['#FFD93D', '#FF6B6B', '#6BCF7F'],
-      sizes: ['S', 'M', 'L', 'XL', 'XXL'],
-      isPopular: true
-    },
-    {
-      id: 3,
-      name: 'Caftan Brodé Premium',
-      price: 189.99,
-      originalPrice: 249.99,
-      image: 'assets/images/femmes/caftan-brode.jpg',
-      category: 'Caftans',
-      rating: 4.7,
-      reviews: 31,
-      colors: ['#8B4513', '#DAA520', '#CD853F'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      isPopular: false
-    },
-    {
-      id: 4,
-      name: 'Jupe Wax Moderne',
-      price: 79.99,
-      originalPrice: 109.99,
-      image: 'assets/images/femmes/jupe-wax.jpg',
-      category: 'Jupes',
-      rating: 4.6,
-      reviews: 42,
-      colors: ['#FF9800', '#E91E63', '#9C27B0'],
-      sizes: ['XS', 'S', 'M', 'L', 'XL'],
-      isPopular: true
-    },
-    {
-      id: 5,
-      name: 'Blouse Dashiki Chic',
-      price: 94.99,
-      originalPrice: 129.99,
-      image: 'assets/images/femmes/blouse-dashiki.jpg',
-      category: 'Blouses',
-      rating: 4.8,
-      reviews: 26,
-      colors: ['#FF5722', '#795548', '#FFC107'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      isPopular: false
-    },
-    {
-      id: 6,
-      name: 'Kimono Bogolan Luxe',
-      price: 119.99,
-      originalPrice: 159.99,
-      image: 'assets/images/femmes/kimono-bogolan.jpg',
-      category: 'Kimonos',
-      rating: 4.9,
-      reviews: 15,
-      colors: ['#8D6E63', '#A1887F', '#D7CCC8'],
-      sizes: ['S', 'M', 'L', 'XL'],
-      isPopular: true
-    }
-  ];
-
-  featuredProducts = this.allProducts;
+  categories: any[] = [];
+  allProducts: Product[] = [];
+  featuredProducts: Product[] = [];
+  loading = false;
 
   styleGuide = [
     {
       title: 'Élégance Africaine',
       description: 'Découvrez comment porter nos pièces avec style et sophistication.',
-      image: 'assets/images/style/elegance-africaine.jpg',
+      image: 'https://via.placeholder.com/400x300?text=Élégance+Africaine',
       tips: ['Associez les couleurs vives', 'Misez sur les accessoires dorés', 'Jouez avec les volumes']
     },
     {
       title: 'Tendances Wax',
       description: 'Les motifs Wax revisités dans un style contemporain.',
-      image: 'assets/images/style/tendances-wax.jpg',
+      image: 'https://via.placeholder.com/400x300?text=Tendances+Wax',
       tips: ['Mix & match des imprimés', 'Ajoutez une touche moderne', 'Osez les superpositions']
     },
     {
       title: 'Occasion Spéciale',
       description: 'Nos conseils pour briller lors des événements importants.',
-      image: 'assets/images/style/occasion-speciale.jpg',
+      image: 'https://via.placeholder.com/400x300?text=Occasion+Spéciale',
       tips: ['Choisissez des pièces statement', 'Harmonisez votre coiffure', 'Complétez avec des bijoux']
     }
   ];
@@ -143,11 +73,16 @@ export class FemmesComponent implements OnInit {
     private route: ActivatedRoute,
     private cartService: CartService,
     private wishlistService: WishlistService,
-    private authService: AuthService
+    private authService: AuthService,
+    private productService: ProductService,
+    private categoryService: CategoryService,
+    private toastService: ToastService
   ) { }
 
   ngOnInit(): void {
-    // Écouter les changements de paramètres de route
+    this.loadCategories();
+    this.loadProducts();
+    
     this.route.params.subscribe(params => {
       if (params['category']) {
         this.filters.category = params['category'];
@@ -156,68 +91,197 @@ export class FemmesComponent implements OnInit {
     });
   }
 
+  loadCategories(): void {
+    // Charger toutes les catégories et filtrer celles qui ont "vetements-femmes" comme parent
+    this.categoryService.getCategories(true, true).subscribe({
+      next: (response: any) => {
+        const allCategories = Array.isArray(response) ? response : response.data || [];
+        // Filtrer les sous-catégories de "Vêtements Femmes" (slug: vetements-femmes)
+        const parentCategory = allCategories.find((cat: any) => cat.slug === 'vetements-femmes');
+        if (parentCategory && parentCategory.children) {
+          this.categories = parentCategory.children.map((cat: any) => ({
+            name: cat.name,
+            count: cat.products_count || 0,
+            icon: this.getCategoryIcon(cat.slug),
+            path: `/shop?category=${cat.slug}`
+          }));
+        } else {
+          // Fallback: utiliser getSubCategories si disponible
+          if (parentCategory?.id) {
+            this.categoryService.getSubCategories(parentCategory.id).subscribe({
+              next: (subCats: any) => {
+                this.categories = (Array.isArray(subCats) ? subCats : subCats.data || []).map((cat: any) => ({
+                  name: cat.name,
+                  count: cat.products_count || 0,
+                  icon: this.getCategoryIcon(cat.slug),
+                  path: `/shop?category=${cat.slug}`
+                }));
+              },
+              error: (error) => {
+                console.error('Erreur chargement sous-catégories:', error);
+              }
+            });
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Erreur chargement catégories:', error);
+      }
+    });
+  }
+
+  loadProducts(): void {
+    this.loading = true;
+    // Charger les produits de la catégorie "Vêtements Femmes"
+    this.productService.getProducts({
+      category: 'vetements-femmes',
+      limit: 50,
+      status: 'active'
+    }).subscribe({
+      next: (response: any) => {
+        const products = Array.isArray(response) ? response : response.data || [];
+        this.allProducts = products.map((product: any) => ({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          oldPrice: product.compareAtPrice || product.compare_at_price || product.compare_price,
+          image: this.normalizeProductImage(product),
+          category: product.category?.name || product.category_name || '',
+          rating: product.averageRating || product.average_rating || 0,
+          reviews: product.reviewsCount || product.reviews_count || 0,
+          isPopular: product.featured || false
+        }));
+        this.featuredProducts = this.allProducts;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement produits femmes:', error);
+        this.loading = false;
+      }
+    });
+  }
+
   filterProducts(): void {
-    // Filtrer les produits selon la catégorie sélectionnée
     if (this.filters.category) {
       this.featuredProducts = this.allProducts.filter(product => 
-        product.category.toLowerCase() === this.filters.category.toLowerCase()
+        product.category.toLowerCase().includes(this.filters.category.toLowerCase())
       );
     } else {
       this.featuredProducts = this.allProducts;
     }
   }
 
-  addToCart(product: any): void {
-    // Vérifier si l'utilisateur est authentifié
+  private getCategoryIcon(slug: string): string {
+    const icons: { [key: string]: string } = {
+      'robes': '👗',
+      'ensembles-complets': '👚',
+      'jupes-pagnes': '🩱',
+      'hauts-blouses': '👔',
+      'boubous-caftans': '🥻',
+      'kimonos': '🥋'
+    };
+    return icons[slug] || '👗';
+  }
+
+  private normalizeProductImage(product: any): string {
+    const buildImageUrl = (imgPath: string): string => {
+      if (!imgPath || imgPath.trim() === '') return '';
+      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) return imgPath;
+      if (imgPath.startsWith('/')) {
+        const cleanPath = imgPath.substring(1);
+        return `${environment.apiUrl}/${cleanPath}`;
+      }
+      if (imgPath.includes('uploads/')) return `${environment.apiUrl}/${imgPath}`;
+      if (imgPath.startsWith('assets/')) return '/' + imgPath;
+      return `${environment.apiUrl}/uploads/products/${imgPath}`;
+    };
+
+    if (product.images) {
+      if (Array.isArray(product.images) && product.images.length > 0) {
+        const firstImage = product.images[0];
+        if (typeof firstImage === 'string') return buildImageUrl(firstImage);
+        if (typeof firstImage === 'object') {
+          const url = firstImage.url || firstImage.path || firstImage.image_url || '';
+          return buildImageUrl(url);
+        }
+      }
+      if (typeof product.images === 'string') {
+        if (product.images.trim().startsWith('[') || product.images.trim().startsWith('{')) {
+          try {
+            const parsed = JSON.parse(product.images);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const firstImage = parsed[0];
+              if (typeof firstImage === 'string') return buildImageUrl(firstImage);
+              if (typeof firstImage === 'object') {
+                const url = firstImage.url || firstImage.path || firstImage.image_url || '';
+                return buildImageUrl(url);
+              }
+            }
+          } catch {
+            return buildImageUrl(product.images);
+          }
+        } else {
+          return buildImageUrl(product.images);
+        }
+      }
+    }
+
+    if (product.primaryImage) return buildImageUrl(product.primaryImage);
+    if (product.primary_image) return buildImageUrl(product.primary_image);
+    if (product.image_url) return buildImageUrl(product.image_url);
+
+    return `https://via.placeholder.com/300x300?text=${encodeURIComponent(product.name || 'Produit')}`;
+  }
+
+  addToCart(product: Product): void {
     this.authService.isAuthenticated$.subscribe(isAuth => {
       if (!isAuth) {
-        alert('Veuillez vous connecter pour ajouter des articles au panier');
+        this.toastService.warning('Veuillez vous connecter pour ajouter des produits au panier');
         this.router.navigate(['/login']);
         return;
       }
 
-      // Ajouter au panier via le service
       this.cartService.addToCart({
         product_id: product.id.toString(),
         quantity: 1
       }).subscribe({
-        next: (cartItem) => {
-          console.log('✅ Produit ajouté au panier:', cartItem);
-          alert('Produit ajouté au panier avec succès!');
+        next: () => {
+          this.toastService.success(`${product.name} ajouté au panier !`);
         },
         error: (error) => {
-          console.error('❌ Erreur lors de l\'ajout au panier:', error);
-          alert('Erreur lors de l\'ajout au panier. Veuillez réessayer.');
+          console.error('Erreur ajout au panier:', error);
+          this.toastService.error('Erreur lors de l\'ajout au panier');
         }
       });
     });
   }
 
-  addToWishlist(product: any): void {
-    // Vérifier si l'utilisateur est authentifié
+  addToWishlist(product: Product): void {
     this.authService.isAuthenticated$.subscribe(isAuth => {
       if (!isAuth) {
-        alert('Veuillez vous connecter pour ajouter des articles aux favoris');
+        this.toastService.warning('Veuillez vous connecter pour ajouter des produits aux favoris');
         this.router.navigate(['/login']);
         return;
       }
 
-      // Ajouter aux favoris via le service
       this.wishlistService.addToWishlist(product.id.toString()).subscribe({
-        next: (response) => {
-          console.log('✅ Produit ajouté aux favoris:', response);
-          alert('Produit ajouté aux favoris avec succès!');
+        next: () => {
+          this.toastService.success(`${product.name} ajouté aux favoris !`);
         },
         error: (error) => {
-          console.error('❌ Erreur lors de l\'ajout aux favoris:', error);
-          alert('Erreur lors de l\'ajout aux favoris. Veuillez réessayer.');
+          console.error('Erreur ajout aux favoris:', error);
+          if (error.status === 409) {
+            this.toastService.info('Ce produit est déjà dans vos favoris');
+          } else {
+            this.toastService.error('Erreur lors de l\'ajout aux favoris');
+          }
         }
       });
     });
   }
 
-  viewProduct(product: any): void {
-    console.log('Voir le produit:', product);
+  viewProduct(product: Product): void {
+    this.router.navigate(['/products', product.id]);
   }
 
   filterByCategory(category: string): void {
@@ -231,7 +295,7 @@ export class FemmesComponent implements OnInit {
     }
   }
 
-  navigateToProduct(product: any): void {
+  navigateToProduct(product: Product): void {
     this.router.navigate(['/products', product.id]);
   }
 
@@ -246,5 +310,9 @@ export class FemmesComponent implements OnInit {
 
   getDiscountPercentage(originalPrice: number, currentPrice: number): number {
     return Math.round(((originalPrice - currentPrice) / originalPrice) * 100);
+  }
+
+  encodeURI(text: string): string {
+    return encodeURIComponent(text || '');
   }
 }

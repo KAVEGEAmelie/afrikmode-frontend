@@ -10,7 +10,7 @@ export class SafeImagePipe implements PipeTransform {
     product: '/assets/images/products/placeholder.jpg',
     avatar: '/assets/images/avatar-placeholder.png',
     store: '/assets/images/store-placeholder.jpg',
-    category: '/assets/images/category-placeholder.jpg'
+    category: '/assets/images/products/placeholder.jpg'
   };
 
   transform(
@@ -20,32 +20,52 @@ export class SafeImagePipe implements PipeTransform {
   ): string {
     // Si une valeur est fournie
     if (value && value.trim() !== '') {
-      // Si c'est déjà une URL complète
+      // Si c'est déjà une URL complète (http:// ou https://)
       if (value.startsWith('http://') || value.startsWith('https://')) {
         return value;
       }
       
-      // Si c'est un chemin relatif commençant par /
-      if (value.startsWith('/')) {
+      // Si c'est un data URL
+      if (value.startsWith('data:')) {
         return value;
       }
       
       // Si c'est un chemin assets
-      if (value.startsWith('assets/')) {
-        return '/' + value;
+      if (value.startsWith('assets/') || value.startsWith('/assets/')) {
+        return value.startsWith('/') ? value : '/' + value;
       }
       
-      // Si c'est juste un nom de fichier, construire l'URL avec le backend
+      // Si le chemin commence par /uploads, construire l'URL complète
+      if (value.startsWith('/uploads')) {
+        return `${environment.apiUrl}${value}`;
+      }
+      
+      // Si le chemin contient uploads/ (sans / au début)
+      if (value.includes('uploads/')) {
+        const cleanPath = value.startsWith('/') ? value : `/${value}`;
+        return `${environment.apiUrl}${cleanPath}`;
+      }
+      
+      // Si c'est juste un nom de fichier (sans /), construire l'URL avec le backend
       if (!value.includes('/')) {
-        return `${environment.apiUrl}/uploads/${value}`;
+        // Déterminer le dossier selon le type
+        let uploadPath = 'products';
+        if (type === 'avatar') uploadPath = 'users';
+        else if (type === 'store') uploadPath = 'stores';
+        else if (type === 'category') uploadPath = 'categories';
+        
+        return `${environment.uploadsUrl || environment.apiUrl}/uploads/${uploadPath}/${value}`;
       }
       
-      // Sinon, ajouter le préfixe du serveur backend si configuré
+      // Si environment.uploadsUrl est configuré, l'utiliser
       if (environment.uploadsUrl) {
-        return `${environment.uploadsUrl}/${value}`;
+        const cleanPath = value.startsWith('/') ? value.substring(1) : value;
+        return `${environment.uploadsUrl}/${cleanPath}`;
       }
       
-      return value;
+      // Par défaut, essayer avec l'API URL
+      const cleanPath = value.startsWith('/') ? value.substring(1) : value;
+      return `${environment.apiUrl}/${cleanPath}`;
     }
     
     // Utiliser le fallback fourni ou l'image par défaut du type

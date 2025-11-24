@@ -88,10 +88,10 @@
            [queryParams]="{category: category.name}">
         <div class="category-image">
           <img 
-            [src]="category.image" 
+            [src]="category.image | safeImage:'category'" 
             [alt]="category.name"
             loading="lazy"
-            onerror="this.src='assets/images/placeholder.jpg'">
+            (error)="$event.target.src='https://via.placeholder.com/300x300?text=' + encodeURIComponent(category.name)">
           <div class="category-overlay">
             <span class="product-count">{{ category.count }} produits</span>
           </div>
@@ -128,7 +128,7 @@
 
           <!-- Image -->
           <div class="product-image">
-            <img [src]="product.image" [alt]="product.name">
+            <img [src]="product.image | safeImage:'product'" [alt]="product.name" (error)="$event.target.src='https://via.placeholder.com/300x300?text=' + encodeURIComponent(product.name)">
             <div class="product-actions">
               <button class="action-btn" (click)="addToWishlist(product, $event)" title="Ajouter aux favoris">
                 <i class="far fa-heart"></i>
@@ -200,7 +200,7 @@
           </div>
 
           <div class="product-image">
-            <img [src]="product.image" [alt]="product.name">
+            <img [src]="product.image | safeImage:'product'" [alt]="product.name" (error)="$event.target.src='https://via.placeholder.com/300x300?text=' + encodeURIComponent(product.name)">
             <div class="product-actions">
               <button class="action-btn" (click)="addToWishlist(product, $event)">
                 <i class="far fa-heart"></i>

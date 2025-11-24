@@ -5,12 +5,26 @@ import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const notificationService = inject(NotificationService);
+  let notificationService: NotificationService | null = null;
+  
+  try {
+    notificationService = inject(NotificationService);
+  } catch (error) {
+    // Si NotificationService n'est pas disponible, continuer sans afficher de notification
+    console.warn('NotificationService non disponible');
+  }
 
   return next(req).pipe(
     catchError((error) => {
       let errorMessage = 'Une erreur est survenue';
       let errorTitle = 'Erreur';
+
+      // Ignorer les erreurs de connexion (backend non disponible)
+      if (error.status === 0 || error.status === null || error.status === undefined) {
+        // Backend non disponible, ne pas afficher d'erreur pour éviter les spams
+        console.warn('Backend non disponible:', req.url);
+        return throwError(() => error);
+      }
 
       if (error.error instanceof ErrorEvent) {
         // Erreur côté client
@@ -69,8 +83,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         }
       }
 
-      // Afficher la notification d'erreur
-      notificationService.showError(errorMessage, errorTitle);
+      // Afficher la notification d'erreur seulement si le service est disponible
+      if (notificationService) {
+        try {
+          notificationService.showError(errorMessage, errorTitle);
+        } catch (notifError) {
+          console.warn('Erreur lors de l\'affichage de la notification:', notifError);
+        }
+      }
 
       // Logger l'erreur pour le debugging
       console.error('HTTP Error:', {

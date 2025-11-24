@@ -31,114 +31,174 @@ export class NotificationService {
     private websocketService: WebsocketService,
     private apiService: ApiService
   ) {
-    this.initializeWebSocketListeners();
+    // Initialiser les listeners avec protection contre les erreurs
+    try {
+      this.initializeWebSocketListeners();
+    } catch (error) {
+      console.warn('Erreur lors de l\'initialisation des listeners WebSocket:', error);
+      // Continuer même si l'initialisation échoue
+    }
   }
 
   private initializeWebSocketListeners(): void {
-    // Écouter les notifications en temps réel
-    this.websocketService.on('notification').pipe(
-      catchError(error => {
-        console.warn('WebSocket notification error:', error);
-        return new Observable(subscriber => subscriber.complete());
-      })
-    ).subscribe((data: any) => {
-      this.addNotification(data);
-    });
-
-    // Écouter les mises à jour de commandes
-    this.websocketService.on('order_update').pipe(
-      catchError(error => {
-        console.warn('WebSocket order_update error:', error);
-        return new Observable(subscriber => subscriber.complete());
-      })
-    ).subscribe((data: any) => {
-      this.addNotification({
-        id: `order_${data.orderId}_${Date.now()}`,
-        type: 'order',
-        title: 'Commande mise à jour',
-        message: `Commande #${data.orderNumber} - ${data.status}`,
-        data: data,
-        read: false,
-        createdAt: new Date().toISOString(),
-        priority: 'medium'
+    try {
+      // Écouter les notifications en temps réel
+      this.websocketService.on('notification').pipe(
+        catchError(error => {
+          console.warn('WebSocket notification error:', error);
+          return new Observable(subscriber => subscriber.complete());
+        })
+      ).subscribe({
+        next: (data: any) => {
+          this.addNotification(data);
+        },
+        error: (error) => {
+          console.warn('Erreur dans la souscription WebSocket notification:', error);
+        }
       });
-    });
+    } catch (error) {
+      console.warn('Erreur lors de l\'initialisation du listener notification:', error);
+    }
 
-    // Écouter les nouveaux paiements
-    this.websocketService.on('payment_received').pipe(
-      catchError(error => {
-        console.warn('WebSocket payment_received error:', error);
-        return new Observable(subscriber => subscriber.complete());
-      })
-    ).subscribe((data: any) => {
-      this.addNotification({
-        id: `payment_${data.paymentId}_${Date.now()}`,
-        type: 'payment',
-        title: 'Paiement reçu',
-        message: `Paiement de ${data.amount} FCFA confirmé`,
-        data: data,
-        read: false,
-        createdAt: new Date().toISOString(),
-        priority: 'high'
+    try {
+      // Écouter les mises à jour de commandes
+      this.websocketService.on('order_update').pipe(
+        catchError(error => {
+          console.warn('WebSocket order_update error:', error);
+          return new Observable(subscriber => subscriber.complete());
+        })
+      ).subscribe({
+        next: (data: any) => {
+          this.addNotification({
+            id: `order_${data.orderId}_${Date.now()}`,
+            type: 'order',
+            title: 'Commande mise à jour',
+            message: `Commande #${data.orderNumber} - ${data.status}`,
+            data: data,
+            read: false,
+            createdAt: new Date().toISOString(),
+            priority: 'medium'
+          });
+        },
+        error: (error) => {
+          console.warn('Erreur dans la souscription WebSocket order_update:', error);
+        }
       });
-    });
+    } catch (error) {
+      console.warn('Erreur lors de l\'initialisation du listener order_update:', error);
+    }
 
-    // Écouter les alertes de stock
-    this.websocketService.on('stock_alert').pipe(
-      catchError(error => {
-        console.warn('WebSocket stock_alert error:', error);
-        return new Observable(subscriber => subscriber.complete());
-      })
-    ).subscribe((data: any) => {
-      this.addNotification({
-        id: `stock_${data.productId}_${Date.now()}`,
-        type: 'stock',
-        title: 'Stock faible',
-        message: `Produit "${data.productName}" - Stock: ${data.stock} unités`,
-        data: data,
-        read: false,
-        createdAt: new Date().toISOString(),
-        priority: 'urgent'
+    try {
+      // Écouter les nouveaux paiements
+      this.websocketService.on('payment_received').pipe(
+        catchError(error => {
+          console.warn('WebSocket payment_received error:', error);
+          return new Observable(subscriber => subscriber.complete());
+        })
+      ).subscribe({
+        next: (data: any) => {
+          this.addNotification({
+            id: `payment_${data.paymentId}_${Date.now()}`,
+            type: 'payment',
+            title: 'Paiement reçu',
+            message: `Paiement de ${data.amount} FCFA confirmé`,
+            data: data,
+            read: false,
+            createdAt: new Date().toISOString(),
+            priority: 'high'
+          });
+        },
+        error: (error) => {
+          console.warn('Erreur dans la souscription WebSocket payment_received:', error);
+        }
       });
-    });
+    } catch (error) {
+      console.warn('Erreur lors de l\'initialisation du listener payment_received:', error);
+    }
 
-    // Écouter les nouveaux avis
-    this.websocketService.on('new_review').pipe(
-      catchError(error => {
-        console.warn('WebSocket new_review error:', error);
-        return new Observable(subscriber => subscriber.complete());
-      })
-    ).subscribe((data: any) => {
-      this.addNotification({
-        id: `review_${data.reviewId}_${Date.now()}`,
-        type: 'review',
-        title: 'Nouvel avis client',
-        message: `Avis ${data.rating} étoiles pour "${data.productName}"`,
-        data: data,
-        read: false,
-        createdAt: new Date().toISOString(),
-        priority: 'medium'
+    try {
+      // Écouter les alertes de stock
+      this.websocketService.on('stock_alert').pipe(
+        catchError(error => {
+          console.warn('WebSocket stock_alert error:', error);
+          return new Observable(subscriber => subscriber.complete());
+        })
+      ).subscribe({
+        next: (data: any) => {
+          this.addNotification({
+            id: `stock_${data.productId}_${Date.now()}`,
+            type: 'stock',
+            title: 'Stock faible',
+            message: `Produit "${data.productName}" - Stock: ${data.stock} unités`,
+            data: data,
+            read: false,
+            createdAt: new Date().toISOString(),
+            priority: 'urgent'
+          });
+        },
+        error: (error) => {
+          console.warn('Erreur dans la souscription WebSocket stock_alert:', error);
+        }
       });
-    });
+    } catch (error) {
+      console.warn('Erreur lors de l\'initialisation du listener stock_alert:', error);
+    }
 
-    // Écouter les nouveaux messages
-    this.websocketService.on('chat_message').pipe(
-      catchError(error => {
-        console.warn('WebSocket chat_message error:', error);
-        return new Observable(subscriber => subscriber.complete());
-      })
-    ).subscribe((data: any) => {
-      this.addNotification({
-        id: `message_${data.messageId}_${Date.now()}`,
-        type: 'message',
-        title: 'Nouveau message',
-        message: `${data.senderName}: ${data.message}`,
-        data: data,
-        read: false,
-        createdAt: new Date().toISOString(),
-        priority: 'medium'
+    try {
+      // Écouter les nouveaux avis
+      this.websocketService.on('new_review').pipe(
+        catchError(error => {
+          console.warn('WebSocket new_review error:', error);
+          return new Observable(subscriber => subscriber.complete());
+        })
+      ).subscribe({
+        next: (data: any) => {
+          this.addNotification({
+            id: `review_${data.reviewId}_${Date.now()}`,
+            type: 'review',
+            title: 'Nouvel avis client',
+            message: `Avis ${data.rating} étoiles pour "${data.productName}"`,
+            data: data,
+            read: false,
+            createdAt: new Date().toISOString(),
+            priority: 'medium'
+          });
+        },
+        error: (error) => {
+          console.warn('Erreur dans la souscription WebSocket new_review:', error);
+        }
       });
-    });
+    } catch (error) {
+      console.warn('Erreur lors de l\'initialisation du listener new_review:', error);
+    }
+
+    try {
+      // Écouter les nouveaux messages
+      this.websocketService.on('chat_message').pipe(
+        catchError(error => {
+          console.warn('WebSocket chat_message error:', error);
+          return new Observable(subscriber => subscriber.complete());
+        })
+      ).subscribe({
+        next: (data: any) => {
+          this.addNotification({
+            id: `message_${data.messageId}_${Date.now()}`,
+            type: 'message',
+            title: 'Nouveau message',
+            message: `${data.senderName}: ${data.message}`,
+            data: data,
+            read: false,
+            createdAt: new Date().toISOString(),
+            priority: 'medium'
+          });
+        },
+        error: (error) => {
+          console.warn('Erreur dans la souscription WebSocket chat_message:', error);
+        }
+      });
+    } catch (error) {
+      console.warn('Erreur lors de l\'initialisation du listener chat_message:', error);
+    }
   }
 
   private addNotification(notification: Notification): void {

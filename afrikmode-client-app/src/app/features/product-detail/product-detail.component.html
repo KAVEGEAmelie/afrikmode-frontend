@@ -34,7 +34,7 @@
             
             <!-- Badges -->
             <div class="image-badges">
-              <span *ngIf="product.oldPrice" class="badge badge-sale">
+              <span *ngIf="product.oldPrice && getDiscountPercentage() > 0 && getDiscountPercentage() <= 100" class="badge badge-sale">
                 -{{ getDiscountPercentage() }}%
               </span>
             </div>
@@ -99,9 +99,9 @@
           </div>
   
           <!-- Sélection couleur -->
-          <div class="option-group">
+          <div class="option-group" *ngIf="product.colors && product.colors.length > 0">
             <label class="option-label">
-              Couleur: <span class="selected-value">{{ selectedColor }}</span>
+              Couleur: <span class="selected-value">{{ selectedColor || 'Non sélectionnée' }}</span>
             </label>
             <div class="color-options">
               <button 
@@ -115,9 +115,9 @@
               </button>
             </div>
           </div>
-  
+
           <!-- Sélection taille -->
-          <div class="option-group">
+          <div class="option-group" *ngIf="product.sizes && product.sizes.length > 0">
             <label class="option-label">
               Taille: <span class="selected-value">{{ selectedSize || 'Sélectionner' }}</span>
             </label>
@@ -213,7 +213,17 @@
             <p class="description-text">{{ product.description }}</p>
             
             <h4>Matériaux</h4>
-            <p>{{ product.materials }}</p>
+            <div *ngIf="getFormattedMaterials().length > 0; else noMaterials">
+              <ul class="materials-list">
+                <li *ngFor="let material of getFormattedMaterials()">
+                  <i class="fas fa-check"></i>
+                  {{ material }}
+                </li>
+              </ul>
+            </div>
+            <ng-template #noMaterials>
+              <p class="no-data">Aucun matériau spécifié</p>
+            </ng-template>
             
             <h4>Entretien</h4>
             <ul class="care-list">

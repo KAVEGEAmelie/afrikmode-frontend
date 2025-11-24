@@ -113,7 +113,7 @@ interface ProductFormData {
                 <h3>Informations principales</h3>
                 <div class="form-grid">
                   <div class="form-group full-width">
-                    <label for="name">Nom du produit * <span class="counter">{{ formData.name.length }}/200</span></label>
+                    <label for="name">Nom du produit * <span class="counter" [class.warning]="(formData.name || '').length > 180" [class.error]="(formData.name || '').length >= 200">{{ (formData.name || '').length }}/200</span></label>
                     <input 
                       type="text" 
                       id="name" 
@@ -121,28 +121,31 @@ interface ProductFormData {
                       name="name"
                       required
                       maxlength="200"
+                      (input)="onNameInput($event)"
                       placeholder="Ex: Robe Ankara Élégante à Motifs Traditionnels">
                   </div>
 
                   <div class="form-group full-width">
-                    <label for="shortDescription">Description courte <span class="counter">{{ (formData.shortDescription || '').length }}/200</span></label>
+                    <label for="shortDescription">Description courte <span class="counter" [class.warning]="(formData.shortDescription || '').length > 180" [class.error]="(formData.shortDescription || '').length >= 200">{{ (formData.shortDescription || '').length }}/200</span></label>
                     <input 
                       type="text" 
                       id="shortDescription" 
                       [(ngModel)]="formData.shortDescription" 
                       name="shortDescription"
                       maxlength="200"
+                      (input)="onShortDescriptionInput($event)"
                       placeholder="Résumé en une phrase pour les listes de produits">
                   </div>
 
                   <div class="form-group full-width">
-                    <label for="description">Description complète * <span class="counter">{{ formData.description.length }}</span></label>
+                    <label for="description">Description complète * <span class="counter">{{ (formData.description || '').length }}</span></label>
                     <textarea 
                       id="description" 
                       [(ngModel)]="formData.description" 
                       name="description"
                       required
                       rows="6"
+                      (input)="onDescriptionInput($event)"
                       placeholder="Décrivez votre produit en détail : matériaux, coupe, inspiration culturelle, occasions d'utilisation..."></textarea>
                   </div>
                 </div>
@@ -332,7 +335,7 @@ interface ProductFormData {
                   <input 
                     type="file" 
                     id="imageUpload" 
-                    accept="image/*" 
+                    accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" 
                     multiple
                     (change)="onFilesSelected($event)"
                     [disabled]="selectedImages.length >= 10"
@@ -341,8 +344,12 @@ interface ProductFormData {
                   <label for="imageUpload" class="upload-label" [class.disabled]="selectedImages.length >= 10">
                     <i class="fas fa-cloud-upload"></i>
                     <span>Cliquez ou glissez vos images ici</span>
-                    <small>PNG, JPG, WEBP (max 5 Mo chacune)</small>
+                    <small>PNG, JPG, WEBP, GIF (max 5 Mo chacune, minimum 1 image requise)</small>
                   </label>
+                  
+                  <div class="image-validation-info" *ngIf="selectedImages.length === 0">
+                    <small class="error-text">⚠️ Au moins une image est requise pour créer un produit</small>
+                  </div>
                 </div>
 
                 <div class="images-preview" *ngIf="selectedImages.length > 0">
@@ -551,26 +558,28 @@ interface ProductFormData {
                 <h3>Optimisation pour les moteurs de recherche</h3>
                 <div class="form-grid">
                   <div class="form-group full-width">
-                    <label for="metaTitle">Titre SEO <span class="counter">{{ (formData.metaTitle || formData.name).length }}/70</span></label>
+                    <label for="metaTitle">Titre SEO <span class="counter" [class.warning]="(formData.metaTitle || formData.name || '').length > 60" [class.error]="(formData.metaTitle || formData.name || '').length >= 70">{{ (formData.metaTitle || formData.name || '').length }}/70</span></label>
                     <input 
                       type="text" 
                       id="metaTitle" 
                       [(ngModel)]="formData.metaTitle" 
                       name="metaTitle"
                       maxlength="70"
-                      [placeholder]="formData.name">
+                      (input)="onMetaTitleInput($event)"
+                      [placeholder]="formData.name || 'Titre SEO'">
                     <small class="help-text">Si vide, le nom du produit sera utilisé</small>
                   </div>
 
                   <div class="form-group full-width">
-                    <label for="metaDescription">Description SEO <span class="counter">{{ (formData.metaDescription || formData.shortDescription || formData.description.substring(0, 160)).length }}/160</span></label>
+                    <label for="metaDescription">Description SEO <span class="counter" [class.warning]="getMetaDescriptionLength() > 140" [class.error]="getMetaDescriptionLength() >= 160">{{ getMetaDescriptionLength() }}/160</span></label>
                     <textarea 
                       id="metaDescription" 
                       [(ngModel)]="formData.metaDescription" 
                       name="metaDescription"
                       maxlength="160"
                       rows="3"
-                      [placeholder]="formData.shortDescription || formData.description.substring(0, 160)"></textarea>
+                      (input)="onMetaDescriptionInput($event)"
+                      [placeholder]="formData.shortDescription || (formData.description ? formData.description.substring(0, 160) : 'Description SEO')"></textarea>
                     <small class="help-text">Si vide, la description courte sera utilisée</small>
                   </div>
 
@@ -604,8 +613,8 @@ interface ProductFormData {
                 <h3>Aperçu dans les résultats de recherche</h3>
                 <div class="search-preview">
                   <div class="preview-url">votresite.com › produits › {{ generateSlug(formData.name) }}</div>
-                  <div class="preview-title">{{ formData.metaTitle || formData.name }}</div>
-                  <div class="preview-description">{{ formData.metaDescription || formData.shortDescription || formData.description.substring(0, 160) }}</div>
+                  <div class="preview-title">{{ formData.metaTitle || formData.name || 'Titre du produit' }}</div>
+                  <div class="preview-description">{{ formData.metaDescription || formData.shortDescription || (formData.description ? formData.description.substring(0, 160) : 'Description du produit') }}</div>
                 </div>
               </div>
             </div>
@@ -810,6 +819,17 @@ interface ProductFormData {
       font-size: 0.8rem;
       color: #999;
       font-weight: 400;
+      transition: color 0.3s ease;
+    }
+
+    .counter.warning {
+      color: #f59e0b;
+      font-weight: 600;
+    }
+
+    .counter.error {
+      color: #dc2626;
+      font-weight: 700;
     }
 
     .form-group input,
@@ -840,6 +860,16 @@ interface ProductFormData {
       font-size: 0.8rem;
       color: #666;
       margin-top: 5px;
+    }
+
+    .image-validation-info {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .error-text {
+      color: #dc2626;
+      font-weight: 600;
     }
 
     /* Images */
@@ -1563,18 +1593,63 @@ export class ProductFormComponent implements OnInit, OnChanges {
     const remainingSlots = 10 - this.selectedImages.length;
     const filesToAdd = files.slice(0, remainingSlots);
 
-    filesToAdd.forEach(file => {
-      if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+    // Types d'images autorisés
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    const maxSize = 5 * 1024 * 1024; // 5 Mo
+    const errors: string[] = [];
+
+    filesToAdd.forEach((file, index) => {
+      // Validation du type
+      if (!allowedTypes.includes(file.type.toLowerCase())) {
+        errors.push(`${file.name}: Type de fichier non autorisé. Utilisez JPG, PNG, WEBP ou GIF.`);
+        return;
+      }
+
+      // Validation de la taille
+      if (file.size > maxSize) {
+        errors.push(`${file.name}: Fichier trop volumineux (max 5 Mo). Taille actuelle: ${(file.size / 1024 / 1024).toFixed(2)} Mo`);
+        return;
+      }
+
+      // Validation de la taille minimale (éviter les fichiers vides ou corrompus)
+      if (file.size < 100) {
+        errors.push(`${file.name}: Fichier trop petit ou corrompu.`);
+        return;
+      }
+
+      // Vérifier si on n'a pas déjà atteint la limite
+      if (this.selectedImages.length >= 10) {
+        errors.push(`Limite de 10 images atteinte.`);
+        return;
+      }
+
+      // Lire et ajouter l'image
         const reader = new FileReader();
         reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (result) {
           this.selectedImages.push({
             file: file,
-            preview: e.target?.result as string
+            preview: result
           });
+        }
+      };
+      reader.onerror = () => {
+        errors.push(`${file.name}: Erreur lors de la lecture du fichier.`);
         };
         reader.readAsDataURL(file);
-      }
     });
+
+    // Afficher les erreurs s'il y en a
+    if (errors.length > 0) {
+      alert('Erreurs de validation:\n' + errors.join('\n'));
+    }
+
+    // Afficher un message si certains fichiers ont été ignorés
+    if (files.length > filesToAdd.length) {
+      const ignored = files.length - filesToAdd.length;
+      alert(`${ignored} fichier(s) ignoré(s) car la limite de 10 images est atteinte.`);
+    }
 
     input.value = '';
   }
@@ -1678,14 +1753,95 @@ export class ProductFormComponent implements OnInit, OnChanges {
       .replace(/^-+|-+$/g, '');
   }
 
+  // Méthodes pour gérer l'input en temps réel et limiter la saisie
+  onNameInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    if (value.length > 200) {
+      this.formData.name = value.substring(0, 200);
+      input.value = this.formData.name;
+    }
+  }
+
+  onShortDescriptionInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    if (value.length > 200) {
+      this.formData.shortDescription = value.substring(0, 200);
+      input.value = this.formData.shortDescription;
+    }
+  }
+
+  onDescriptionInput(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    // Pas de limite pour la description complète, juste mettre à jour le compteur
+  }
+
+  onMetaTitleInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    if (value.length > 70) {
+      this.formData.metaTitle = value.substring(0, 70);
+      input.value = this.formData.metaTitle;
+    }
+  }
+
+  onMetaDescriptionInput(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    const value = textarea.value;
+    if (value.length > 160) {
+      this.formData.metaDescription = value.substring(0, 160);
+      textarea.value = this.formData.metaDescription;
+    }
+  }
+
+  getMetaDescriptionLength(): number {
+    return (this.formData.metaDescription || 
+            this.formData.shortDescription || 
+            (this.formData.description ? this.formData.description.substring(0, 160) : '')).length;
+  }
+
   isFormValid(): boolean {
+    // Validation des champs obligatoires
+    const hasName = this.formData.name && this.formData.name.trim().length > 0;
+    const hasDescription = this.formData.description && this.formData.description.trim().length > 0;
+    const hasValidPrice = this.formData.price > 0;
+    const hasSku = this.formData.sku && this.formData.sku.trim().length > 0;
+    const hasCategory = this.formData.category && this.formData.category.trim().length > 0;
+    const hasValidStock = this.formData.stockQuantity >= 0;
+    
+    // Validation des images : au moins une image requise
+    const hasAtLeastOneImage = this.selectedImages.length > 0;
+    
+    // Validation des fichiers images
+    const allImagesValid = this.selectedImages.every(img => {
+      if (img.file) {
+        // Vérifier le type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowedTypes.includes(img.file.type.toLowerCase())) {
+          return false;
+        }
+        // Vérifier la taille (max 5 Mo)
+        if (img.file.size > 5 * 1024 * 1024) {
+          return false;
+        }
+        // Vérifier la taille minimale
+        if (img.file.size < 100) {
+          return false;
+        }
+      }
+      return true;
+    });
+    
     return !!(
-      this.formData.name &&
-      this.formData.description &&
-      this.formData.price > 0 &&
-      this.formData.sku &&
-      this.formData.category &&
-      this.formData.stockQuantity >= 0
+      hasName &&
+      hasDescription &&
+      hasValidPrice &&
+      hasSku &&
+      hasCategory &&
+      hasValidStock &&
+      hasAtLeastOneImage &&
+      allImagesValid
     );
   }
 
@@ -1695,20 +1851,99 @@ export class ProductFormComponent implements OnInit, OnChanges {
   }
 
   onSubmit() {
-    if (this.isFormValid()) {
-      const submitData: any = { ...this.formData };
-      
-      if (this.selectedImages.length > 0) {
-        submitData.imageFiles = this.selectedImages
-          .filter(img => img.file)
-          .map(img => img.file);
-        
-        submitData.existingImages = this.selectedImages
-          .filter(img => !img.file)
-          .map(img => img.preview);
+    if (!this.isFormValid()) {
+      // Vérifier spécifiquement les images
+      if (this.selectedImages.length === 0) {
+        alert('⚠️ Veuillez ajouter au moins une image au produit.');
+        this.activeTab = 'images';
+        return;
       }
       
+      // Vérifier la validité des fichiers
+      const invalidImages = this.selectedImages.filter(img => {
+        if (img.file) {
+          const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+          return !allowedTypes.includes(img.file!.type.toLowerCase()) || 
+                 img.file!.size > 5 * 1024 * 1024 || 
+                 img.file!.size < 100;
+        }
+        return false;
+      });
+      
+      if (invalidImages.length > 0) {
+        alert('⚠️ Certaines images ne sont pas valides. Veuillez vérifier les types de fichiers (JPG, PNG, WEBP, GIF) et leur taille (max 5 Mo).');
+        this.activeTab = 'images';
+        return;
+      }
+      
+      console.warn('⚠️ Formulaire invalide:', {
+        name: this.formData.name,
+        description: this.formData.description,
+        price: this.formData.price,
+        sku: this.formData.sku,
+        category: this.formData.category,
+        stockQuantity: this.formData.stockQuantity,
+        imagesCount: this.selectedImages.length
+      });
+      return;
+    }
+
+    try {
+      const submitData: any = { ...this.formData };
+      
+      // Nettoyer les chaînes de caractères
+      submitData.name = (submitData.name || '').trim();
+      submitData.description = (submitData.description || '').trim();
+      submitData.shortDescription = (submitData.shortDescription || '').trim();
+      submitData.sku = (submitData.sku || '').trim();
+      
+      // Toujours inclure le statut pour éviter qu'il soit réinitialisé
+      if (!submitData.status) {
+        submitData.status = this.formData.status || 'draft';
+      }
+      
+      // Convertir les valeurs numériques
+      submitData.price = parseFloat(submitData.price.toString()) || 0;
+      submitData.compareAtPrice = submitData.compareAtPrice ? parseFloat(submitData.compareAtPrice.toString()) : undefined;
+      submitData.stockQuantity = parseInt(submitData.stockQuantity.toString()) || 0;
+      submitData.lowStockThreshold = submitData.lowStockThreshold ? parseInt(submitData.lowStockThreshold.toString()) : undefined;
+      submitData.weight = submitData.weight ? parseFloat(submitData.weight.toString()) : undefined;
+      
+      // Gérer les dimensions
+      if (submitData.dimensions) {
+        submitData.dimensions.length = submitData.dimensions.length ? parseFloat(submitData.dimensions.length.toString()) : 0;
+        submitData.dimensions.width = submitData.dimensions.width ? parseFloat(submitData.dimensions.width.toString()) : 0;
+        submitData.dimensions.height = submitData.dimensions.height ? parseFloat(submitData.dimensions.height.toString()) : 0;
+      }
+      
+      // Gérer les images : séparer les fichiers des images existantes
+      const newImageFiles = this.selectedImages
+        .filter(img => img.file !== null)
+        .map(img => img.file as File);
+      
+      const existingImageUrls = this.selectedImages
+        .filter(img => img.file === null && img.preview && !img.preview.startsWith('data:'))
+        .map(img => img.preview);
+      
+      // Toujours envoyer les images (même si vides) pour que le backend sache quoi faire
+      if (newImageFiles.length > 0) {
+        submitData.imageFiles = newImageFiles;
+      }
+      
+      // Toujours envoyer les images existantes (même si vides) pour préserver les images actuelles
+      submitData.existingImages = existingImageUrls;
+      
+      // S'assurer que les tableaux ne sont pas undefined
+      submitData.colorsAvailable = submitData.colorsAvailable || [];
+      submitData.sizesAvailable = submitData.sizesAvailable || [];
+      submitData.materials = submitData.materials || [];
+      submitData.tags = submitData.tags || [];
+      
+      console.log('✅ Données du formulaire validées:', submitData);
       this.save.emit(submitData);
+    } catch (error) {
+      console.error('❌ Erreur lors de la préparation des données:', error);
+      alert('Une erreur est survenue lors de la préparation des données. Veuillez vérifier les champs du formulaire.');
     }
   }
 

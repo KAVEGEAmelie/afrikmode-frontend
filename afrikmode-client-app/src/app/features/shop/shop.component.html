@@ -36,11 +36,13 @@
   
             <!-- Categories -->
             <div class="filter-group">
-              <label>Catégories</label>
+              <label for="category-filter">Catégories</label>
               <select 
+                id="category-filter"
                 [(ngModel)]="selectedCategory" 
                 (ngModelChange)="applyFilters()"
-                class="filter-select">
+                class="filter-select"
+                title="Sélectionner une catégorie">
                 <option value="all">Toutes les catégories</option>
                 <option *ngFor="let cat of filterOptions.categories" [value]="cat">
                   {{ cat }}
@@ -50,11 +52,13 @@
   
             <!-- Price Range -->
             <div class="filter-group">
-              <label>Prix</label>
+              <label for="price-filter">Prix</label>
               <select 
+                id="price-filter"
                 [(ngModel)]="selectedPriceRange" 
                 (ngModelChange)="applyFilters()"
-                class="filter-select">
+                class="filter-select"
+                title="Sélectionner une fourchette de prix">
                 <option value="all">Tous les prix</option>
                 <option *ngFor="let range of filterOptions.priceRanges" [value]="range.label">
                   {{ range.label }}
@@ -115,10 +119,13 @@
   
               <div class="toolbar-right">
                 <!-- Sort -->
+                <label for="sort-select" class="sr-only">Trier les produits</label>
                 <select 
+                  id="sort-select"
                   [(ngModel)]="sortBy" 
                   (ngModelChange)="sortProducts()"
-                  class="sort-select">
+                  class="sort-select"
+                  title="Trier les produits">
                   <option value="default">Trier par défaut</option>
                   <option value="newest">Les plus récents</option>
                   <option value="price-asc">Prix croissant</option>
@@ -161,7 +168,7 @@
   
                   <!-- Image -->
                   <div class="product-image">
-                    <img [src]="product.image" [alt]="product.name">
+                    <img [src]="product.image | safeImage:'product'" [alt]="product.name" (error)="$event.target.src='https://via.placeholder.com/300x300?text=' + encodeURIComponent(product.name)">
                     <div class="product-actions">
                       <button class="action-btn" (click)="addToWishlist(product, $event)" title="Favoris">
                         <i class="far fa-heart"></i>

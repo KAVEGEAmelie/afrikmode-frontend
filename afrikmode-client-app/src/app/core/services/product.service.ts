@@ -1,6 +1,7 @@
 // src/app/core/services/product.service.ts
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { 
@@ -70,6 +71,7 @@ export class ProductService {
     page?: number;
     limit?: number;
     category_id?: string;
+    category?: string; // Slug de la catégorie
     brand_id?: string;
     store_id?: string;
     min_price?: number;
@@ -90,10 +92,19 @@ export class ProductService {
   /**
    * Obtenir un produit par ID
    */
-  getProduct(id: string): Observable<Product> {
-    return this.http.get<Product>(`${this.baseUrl}/products/${id}`, {
+  getProduct(id: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/products/${id}`, {
       headers: this.getHeaders()
-    });
+    }).pipe(
+      map((response: any) => {
+        // L'API retourne {success: true, data: {...}}
+        if (response.success && response.data) {
+          return response.data;
+        }
+        // Si la réponse est directement le produit
+        return response;
+      })
+    );
   }
 
   /**

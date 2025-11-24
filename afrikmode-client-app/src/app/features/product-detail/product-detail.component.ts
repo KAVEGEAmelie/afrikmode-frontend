@@ -10,6 +10,7 @@ import { ProductService } from '../../core/services/product.service';
 import { ToastService } from '../../core/services/toast.service';
 import { ProductReviewsDisplayComponent } from '../../shared/components/product-reviews-display/product-reviews-display.component';
 import { SafeImagePipe } from '../../core/pipes/safe-image.pipe';
+import { environment } from '../../../environments/environment';
 
 interface Product {
   id: string | number;
@@ -26,7 +27,7 @@ interface Product {
   reviewCount: number;
   sku: string;
   features: string[];
-  materials: string;
+  materials: any; // Peut être string, array, ou object
   careInstructions: string[];
 }
 
@@ -102,45 +103,98 @@ export class ProductDetailComponent implements OnInit {
         // Gérer différentes structures de réponse
         const product = response.data || response;
         
-        // Normaliser les images
-        const normalizedImages = this.normalizeImages(product.images || product.image_url);
+        console.log('📦 Produit chargé:', {
+          id: product.id,
+          name: product.name,
+          images: product.images,
+          primaryImage: product.primaryImage || product.primary_image,
+          colorsAvailable: product.colorsAvailable || product.colors_available,
+          sizesAvailable: product.sizesAvailable || product.sizes_available,
+          category: product.category
+        });
+        
+        // Normaliser les images - essayer toutes les sources possibles
+        let finalImages: string[] = [];
+        
+        // 1. Essayer images (peut être tableau, JSON string, ou null)
+        if (product.images) {
+          finalImages = this.normalizeImages(product.images);
+        }
+        
+        // 2. Si pas d'images, essayer primaryImage (camelCase)
+        if (finalImages.length === 0 && product.primaryImage) {
+          finalImages = this.normalizeImages(product.primaryImage);
+        }
+        
+        // 3. Si pas d'images, essayer primary_image (snake_case)
+        if (finalImages.length === 0 && product.primary_image) {
+          finalImages = this.normalizeImages(product.primary_image);
+        }
+        
+        // 4. Si toujours pas d'images, essayer image_url
+        if (finalImages.length === 0 && product.image_url) {
+          finalImages = this.normalizeImages(product.image_url);
+        }
+        
+        // 5. Si toujours pas d'images, utiliser le placeholder
+        if (finalImages.length === 0) {
+          finalImages = ['https://via.placeholder.com/600x600?text=' + encodeURIComponent(product.name || 'Produit')];
+        }
         
         // Stocker le vendor_id pour les conversations
         this.vendorId = product.vendor_id || product.store?.vendor_id || product.store_id || null;
         
-        // Mapper les données de l'API vers l'interface locale
+        // Mapper les données de l'API vers l'interface locale - gérer les deux formats (camelCase et snake_case)
         this.product = {
           id: product.id || this.productId,
           name: product.name || 'Produit sans nom',
           price: parseFloat(product.price) || 0,
-          oldPrice: product.compare_price ? parseFloat(product.compare_price) : undefined,
-          description: product.description || '',
-          images: normalizedImages.length > 0 
-            ? normalizedImages
-            : ['/assets/images/products/default.jpg'],
+          oldPrice: (() => {
+            const comparePrice = product.compareAtPrice || product.compare_at_price || product.compare_price;
+            if (!comparePrice) return undefined;
+            const parsed = parseFloat(comparePrice);
+            // S'assurer que le prix comparé est supérieur au prix actuel pour être valide
+            const currentPrice = parseFloat(product.price) || 0;
+            if (parsed > currentPrice && parsed > 0) {
+              return parsed;
+            }
+            return undefined;
+          })(),
+          description: product.description || product.shortDescription || product.short_description || '',
+          images: finalImages,
           category: this.extractCategoryName(product),
           colors: this.normalizeColors(product),
           sizes: this.normalizeSizes(product),
-          stock: parseInt(product.stock_quantity || product.stock || '0') || 0,
-          rating: parseFloat(product.rating || product.average_rating || '0') || 0,
-          reviewCount: parseInt(product.reviews_count || product.review_count || '0') || 0,
+          stock: parseInt(product.stockQuantity || product.stock_quantity || product.stock || '0') || 0,
+          rating: parseFloat(product.averageRating || product.average_rating || product.rating || '0') || 0,
+          reviewCount: parseInt(product.reviewsCount || product.reviews_count || product.review_count || '0') || 0,
           sku: product.sku || product.sku_code || '',
           features: this.normalizeFeatures(product),
           materials: this.normalizeMaterials(product),
           careInstructions: this.normalizeCareInstructions(product)
         };
+        
+        console.log('✅ Produit normalisé:', {
+          id: this.product.id,
+          name: this.product.name,
+          images: this.product.images,
+          category: this.product.category,
+          colors: this.product.colors.length,
+          sizes: this.product.sizes.length
+        });
 
         // Initialiser les sélections
         if (this.product.images.length > 0) {
           this.selectedImage = this.product.images[0];
           this.selectedImageIndex = 0;
         }
-        if (this.product.colors.length > 0) {
-          this.selectedColor = this.product.colors[0].name;
-        }
-        if (this.product.sizes.length > 0) {
-          this.selectedSize = this.product.sizes[0];
-        }
+        // Ne pas initialiser automatiquement les couleurs/tailles - laisser l'utilisateur choisir
+        // if (this.product.colors.length > 0) {
+        //   this.selectedColor = this.product.colors[0].name;
+        // }
+        // if (this.product.sizes.length > 0) {
+        //   this.selectedSize = this.product.sizes[0];
+        // }
 
         this.loading = false;
 
@@ -163,29 +217,76 @@ export class ProductDetailComponent implements OnInit {
    */
   private normalizeImages(images: any): string[] {
     if (!images) return [];
+    
+    // Helper pour construire l'URL complète
+    const buildImageUrl = (imgPath: string): string => {
+      if (!imgPath || imgPath.trim() === '') return '';
+      
+      // Si c'est déjà une URL complète, la retourner telle quelle
+      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+        return imgPath;
+      }
+      
+      // Si c'est un chemin absolu (commence par /), construire l'URL avec l'API
+      if (imgPath.startsWith('/')) {
+        // Enlever le / au début si présent pour éviter les doubles slashes
+        const cleanPath = imgPath.startsWith('/') ? imgPath.substring(1) : imgPath;
+        return `${environment.apiUrl}/${cleanPath}`;
+      }
+      
+      // Si c'est un chemin relatif (uploads/products/...), construire l'URL
+      if (imgPath.includes('uploads/')) {
+        return `${environment.apiUrl}/${imgPath}`;
+      }
+      
+      // Sinon, essayer avec uploads/products/
+      return `${environment.apiUrl}/uploads/products/${imgPath}`;
+    };
+    
+    // Si c'est déjà un tableau
     if (Array.isArray(images)) {
       return images.map((img: any) => {
-        if (typeof img === 'string') return img;
+        if (typeof img === 'string') {
+          return buildImageUrl(img);
+        }
         if (img && typeof img === 'object') {
-          return img.url || img.path || img.image_url || img.src || '';
+          const url = img.url || img.path || img.image_url || img.src || img.primary_image || '';
+          return buildImageUrl(url);
         }
         return '';
       }).filter((url: string) => url && url.trim() !== '');
     }
+    
+    // Si c'est une chaîne JSON
     if (typeof images === 'string') {
+      // Si c'est déjà une URL, la retourner
+      if (images.startsWith('http://') || images.startsWith('https://')) {
+        return [images];
+      }
+      
+      // Si c'est un chemin absolu, construire l'URL
+      if (images.startsWith('/')) {
+        return [buildImageUrl(images)];
+      }
+      
       try {
         const parsed = JSON.parse(images);
         if (Array.isArray(parsed)) {
           return parsed.map((img: any) => {
-            if (typeof img === 'string') return img;
-            return img?.url || img?.path || img?.image_url || '';
+            if (typeof img === 'string') {
+              return buildImageUrl(img);
+            }
+            const url = img?.url || img?.path || img?.image_url || img?.src || '';
+            return buildImageUrl(url);
           }).filter((url: string) => url && url.trim() !== '');
         }
-        return [images];
+        return [buildImageUrl(images)];
       } catch {
-        return [images];
+        // Si ce n'est pas du JSON valide, c'est probablement un chemin simple
+        return [buildImageUrl(images)];
       }
     }
+    
     return [];
   }
 
@@ -193,13 +294,17 @@ export class ProductDetailComponent implements OnInit {
    * Extrait le nom de la catégorie
    */
   private extractCategoryName(product: any): string {
+    // Essayer d'abord l'objet category
     if (product.category) {
       if (typeof product.category === 'string') return product.category;
       if (product.category.name) return product.category.name;
       if (product.category.title) return product.category.title;
     }
+    // Essayer les champs directs
     if (product.category_name) return product.category_name;
-    if (product.category_id) return product.category_id;
+    if (product.categoryName) return product.categoryName;
+    // Si seulement l'ID est disponible, retourner une chaîne vide plutôt que l'ID
+    if (product.category_id || product.categoryId) return '';
     return '';
   }
 
@@ -297,26 +402,68 @@ export class ProductDetailComponent implements OnInit {
   }
 
   /**
-   * Normalise les matériaux
+   * Normalise les matériaux - garde le format original pour getFormattedMaterials()
    */
-  private normalizeMaterials(product: any): string {
+  private normalizeMaterials(product: any): any {
+    // Garder le format original (peut être string, array, ou object) pour permettre le formatage dans getFormattedMaterials()
     if (product.materials) {
       if (typeof product.materials === 'string') {
+        // Si c'est "[]" ou vide, retourner un tableau vide
+        if (product.materials.trim() === '' || product.materials.trim() === '[]') {
+          return [];
+        }
         try {
-          const materials = JSON.parse(product.materials);
-          if (typeof materials === 'object') {
-            return materials.text || materials.name || JSON.stringify(materials);
-          }
-          return materials;
+          const parsed = JSON.parse(product.materials);
+          return parsed;
         } catch {
+          // Si ce n'est pas du JSON valide, retourner la chaîne telle quelle
           return product.materials;
         }
       }
-      if (typeof product.materials === 'object') {
-        return product.materials.text || product.materials.name || JSON.stringify(product.materials);
+      // Si c'est déjà un tableau ou un objet, le retourner tel quel
+      return product.materials;
+    }
+    return [];
+  }
+
+  /**
+   * Retourne les matériaux formatés comme un tableau pour l'affichage
+   */
+  getFormattedMaterials(): string[] {
+    if (!this.product || !this.product.materials) return [];
+    
+    // Si materials est déjà une chaîne, essayer de la parser
+    if (typeof this.product.materials === 'string') {
+      // Si c'est une chaîne vide ou "[]", retourner un tableau vide
+      if (this.product.materials.trim() === '' || this.product.materials.trim() === '[]') {
+        return [];
+      }
+      try {
+        const parsed = JSON.parse(this.product.materials);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((m: any) => m && m.toString().trim() !== '');
+        }
+        if (typeof parsed === 'object' && parsed.text) {
+          return [parsed.text];
+        }
+      } catch {
+        // Si ce n'est pas du JSON, traiter comme une chaîne simple
+        if (this.product.materials.includes(',')) {
+          return this.product.materials.split(',').map((m: string) => m.trim()).filter((m: string) => m !== '');
+        }
+        return [this.product.materials];
       }
     }
-    return '';
+    
+    // Si c'est un tableau
+    if (Array.isArray(this.product.materials)) {
+      return this.product.materials.map((m: any) => {
+        if (typeof m === 'string') return m;
+        return m?.text || m?.name || JSON.stringify(m);
+      }).filter((m: string) => m && m.trim() !== '');
+    }
+    
+    return [];
   }
 
   /**
@@ -396,8 +543,10 @@ export class ProductDetailComponent implements OnInit {
               id: product.id || product.id,
               name: product.name || 'Produit sans nom',
               price: parseFloat(product.price || '0') || 0,
-              oldPrice: product.compare_price ? parseFloat(product.compare_price) : undefined,
-              image: images.length > 0 ? images[0] : '/assets/images/products/default.jpg',
+              oldPrice: product.compareAtPrice || product.compare_at_price || product.compare_price 
+                ? parseFloat(product.compareAtPrice || product.compare_at_price || product.compare_price) 
+                : undefined,
+              image: images.length > 0 ? images[0] : 'https://via.placeholder.com/300x300?text=Produit',
               rating: parseFloat(product.rating || product.average_rating || '0') || 0
             };
           });
@@ -553,8 +702,13 @@ export class ProductDetailComponent implements OnInit {
   }
 
   getDiscountPercentage(): number {
-    if (this.product && this.product.oldPrice) {
-      return Math.round(((this.product.oldPrice - this.product.price) / this.product.oldPrice) * 100);
+    if (this.product && this.product.oldPrice && this.product.price) {
+      // S'assurer que oldPrice > price pour éviter les pourcentages négatifs ou > 100%
+      if (this.product.oldPrice > this.product.price) {
+        const discount = ((this.product.oldPrice - this.product.price) / this.product.oldPrice) * 100;
+        // Limiter à 100% maximum
+        return Math.min(Math.round(discount), 100);
+      }
     }
     return 0;
   }

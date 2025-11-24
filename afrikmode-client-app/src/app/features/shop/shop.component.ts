@@ -6,6 +6,8 @@ import { CartService } from '../../core/services/cart.service';
 import { WishlistService } from '../../core/services/wishlist.service';
 import { ProductService } from '../../core/services/product.service';
 import { AuthService } from '../../core/services/auth.service';
+import { SafeImagePipe } from '../../core/pipes/safe-image.pipe';
+import { environment } from '../../../environments/environment';
 
 interface Product {
   id: number;
@@ -31,7 +33,7 @@ interface FilterOptions {
 @Component({
   selector: 'app-shop',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, SafeImagePipe],
   templateUrl: './shop.component.html',
   styleUrls: ['./shop.component.scss']
 })
@@ -169,14 +171,16 @@ export class ShopComponent implements OnInit {
           id: parseInt(product.id) || product.id,
           name: product.name,
           price: product.price,
-          oldPrice: product.compare_price,
-          image: product.image_url || product.images?.[0]?.url || 'assets/images/products/default.jpg',
-          category: product.category?.name || '',
+          oldPrice: product.compareAtPrice || product.compare_at_price || product.compare_price,
+          image: this.normalizeProductImage(product),
+          category: product.category?.name || product.category_name || '',
           colors: product.variants?.filter((v: any) => v.attributes?.color).map((v: any) => v.attributes.color) || [],
           sizes: product.variants?.filter((v: any) => v.attributes?.size).map((v: any) => v.attributes.size) || [],
           isNew: product.is_featured || false,
-          discount: product.compare_price ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100) : 0,
-          rating: product.rating || 4.0
+          discount: (product.compareAtPrice || product.compare_at_price || product.compare_price) 
+            ? Math.round(((product.compareAtPrice || product.compare_at_price || product.compare_price - product.price) / (product.compareAtPrice || product.compare_at_price || product.compare_price)) * 100) 
+            : 0,
+          rating: product.averageRating || product.average_rating || product.rating || 4.0
         }));
 
         // Mettre à jour la pagination
@@ -210,6 +214,96 @@ export class ShopComponent implements OnInit {
 
   isInWishlist(productId: number): boolean {
     return this.wishlistProductIds.has(productId.toString());
+  }
+
+  /**
+   * Normalise l'image d'un produit depuis différentes sources possibles
+   */
+  private normalizeProductImage(product: any): string {
+    // Helper pour construire l'URL complète
+    const buildImageUrl = (imgPath: string): string => {
+      if (!imgPath || imgPath.trim() === '') return '';
+      
+      // Si c'est déjà une URL complète, la retourner telle quelle
+      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+        return imgPath;
+      }
+      
+      // Si c'est un chemin absolu (commence par /), construire l'URL avec l'API
+      if (imgPath.startsWith('/')) {
+        const cleanPath = imgPath.startsWith('/') ? imgPath.substring(1) : imgPath;
+        return `${environment.apiUrl}/${cleanPath}`;
+      }
+      
+      // Si c'est un chemin relatif (uploads/products/...), construire l'URL
+      if (imgPath.includes('uploads/')) {
+        return `${environment.apiUrl}/${imgPath}`;
+      }
+      
+      // Si c'est un chemin assets, le retourner tel quel
+      if (imgPath.startsWith('assets/')) {
+        return '/' + imgPath;
+      }
+      
+      // Sinon, essayer avec uploads/products/
+      return `${environment.apiUrl}/uploads/products/${imgPath}`;
+    };
+
+    // 1. Essayer images (peut être tableau, JSON string, ou null)
+    if (product.images) {
+      if (Array.isArray(product.images) && product.images.length > 0) {
+        const firstImage = product.images[0];
+        if (typeof firstImage === 'string') {
+          return buildImageUrl(firstImage);
+        }
+        if (typeof firstImage === 'object') {
+          const url = firstImage.url || firstImage.path || firstImage.image_url || firstImage.src || '';
+          return buildImageUrl(url);
+        }
+      }
+      if (typeof product.images === 'string') {
+        // Si c'est une chaîne JSON
+        if (product.images.trim().startsWith('[') || product.images.trim().startsWith('{')) {
+          try {
+            const parsed = JSON.parse(product.images);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const firstImage = parsed[0];
+              if (typeof firstImage === 'string') {
+                return buildImageUrl(firstImage);
+              }
+              if (typeof firstImage === 'object') {
+                const url = firstImage.url || firstImage.path || firstImage.image_url || '';
+                return buildImageUrl(url);
+              }
+            }
+          } catch {
+            // Si ce n'est pas du JSON valide, traiter comme une URL simple
+            return buildImageUrl(product.images);
+          }
+        } else {
+          // C'est probablement une URL simple
+          return buildImageUrl(product.images);
+        }
+      }
+    }
+
+    // 2. Essayer primaryImage (camelCase)
+    if (product.primaryImage) {
+      return buildImageUrl(product.primaryImage);
+    }
+
+    // 3. Essayer primary_image (snake_case)
+    if (product.primary_image) {
+      return buildImageUrl(product.primary_image);
+    }
+
+    // 4. Essayer image_url
+    if (product.image_url) {
+      return buildImageUrl(product.image_url);
+    }
+
+    // 5. Fallback vers placeholder en ligne
+    return `https://via.placeholder.com/300x300?text=${encodeURIComponent(product.name || 'Produit')}`;
   }
 
   // Gestion des filtres

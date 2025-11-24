@@ -9,7 +9,7 @@ export class ImageService {
     product: '/assets/images/products/placeholder.jpg',
     avatar: '/assets/images/avatar-placeholder.png',
     store: '/assets/images/store-placeholder.jpg',
-    category: '/assets/images/category-placeholder.jpg'
+    category: '/assets/images/products/placeholder.jpg'
   };
 
   /**

@@ -11,12 +11,21 @@ export class TokenRefreshService {
   private refreshSubject = new BehaviorSubject<boolean>(false);
 
   constructor(private authService: AuthService) {
-    this.startTokenRefreshTimer();
+    // Démarrer le timer seulement si l'utilisateur est authentifié
+    // Éviter de démarrer immédiatement pour ne pas causer de crash si le backend n'est pas disponible
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      // Démarrer après un délai pour laisser l'app se charger
+      setTimeout(() => {
+        this.startTokenRefreshTimer();
+      }, 5000); // Attendre 5 secondes avant de démarrer
+    }
   }
 
   private startTokenRefreshTimer(): void {
     // Vérifier le token toutes les 10 minutes
-    this.refreshTimer = timer(0, 10 * 60 * 1000).subscribe(() => {
+    // Ne pas vérifier immédiatement (timer(0, ...)) pour éviter les crashes
+    this.refreshTimer = timer(10 * 60 * 1000, 10 * 60 * 1000).subscribe(() => {
       this.checkAndRefreshToken();
     });
   }
@@ -32,15 +41,20 @@ export class TokenRefreshService {
     // Vérifier si le token est proche de l'expiration (dans les 5 prochaines minutes)
     try {
       const tokenData = this.parseJwt(token);
+      if (!tokenData || !tokenData.exp) {
+        return; // Token invalide, ne pas essayer de rafraîchir
+      }
+      
       const now = Math.floor(Date.now() / 1000);
       const timeUntilExpiry = tokenData.exp - now;
       
       // Si le token expire dans moins de 5 minutes, le rafraîchir
-      if (timeUntilExpiry < 300) {
+      if (timeUntilExpiry < 300 && timeUntilExpiry > 0) {
         this.refreshToken();
       }
     } catch (error) {
-      console.error('Erreur lors de la vérification du token:', error);
+      console.warn('Erreur lors de la vérification du token:', error);
+      // Ne pas crash, juste logger l'erreur
     }
   }
 
@@ -52,24 +66,36 @@ export class TokenRefreshService {
     this.isRefreshing = true;
     this.refreshSubject.next(true);
 
-    this.authService.refreshToken().subscribe({
-      next: (response) => {
-        console.log('✅ Token rafraîchi avec succès');
-        this.isRefreshing = false;
-        this.refreshSubject.next(false);
-      },
-      error: (error) => {
-        console.error('❌ Erreur lors du rafraîchissement du token:', error);
-        this.isRefreshing = false;
-        this.refreshSubject.next(false);
-        
-        // Si le refresh token est invalide, nettoyer et déconnecter
-        if (error.status === 401 || error.status === 403) {
-          // Ne pas appeler logout() pour éviter les boucles, juste nettoyer
-          this.authService.clearAuthData();
+    try {
+      this.authService.refreshToken().subscribe({
+        next: (response) => {
+          console.log('✅ Token rafraîchi avec succès');
+          this.isRefreshing = false;
+          this.refreshSubject.next(false);
+        },
+        error: (error) => {
+          // Ne pas logger comme erreur critique si c'est juste que le backend n'est pas disponible
+          if (error.status === 0 || error.status === 503 || error.status === 502) {
+            console.warn('⚠️ Backend non disponible, rafraîchissement du token reporté');
+          } else {
+            console.warn('❌ Erreur lors du rafraîchissement du token:', error);
+          }
+          this.isRefreshing = false;
+          this.refreshSubject.next(false);
+          
+          // Si le refresh token est invalide, nettoyer et déconnecter
+          if (error.status === 401 || error.status === 403) {
+            // Ne pas appeler logout() pour éviter les boucles, juste nettoyer
+            this.authService.clearAuthData();
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      // Catch les erreurs synchrones
+      console.warn('Erreur lors de l\'appel refreshToken:', error);
+      this.isRefreshing = false;
+      this.refreshSubject.next(false);
+    }
   }
 
   private parseJwt(token: string): any {

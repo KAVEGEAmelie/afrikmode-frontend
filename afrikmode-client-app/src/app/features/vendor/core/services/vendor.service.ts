@@ -1051,7 +1051,10 @@ export class VendorService {
     if (productData.price) formData.append('price', productData.price.toString());
     if (productData.compareAtPrice) formData.append('compare_at_price', productData.compareAtPrice.toString());
     if (productData.sku) formData.append('sku', productData.sku);
-    if (productData.status) formData.append('status', productData.status);
+    // Toujours inclure le statut pour éviter qu'il soit réinitialisé lors de la mise à jour
+    if (productData.status !== undefined && productData.status !== null) {
+      formData.append('status', productData.status);
+    }
     if (productData.category) formData.append('category', productData.category);
     if (productData.stockQuantity !== undefined) formData.append('stock_quantity', productData.stockQuantity.toString());
 
@@ -1100,16 +1103,23 @@ export class VendorService {
     if (productData.metaTitle) formData.append('meta_title', productData.metaTitle);
     if (productData.metaDescription) formData.append('meta_description', productData.metaDescription);
 
-    // Images
-    if (productData.imageFiles && Array.isArray(productData.imageFiles)) {
+    // Images - toujours envoyer même si vide pour que le backend sache quoi faire
+    if (productData.imageFiles && Array.isArray(productData.imageFiles) && productData.imageFiles.length > 0) {
       productData.imageFiles.forEach((file: File) => {
-        formData.append('images', file);
+        if (file) {
+          formData.append('images', file);
+        }
       });
     }
     
-    // Images existantes
-    if (productData.existingImages && Array.isArray(productData.existingImages)) {
-      formData.append('existing_images', JSON.stringify(productData.existingImages));
+    // Images existantes - toujours envoyer (même si vide) pour préserver les images actuelles lors de la mise à jour
+    if (productData.existingImages !== undefined) {
+      if (Array.isArray(productData.existingImages) && productData.existingImages.length > 0) {
+        formData.append('existing_images', JSON.stringify(productData.existingImages));
+      } else {
+        // Envoyer un tableau vide pour indiquer qu'il n'y a pas d'images existantes à préserver
+        formData.append('existing_images', JSON.stringify([]));
+      }
     }
 
     return formData;

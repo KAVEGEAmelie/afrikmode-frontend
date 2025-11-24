@@ -44,7 +44,7 @@
       <div class="products-grid">
         <div class="product-card" *ngFor="let product of saleProducts">
           <div class="product-image">
-            <img [src]="product.image" [alt]="product.name" [title]="product.name" />
+            <img [src]="product.image | safeImage:'product'" [alt]="product.name" [title]="product.name" (error)="$event.target.src='https://via.placeholder.com/300x300?text=' + encodeURI(product.name)" />
             <div class="product-badges">
               <span class="badge discount">-{{ product.discount }}%</span>
             </div>
@@ -53,7 +53,7 @@
             <h3 class="product-name">{{ product.name }}</h3>
             <div class="product-price">
               <span class="current-price">{{ product.price }}€</span>
-              <span class="original-price">{{ product.originalPrice }}€</span>
+              <span class="original-price" *ngIf="product.oldPrice">{{ product.oldPrice }}€</span>
             </div>
             <div class="product-rating">
               <span class="rating-stars">{{ product.rating }}/5</span>
